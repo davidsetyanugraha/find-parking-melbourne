@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Documents.Spatial;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
@@ -15,7 +16,7 @@ namespace Parking.Sites
         static string parkingApiUrl = "https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?%24limit=10000";
         
         [FunctionName("SitesStateImport")]
-        public static async Task RunAsync(
+        public static async Task<IActionResult> RunAsync(
             //[TimerTrigger("0 */2 * * * *")]TimerInfo myTimer,
             [HttpTrigger(Microsoft.Azure.WebJobs.Extensions.Http.AuthorizationLevel.Anonymous, "post", Route = "sites/stateimport")] Microsoft.AspNetCore.Http.HttpRequest req,
             [CosmosDB(
@@ -48,6 +49,8 @@ namespace Parking.Sites
                     log.LogInformation($"Total sites processed {result.Count}");
                 }
             }
+
+            return new NoContentResult();
         }
     }
 }
