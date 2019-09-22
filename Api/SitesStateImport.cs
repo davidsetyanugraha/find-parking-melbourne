@@ -17,7 +17,7 @@ namespace Parking.Sites
         [FunctionName("SitesStateImport")]
         public static async Task RunAsync(
             //[TimerTrigger("0 */2 * * * *")]TimerInfo myTimer,
-            [HttpTrigger(Microsoft.Azure.WebJobs.Extensions.Http.AuthorizationLevel.Anonymous, "post", Route = "sites/stateupdate")] Microsoft.AspNetCore.Http.HttpRequest req,
+            [HttpTrigger(Microsoft.Azure.WebJobs.Extensions.Http.AuthorizationLevel.Anonymous, "post", Route = "sites/stateimport")] Microsoft.AspNetCore.Http.HttpRequest req,
             [CosmosDB(
                 databaseName: "parkingdb",
                 collectionName: "sitesstate",
