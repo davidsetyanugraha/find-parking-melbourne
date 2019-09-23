@@ -47,7 +47,7 @@ namespace Api.Functions
                         await documents.AddAsync(newObject);
                     }
 
-                    log.LogInformation($"Sites State import finished. Total sites processed {result.Count}");
+                    log.LogInformation($"Sites State import finished at {DateTime.Now}. Total sites processed {result.Count}");
                 }
             }
 
