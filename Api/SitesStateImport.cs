@@ -31,7 +31,7 @@ namespace Parking.Sites
             {
                 using (HttpContent content = res.Content)
                 {
-                    var lastUpdate = DateTime.Now;
+                    var lastUpdate = DateTime.UtcNow;
                     dynamic result = JsonConvert.DeserializeObject(await content.ReadAsStringAsync());
                     foreach (var item in result) {
                         var newObject = new {
