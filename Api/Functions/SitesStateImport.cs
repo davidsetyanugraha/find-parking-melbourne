@@ -8,7 +8,7 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace Parking.Sites
+namespace Api.Functions
 {
     public static class SitesStateImport
     {
