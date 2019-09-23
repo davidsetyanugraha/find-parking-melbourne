@@ -25,10 +25,11 @@ namespace Api.Functions
                 ConnectionStringSetting = "CosmosDBConnectionString")]IAsyncCollector<dynamic> documents,
             ILogger log)
         {
-            log.LogInformation($"Sites State import executed at: {DateTime.Now}");
+            log.LogInformation($"Sites State import starting at: {DateTime.Now}");
 
             using (HttpResponseMessage res = await client.GetAsync(parkingApiUrl))
             {
+                log.LogInformation($"Sites State import origin downloaded at: {DateTime.Now}");
                 using (HttpContent content = res.Content)
                 {
                     var lastUpdate = DateTime.UtcNow;
@@ -46,7 +47,7 @@ namespace Api.Functions
                         await documents.AddAsync(newObject);
                     }
 
-                    log.LogInformation($"Total sites processed {result.Count}");
+                    log.LogInformation($"Sites State import finished. Total sites processed {result.Count}");
                 }
             }
 
