@@ -24,14 +24,6 @@ namespace Api.Functions
         public static async Task<IActionResult> RunAsync(
             //[TimerTrigger("0 */2 * * * *")]TimerInfo myTimer,
             [HttpTrigger(Microsoft.Azure.WebJobs.Extensions.Http.AuthorizationLevel.Anonymous, "post", Route = "sites/state/import")] Microsoft.AspNetCore.Http.HttpRequest req,
-            // [CosmosDB(
-            //     databaseName: "parkingdb",
-            //     collectionName: "sitesstate",
-            //     ConnectionStringSetting = "CosmosDBConnectionString")]IEnumerable<SiteState> originalSites,
-            // [CosmosDB(
-            //     databaseName: "parkingdb",
-            //     collectionName: "sitesstate",
-            //     ConnectionStringSetting = "CosmosDBConnectionString")]IAsyncCollector<SiteState> destinationSites,
             [CosmosDB(ConnectionStringSetting = "CosmosDBConnectionString")] DocumentClient documentClient,
             ILogger log)
         {
@@ -42,8 +34,8 @@ namespace Api.Functions
                new FeedOptions() { PartitionKey = new PartitionKey(null) })
                .AsDocumentQuery();
             var oldSites = await query.ToDictionary(x => x.Id);
-
             // return new ObjectResult(oldSites);
+
             log.LogInformation($"Sites State import old records imported at: {DateTime.Now}");
 
             var newSites = new List<SiteState>();
@@ -92,7 +84,6 @@ namespace Api.Functions
             foreach (var item in newSites)
             {
                 await documentClient.UpsertDocumentAsync(collectionUri, item);
-                //await destinationSites.AddAsync(newObject);
             }
 
             foreach (var keyPair in oldSites)
