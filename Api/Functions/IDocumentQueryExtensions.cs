@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +22,20 @@ namespace Api.Functions
         public static async Task<List<T>> ToListAsync<T>(this IQueryable<T> query)
         {
             return await query.AsDocumentQuery().ToListAsync();
+        }
+
+        public static async Task<Dictionary<TKey, TSource>> ToDictionary<TSource, TKey>(this IDocumentQuery<TSource> queryable, Func<TSource, TKey> keySelector)
+        {
+            var dictionary = new Dictionary<TKey, TSource>();
+            while (queryable.HasMoreResults)
+            {   //Note that ExecuteNextAsync can return many records in each call
+                var response = await queryable.ExecuteNextAsync<TSource>();
+                foreach (var item in response)
+                {
+                    dictionary.Add(keySelector(item), item);
+                }
+            }
+            return dictionary;
         }
     }
 }
