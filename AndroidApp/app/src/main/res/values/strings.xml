@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">ParkingAssistant</string>
     <string name="title_activity_maps">Map</string>
+    <string name="api_key_googlemaps">AIzaSyBRbC-vfnY8dUcAc_JWyaKxnILpE55bTxQ</string>
 </resources>
