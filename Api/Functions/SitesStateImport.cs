@@ -58,6 +58,8 @@ namespace Api.Functions
                                 (double)item.location.longitude,
                                 (double)item.location.latitude
                             ),
+                            RecordState = SiteState.EntityState.Created,
+                            Ttl = -1
                             // LastUpdate = lastUpdate
                         };
                         
@@ -72,6 +74,7 @@ namespace Api.Functions
                             oldSites.Remove(newSite.Id);
                             if (oldSite.Status != newSite.Status) //|| !oldSite.Location.Equals(newSite.Location))
                             {
+                                newSite.RecordState = SiteState.EntityState.Updated;
                                 newSites.Add(newSite);
                             }
                         }
@@ -88,9 +91,12 @@ namespace Api.Functions
 
             foreach (var keyPair in oldSites)
             {
-                await documentClient.DeleteDocumentAsync(
-                    UriFactory.CreateDocumentUri("parkingdb", "sitesstate", keyPair.Key),
-                    new RequestOptions() { PartitionKey = new PartitionKey(null) });
+                keyPair.Value.RecordState = SiteState.EntityState.Deleted;
+                keyPair.Value.Ttl = 2000; // 2 seconds
+                await documentClient.UpsertDocumentAsync(collectionUri, keyPair.Value);
+                // await documentClient.DeleteDocumentAsync(
+                //     UriFactory.CreateDocumentUri("parkingdb", "sitesstate", keyPair.Key),
+                //     new RequestOptions() { PartitionKey = new PartitionKey(null) });
             }
 
             return new NoContentResult();
