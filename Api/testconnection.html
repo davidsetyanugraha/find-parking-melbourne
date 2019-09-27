@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+ <html>
+ <head>
+    <title>Test connection page</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/@aspnet/signalr@1.0.2/dist/browser/signalr.js"></script>
+
+    <script>
+        function GetMap(){
+            //Add Map Control JavaScript code here.
+        }
+
+        function GetConnectionInfo() {
+            return axios.get('http://localhost:7071/api/sites/state/connect')
+                .then(function (response) {
+                    return response.data
+                }).catch(console.error)
+        }
+    </script>
+
+    <style>
+         html,
+         body {
+             width: 100%;
+             height: 100%;
+             padding: 0;
+             margin: 0;
+         }
+    </style>
+ </head>
+ <body onload="GetMap()">
+     <div id="myMap"></div>
+ </body>
+ </html>
