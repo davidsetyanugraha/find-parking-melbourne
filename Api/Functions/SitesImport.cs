@@ -15,7 +15,7 @@ namespace Api.Functions
     public static class SitesImport
     {
         static HttpClient client = new HttpClient();
-        static string sensorsApiUrl = "https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?%24limit=10000";
+        static string sensorsApiUrl = "https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?%24limit=10";
         static string restrictionsApiUrl = "https://data.melbourne.vic.gov.au/resource/ntht-5rk7.json?%24limit=10000";
         static string baysApiUrl = "https://data.melbourne.vic.gov.au/resource/wuf8-susg.json?%24limit=100000";
 
@@ -84,21 +84,24 @@ namespace Api.Functions
 
                         List<dynamic> restrictions = new List<dynamic>();
 
-                        for (int i = 0; i < 7; i++)
+                        for (int i = 1; i < 7; i++)
                         {
-                            restrictions.Add(
-                                new {
-                                    description = item_res?["description" + i], 
-                                    disabilityext = item_res?["disabilityext" + i], 
-                                    duration = item_res?["duration" + i], 
-                                    effectiveonph = item_res?["effectiveonph" + i], 
-                                    endtime  = item_res?["endtime" + i], 
-                                    fromday = item_res?["fromday" + i], 
-                                    starttime = item_res?["starttime" + i], 
-                                    today = item_res?["today" + i], 
-                                    typedesc = item_res?["typedesc" + i], 
-                                }
-                            );
+                            if (item_res?["description" + i] != null)
+                            {
+                                restrictions.Add(
+                                    new {
+                                        description = item_res?["description" + i], 
+                                        disabilityext = item_res?["disabilityext" + i], 
+                                        duration = item_res?["duration" + i], 
+                                        effectiveonph = item_res?["effectiveonph" + i], 
+                                        endtime  = item_res?["endtime" + i], 
+                                        fromday = item_res?["fromday" + i], 
+                                        starttime = item_res?["starttime" + i], 
+                                        today = item_res?["today" + i], 
+                                        typedesc = item_res?["typedesc" + i], 
+                                    }
+                                );
+                            }  
                         }
 
                         var newObject = new {
