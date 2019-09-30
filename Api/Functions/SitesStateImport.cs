@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ namespace Api.Functions
             Uri collectionUri = UriFactory.CreateDocumentCollectionUri("parkingdb", "sitesstate");
             IDocumentQuery<SiteState> query = documentClient.CreateDocumentQuery<SiteState>(collectionUri,
                new FeedOptions() { PartitionKey = new PartitionKey(null) })
+               .Where(x => x.RecordState != SiteState.EntityState.Deleted)
                .AsDocumentQuery();
             var oldSites = await query.ToDictionary(x => x.Id);
             // return new ObjectResult(oldSites);
