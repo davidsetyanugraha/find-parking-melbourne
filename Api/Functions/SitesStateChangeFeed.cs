@@ -17,7 +17,7 @@ namespace Api.Functions
     public static class SitesStateChangeFeed
     {
         [FunctionName("SitesStateChangeFeed")]
-        public static Task Run(
+        public static void Run(
             [CosmosDBTrigger(
                 databaseName: "parkingdb",
                 collectionName: "sitesstate",
@@ -33,12 +33,16 @@ namespace Api.Functions
                 log.LogInformation("Documents modified " + input.Count);
             }
 
-            return signalRMessages.AddAsync(
+            foreach (var document in input)
+            {
+                signalRMessages.AddAsync(
                 new SignalRMessage 
                 {
-                    Target = "SitesState", 
-                    Arguments = new [] { input } 
-                });
+                    GroupName = document.Id,
+                    Target = "SitesState",
+                    Arguments = new [] { document } 
+                });                
+            }
         }
     }
 }
