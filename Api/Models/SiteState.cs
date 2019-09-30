@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Azure.Documents.Spatial;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Api.Models
 {
@@ -25,6 +26,7 @@ namespace Api.Models
         [JsonProperty(PropertyName = "ttl", NullValueHandling = NullValueHandling.Ignore)]
         public int? Ttl { get; set; }
         [JsonProperty(PropertyName = "recordState", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(StringEnumConverter))]
         public EntityState RecordState { get; set; }
     }
 }
