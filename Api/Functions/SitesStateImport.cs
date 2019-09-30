@@ -19,7 +19,7 @@ namespace Api.Functions
     public static class SitesStateImport
     {
         static HttpClient httpClient = new HttpClient();
-        static string parkingApiUrl = "https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?%24limit=10";
+        static string parkingApiUrl = "https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?%24limit=100000";
         
         [FunctionName("SitesStateImport")]
         public static async Task<IActionResult> RunAsync(
