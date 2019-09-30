@@ -70,8 +70,8 @@ namespace Api.Functions
                 //https://dontpaniclabs.com/blog/post/2017/09/07/getting-started-azure-cosmos-db-part-4-partition-keys/
                 //https://www.lytzen.name/2016/12/06/find-docs-with-no-partitionkey-in-azure.html
                 new FeedOptions() { PartitionKey = new PartitionKey(Undefined.Value) })
-                .Where(siteState => siteState.Location.Distance(
-                    new Point(message.Longitude.Value, message.Latitude.Value)) < distance)
+                .Where(siteState => siteState.RecordState != SiteState.EntityState.Deleted
+                    && siteState.Location.Distance(new Point(message.Longitude.Value, message.Latitude.Value)) < distance)
                 .AsDocumentQuery();
 
             // More of the SDK https://joonasw.net/view/exploring-cosmos-db-sdk-v3
