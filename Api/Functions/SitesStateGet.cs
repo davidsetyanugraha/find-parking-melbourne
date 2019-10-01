@@ -69,7 +69,7 @@ namespace Api.Functions
                 // new FeedOptions() { EnableCrossPartitionQuery = true })
                 //https://dontpaniclabs.com/blog/post/2017/09/07/getting-started-azure-cosmos-db-part-4-partition-keys/
                 //https://www.lytzen.name/2016/12/06/find-docs-with-no-partitionkey-in-azure.html
-                new FeedOptions() { PartitionKey = new PartitionKey(Undefined.Value) })
+                new FeedOptions() { PartitionKey = new PartitionKey(null) })//Undefined.Value) })
                 .Where(siteState => siteState.RecordState != SiteState.EntityState.Deleted
                     && siteState.Location.Distance(new Point(message.Longitude.Value, message.Latitude.Value)) < distance)
                 .AsDocumentQuery();
