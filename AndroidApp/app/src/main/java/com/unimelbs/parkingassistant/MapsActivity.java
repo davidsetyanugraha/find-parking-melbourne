@@ -51,6 +51,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(uom).title("Our Uni"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(uom));
         mMap.moveCamera(CameraUpdateFactory.zoomTo(18));
+        
 
     }
 }

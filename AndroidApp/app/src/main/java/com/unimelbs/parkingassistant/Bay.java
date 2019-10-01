@@ -16,25 +16,24 @@ public class Bay {
     private double lat;
     @NonNull
     private double lon;
+    private double[] polygon;
+
 
     public Bay(@NonNull int bayId,
                double lat,
-               double lon)
+               double lon,
+               double[] polygon)
     {
         this.bayId = bayId;
         this.lat = lat;
         this.lon = lon;
+        this.polygon = polygon;
     }
 
-    public double getLat() {
-        return lat;
-    }
-
-    public int getBayId() {
-        return bayId;
-    }
-
-    public double getLon() {
-        return lon;
+    public double getLat() {return lat;}
+    public int getBayId() {return bayId;}
+    public double getLon() {return lon;}
+    public double[] getPolygon() {
+        return polygon;
     }
 }
