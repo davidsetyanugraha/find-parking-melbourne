@@ -25,7 +25,7 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    public static String apiKey;
+    private static final String TAG = "TEPA";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +35,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         initializeGoogleMapsPlacesApis();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        PermissionManager.reqPermission(this,this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -107,11 +108,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        Log.d(TAG, "onMapReady: ");
         // Add a marker in Sydney and move the camera
         LatLng uom = new LatLng(-37.798122, 144.960814);
         mMap.addMarker(new MarkerOptions().position(uom).title("Our Uni"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(uom));
         mMap.moveCamera(CameraUpdateFactory.zoomTo(18));
+
+
     }
 }
