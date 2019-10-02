@@ -64,7 +64,7 @@ namespace Api.Functions
                 }));
             }
 
-            log.LogInformation($"Client registering to follow bay {command.ConnectionId}.");
+            log.LogInformation($"Client {command.ConnectionId} registering to follow bay {command.ParkingBayId}.");
             
             // var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
             await signalRGroupActions.AddAsync(
@@ -94,7 +94,7 @@ namespace Api.Functions
                 }));
             }
 
-            log.LogInformation($"Client unregistering from following bay {command.ConnectionId}.");
+            log.LogInformation($"Client {command.ConnectionId} unregistering from following bay {command.ParkingBayId}.");
 
             //var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
             await signalRGroupActions.AddAsync(
