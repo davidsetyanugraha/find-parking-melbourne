@@ -53,6 +53,8 @@ namespace Api.Functions
             }
             
             document.SetPropertyValue("status", command.Status);
+            document.SetPropertyValue("recordState", SiteState.EntityState.Updated.ToString());
+            document.SetPropertyValue("ttl", -1);
             await client.ReplaceDocumentAsync(document);
 
             return new OkObjectResult(document);
