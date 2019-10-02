@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Logging;
+using Api.Models;
 
 namespace Api.Functions
 {
@@ -35,13 +36,17 @@ namespace Api.Functions
 
             foreach (var document in input)
             {
-                signalRMessages.AddAsync(
-                new SignalRMessage 
+                if (document.GetPropertyValue<string>("recordState") !=
+                    SiteState.EntityState.Created.ToString())
                 {
-                    GroupName = document.Id,
-                    Target = "SitesState",
-                    Arguments = new [] { document } 
-                });                
+                    signalRMessages.AddAsync(
+                    new SignalRMessage 
+                    {
+                        GroupName = document.Id,
+                        Target = "SitesState",
+                        Arguments = new [] { document } 
+                    });
+                }                
             }
         }
     }
