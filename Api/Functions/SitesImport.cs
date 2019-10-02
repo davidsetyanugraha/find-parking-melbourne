@@ -21,7 +21,7 @@ namespace Api.Functions
 
         [FunctionName("SitesImport")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "sites/import")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/import")] HttpRequest req,
             [CosmosDB(
                 databaseName: "parkingdb",
                 collectionName: "sites",

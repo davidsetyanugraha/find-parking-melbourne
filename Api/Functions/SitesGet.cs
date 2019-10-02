@@ -10,7 +10,7 @@ namespace Api.Functions
     {
         [FunctionName("SitesGet")]
         public static HttpResponseMessage Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "sites/")] HttpRequestMessage req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "sites/")] HttpRequestMessage req,
             [CosmosDB(
                 databaseName: "parkingdb",
                 collectionName: "sites",

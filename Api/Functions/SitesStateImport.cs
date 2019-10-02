@@ -13,6 +13,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Microsoft.Azure.WebJobs.Extensions.Http;
 
 namespace Api.Functions
 {
@@ -24,7 +25,7 @@ namespace Api.Functions
         [FunctionName("SitesStateImport")]
         public static async Task<IActionResult> RunAsync(
             //[TimerTrigger("0 */2 * * * *")]TimerInfo myTimer,
-            [HttpTrigger(Microsoft.Azure.WebJobs.Extensions.Http.AuthorizationLevel.Anonymous, "post", Route = "sites/state/import")] Microsoft.AspNetCore.Http.HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/import")] Microsoft.AspNetCore.Http.HttpRequest req,
             [CosmosDB(ConnectionStringSetting = "CosmosDBConnectionString")] DocumentClient documentClient,
             ILogger log)
         {
