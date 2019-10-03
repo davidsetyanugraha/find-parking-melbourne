@@ -35,6 +35,7 @@ namespace Api.Functions
         }
 
         //https://markheath.net/post/azure-functions-rest-csharp-bindings
+        //http://dontcodetired.com/blog/post/Different-Ways-to-Parse-Http-Request-Data-in-Http-triggered-Azure-Functions
         [FunctionName("SitesStateUpdate")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "sites/state/{id}")] Command command,
