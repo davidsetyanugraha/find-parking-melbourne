@@ -1,4 +1,4 @@
-package com.unimelbs.parkingassistant;
+package com.unimelbs.parkingassistant.db;
 
 import android.app.Application;
 

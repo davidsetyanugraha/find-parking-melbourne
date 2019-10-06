@@ -1,4 +1,4 @@
-package com.unimelbs.parkingassistant;
+package com.unimelbs.parkingassistant.db;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;

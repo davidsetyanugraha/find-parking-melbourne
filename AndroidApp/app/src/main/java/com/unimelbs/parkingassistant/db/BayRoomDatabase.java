@@ -1,4 +1,4 @@
-package com.unimelbs.parkingassistant;
+package com.unimelbs.parkingassistant.db;
 
 import android.content.Context;
 
@@ -6,7 +6,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities={Bay.class},version=1)
+@Database(entities={Bay.class},version=1, exportSchema = false)
 public abstract class BayRoomDatabase extends RoomDatabase {
     public abstract BayDao bayDao();
 

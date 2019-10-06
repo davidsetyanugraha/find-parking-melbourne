@@ -20,12 +20,13 @@ import com.google.android.libraries.places.api.model.Place;
 
 import java.util.Arrays;
 import java.util.List;
-
+import com.unimelbs.parkingassistant.util.*;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private static final String TAG = "TEPA";
+    private static String apiKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +88,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void initializeGoogleMapsPlacesApis(){
 
-        MapsActivity.apiKey = getResources().getString(R.string.api_key_googlemaps);
+        //MapsActivity.apiKey = getResources().getString(R.string.api_key_googlemaps);
+        MapsActivity.apiKey = getResources().getString(R.string.google_maps_key);
         // Initialize the Places SDK
         Places.initialize(getApplicationContext(), apiKey);
         // Create a new Places client instance

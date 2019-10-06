@@ -1,5 +1,5 @@
 
-package com.unimelbs.parkingassistant;
+package com.unimelbs.parkingassistant.util;
 
 import android.Manifest;
 import android.app.Activity;
