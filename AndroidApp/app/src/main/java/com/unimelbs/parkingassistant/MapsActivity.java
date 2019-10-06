@@ -33,6 +33,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+
         initializeGoogleMapsPlacesApis();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -58,7 +59,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         try {
             autocompleteFragment.setPlaceFields(placeFields);
         } catch (NullPointerException e) {
-            Log.d("NP", "Null Pointer Exception while setting Place Fields to Retrieve");
+            Log.d(TAG, "Null Pointer Exception while setting Place Fields to Retrieve");
             e.printStackTrace();
         }
 
@@ -69,18 +70,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 String placeName = place.getName();
                 LatLng placeLatLng = place.getLatLng();
-
-
                 mMap.addMarker(new MarkerOptions().position(placeLatLng).title(placeName));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(placeLatLng));
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(18));
-                Log.i("LocationSetTo", "Place: " + placeName + ", " + place.getId()+ ", " + placeLatLng);
+                Log.i(TAG, "Place: " + placeName + ", " + place.getId()+ ", " + placeLatLng);
             }
 
             @Override
             public void onError(Status status) {
                 // TODO: Handle the error.
-                Log.i("onError", "An error occurred: " + status);
+                Log.i(TAG, "An error occurred: " + status);
             }
         });
 
@@ -90,10 +89,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //MapsActivity.apiKey = getResources().getString(R.string.api_key_googlemaps);
         MapsActivity.apiKey = getResources().getString(R.string.google_maps_key);
+        Log.d(TAG, "initializeGoogleMapsPlacesApis: API Key:"+apiKey);
         // Initialize the Places SDK
         Places.initialize(getApplicationContext(), apiKey);
+
         // Create a new Places client instance
         PlacesClient placesClient = Places.createClient(this);
+
 
     }
 
