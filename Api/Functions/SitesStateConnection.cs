@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using FluentValidation;
+using Api.Models;
 
 namespace Api.Functions
 {
@@ -48,6 +49,10 @@ namespace Api.Functions
         [FunctionName("SitesStateConnectionFollow")]
         public static async Task<IActionResult> Follow(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/connection/follow")] Command command,
+            [CosmosDB(
+                databaseName: "parkingdb",
+                collectionName: "sites",
+                ConnectionStringSetting = "CosmosDBConnectionString", Id = "{parkingbayid}")] SiteState siteState,
             [SignalR(HubName = "SitesState")] IAsyncCollector<SignalRGroupAction> signalRGroupActions,
             ILogger log)
         {
@@ -64,6 +69,10 @@ namespace Api.Functions
                 }));
             }
 
+            if (siteState == null) {
+                return new NotFoundResult();
+            }
+
             log.LogInformation($"Client {command.ConnectionId} registering to follow bay {command.ParkingBayId}.");
             
             // var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
@@ -75,7 +84,7 @@ namespace Api.Functions
                     Action = GroupAction.Add
                 });
 
-            return (ActionResult)new OkResult();
+            return (ActionResult)new OkObjectResult(siteState);
         }
 
         [FunctionName("SitesStateConnectionUnfollow")]
