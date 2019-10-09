@@ -20,6 +20,10 @@ import com.google.android.libraries.places.api.model.Place;
 
 import java.util.Arrays;
 import java.util.List;
+
+import com.unimelbs.parkingassistant.model.Bay;
+import com.unimelbs.parkingassistant.model.DataFeed;
+import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
 import com.unimelbs.parkingassistant.util.*;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -86,17 +90,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void initializeGoogleMapsPlacesApis(){
-
-        //MapsActivity.apiKey = getResources().getString(R.string.api_key_googlemaps);
         MapsActivity.apiKey = getResources().getString(R.string.google_maps_key);
-        Log.d(TAG, "initializeGoogleMapsPlacesApis: API Key:"+apiKey);
         // Initialize the Places SDK
         Places.initialize(getApplicationContext(), apiKey);
-
         // Create a new Places client instance
         PlacesClient placesClient = Places.createClient(this);
-
-
     }
 
 
@@ -113,12 +111,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
-        // Add a marker in Sydney and move the camera
-        LatLng uom = new LatLng(-37.798122, 144.960814);
-        mMap.addMarker(new MarkerOptions().position(uom).title("Our Uni"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(uom));
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(18));
-
+        DataFeed data = new DataFeed();
+        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<Bay>(this,mMap,data);
+        mMap.setOnCameraIdleListener(extendedClusterManager);
+        mMap.setOnMarkerClickListener(extendedClusterManager);
+        extendedClusterManager.addItems(data.getItems());
 
     }
 }
