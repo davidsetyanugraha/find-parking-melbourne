@@ -1,24 +1,37 @@
 package com.unimelbs.parkingassistant.model;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
+import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
+import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataFeed implements DataFeeder {
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
+
+import static com.uber.autodispose.AutoDispose.autoDisposable;
+
+public class DataFeed implements DataFeeder, LifecycleOwner {
     private static final String TAG = "TE-DataFeed";
     private List<ClusterItem> bayList;
     public void addBays()
     {
-        String lat = "-37.79";
-        String lng = "144.96";
-        bayList = new ArrayList<ClusterItem>();
-        bayList.add(new Bay(3787, new LatLng(-37.81075000660076,144.98359695184072)));
-        bayList.add(new Bay(3793, new LatLng(-37.818099049118516,144.98935803814706)));
-        bayList.add(new Bay(4317, new LatLng(-37.818498706487105,144.98926900116132)));
-        bayList.add(new Bay(5626, new LatLng(-37.81824811551666,144.9893113154258)));
-        bayList.add(new Bay(5996, new LatLng(-37.81819774695974,144.98931981979553)));
+        ParkingApi api = ParkingApi.getInstance();
+        api.sitesGet()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP)))
+                .subscribe(value -> {System.out.println("Value:" + value.get(0).getDescription());},
+                        throwable -> Log.d(TAG+"-throwable", throwable.getMessage()),
+                        () -> Log.d(TAG+"-completed", "complete"));
     }
 
     public List<ClusterItem> getBayList() {
@@ -30,5 +43,11 @@ public class DataFeed implements DataFeeder {
     public List<ClusterItem> getItems() {
         addBays();
         return this.bayList;
+    }
+
+    @NonNull
+    @Override
+    public Lifecycle getLifecycle() {
+        return null;
     }
 }

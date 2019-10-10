@@ -1,6 +1,6 @@
 package com.unimelbs.parkingassistant;
 
-import com.unimelbs.parkingassistant.db.Bay;
+import com.unimelbs.parkingassistant.model.Bay;
 
 import java.util.Date;
 

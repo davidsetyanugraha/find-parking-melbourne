@@ -35,6 +35,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //todo: Add check if data exists
         setContentView(R.layout.activity_maps);
 
 
@@ -47,6 +48,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         activateAutoCompleteFragment();
+
 
 
     }
@@ -112,10 +114,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
         DataFeed data = new DataFeed();
+        data.addBays();
         ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<Bay>(this,mMap,data);
-        mMap.setOnCameraIdleListener(extendedClusterManager);
-        mMap.setOnMarkerClickListener(extendedClusterManager);
-        extendedClusterManager.addItems(data.getItems());
+        //mMap.setOnCameraIdleListener(extendedClusterManager);
+        //mMap.setOnMarkerClickListener(extendedClusterManager);
+        //extendedClusterManager.addItems(data.getItems());
 
     }
 }
