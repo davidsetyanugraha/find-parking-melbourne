@@ -31,12 +31,16 @@ import static com.uber.autodispose.AutoDispose.autoDisposable;
 public class DataFeed implements DataFeeder {
     private static final String TAG = "DataFeed";
     private static final String BAYS_FILE = "bays.dat";
-    private List<Site> sites;
+    //private List<Site> sites;
+
     Context context;
     File baysFile;
     //private LifecycleObserver lifecycleObserver;
     private LifecycleOwner lifecycleOwner;
     private List<ClusterItem> bayList;
+    //private List<Bay> bayList;
+
+
     public DataFeed (LifecycleOwner mainActivity,
                      Context context) {
         this.lifecycleOwner = mainActivity;
@@ -46,8 +50,9 @@ public class DataFeed implements DataFeeder {
     {
 
         loadBayList();
-        if (sites==null)
+        if (bayList==null)
         {
+
             ParkingApi api = ParkingApi.getInstance();
             api.sitesGet()
                     .subscribeOn(Schedulers.io())
@@ -56,13 +61,13 @@ public class DataFeed implements DataFeeder {
                     .subscribe(value ->
                             {
                                 Log.d(TAG, "addBays: value:"+value.size());
-                                saveBayList(value);
+                                saveBayList(convertSites(value));
                             },
                             throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
-        }
+         }
         else
         {
-            Log.d(TAG, "addBays: "+sites.size());
+            Log.d(TAG, "addBays: "+bayList.size());
         }
 
     }
@@ -86,28 +91,42 @@ public class DataFeed implements DataFeeder {
     private void loadBayList()
     {
         Log.d(TAG, "loadBayList: ");
-        try {
-
+        try
+        {
             FileInputStream fileInputStream = context.openFileInput(BAYS_FILE);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            sites = (List<Site>) objectInputStream.readObject();
-            Log.d(TAG, "loadBayList: num of sites: "+sites.size());
+            bayList = (List<ClusterItem>) objectInputStream.readObject();
+            Log.d(TAG, "loadBayList: num of sites: "+bayList.size());
+            Bay bay = (Bay) bayList.get(0);
+
+            Log.d(TAG, "loadBayList: first Bay:"+ bay.getBayId());
+            Log.d(TAG, "loadBayList: firt Bay's position:"+bay.getRawPosition()[0]);
             fileInputStream.close();
             objectInputStream.close();
         }  catch (FileNotFoundException e) {
-            Log.d(TAG, "loadBayList:"+e.getMessage());
+            Log.d(TAG, "loadBayList: FileNotFoundException: "+e.getMessage());
         } catch (Exception e) {
-            Log.d(TAG, "loadBayList:"+e.getMessage());
+            Log.d(TAG, "loadBayList: general exception: "+e.getMessage());
         }
     }
-    private void saveBayList(List<Site> list)
+    private List<Bay> convertSites(List<Site> sites)
+    {
+        List<Bay> bays = new ArrayList<>();
+        for (Site site: sites)
+        {
+            double[] position = {site.getLocation().getCoordinates().get(0),site.getLocation().getCoordinates().get(1)};
+            if (position.length==0) Log.d(TAG, "convertSites: position array is zero length");
+            bays.add(new Bay(Integer.parseInt(site.getId()), position));
+        }
+        return bays;
+    }
+    private void saveBayList(List<Bay> list)
     {
         Log.d(TAG, "saveBayList: ");
         try {
-
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            Log.d(TAG, "saveBayList: ");
+            Log.d(TAG, "saveBayList: num of serialisable sites"+list.size());
             objectOutputStream.writeObject(list);
             objectOutputStream.close();
             fileOutputStream.close();

@@ -3,13 +3,15 @@ package com.unimelbs.parkingassistant.model;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Bay implements ClusterItem {
+public class Bay implements ClusterItem, Serializable {
 
     private int bayId;
-    private LatLng position;
-    private List<LatLng> polygon;
+
+    private double[] position;
+    private List<double[]> polygon;
     private List<String> restriction;
     private String title;
     private String snippet;
@@ -20,11 +22,13 @@ public class Bay implements ClusterItem {
      * @param bayId
      * @param position
      */
-    public Bay(int bayId, LatLng position) {
+    public Bay(int bayId, double[] position) {
         this.bayId = bayId;
         this.position = position;
     }
-    public Bay(int bayId, LatLng position, List<LatLng> polygon, List<String> restriction, String title, String snippet) {
+
+
+    public Bay(int bayId, double[] position, List<double[]> polygon, List<String> restriction, String title, String snippet) {
         this.bayId = bayId;
         this.position = position;
         this.polygon = polygon;
@@ -37,7 +41,11 @@ public class Bay implements ClusterItem {
      * Getters.
      * @return
      */
-    public List<LatLng> getPolygon() {
+    public double[] getRawPosition() {return this.position;}
+
+    public int getBayId() {return bayId;}
+
+    public List<double[]> getPolygon() {
         return polygon;
     }
 
@@ -47,7 +55,7 @@ public class Bay implements ClusterItem {
 
     @Override
     public LatLng getPosition() {
-        return this.position;
+        return new LatLng(this.position[0],this.position[1]);
     }
 
 
