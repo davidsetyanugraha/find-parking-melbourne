@@ -113,7 +113,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
-        DataFeed data = new DataFeed();
+        DataFeed data = new DataFeed(this, getApplicationContext());
         data.addBays();
         ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<Bay>(this,mMap,data);
         //mMap.setOnCameraIdleListener(extendedClusterManager);
