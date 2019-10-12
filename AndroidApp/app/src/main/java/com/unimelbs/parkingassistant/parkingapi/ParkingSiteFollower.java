@@ -152,33 +152,24 @@ public class ParkingSiteFollower {
             disposable.add(d);
         }
     }
-
-//    private void Connect(String bayId) {
-//        hubConnection = HubConnectionBuilder.create(connectionUrl)
-//                .build();
-//
-//        //Type targetClassType = new TypeToken<ArrayList<Object>>() { }.getType();
-//        hubConnection.on("SitesState",
-//                (message) -> Log.d("PSF:SignalRConnection", message.toString()), //do here the message to outside
-//                Object.class);
-//
-//        hubConnection.onClosed((error) -> Log.d("PSF:SignalRConnection", error.getMessage()));
-//
-////        hubConnection.start().blockingAwait();
-////        hubConnection.start().doOnComplete(() -> hubConnection.invoke(Void.class, "GetConnectionId"));
-//
-//        hubConnection.start().doOnComplete(() -> {
-//            connectionId = hubConnection.getConnectionId();
-//            FollowCommand command = new FollowCommand(connectionId, "6126");
-//            //Different ways to subscribe (lambda) https://guides.codepath.com/android/Lambda-Expressions
-//            api.follow(command)
-//                    //.subscribeOn(Schedulers.io())
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP)))
-//                    .subscribe(value -> Log.d("PSF:Api", "here the value but it is void in this case"),
-//                            throwable -> Log.d("PSF:Api", throwable.getMessage()),
-//                            () -> Log.d("PSF:Api", "complete"));
-//        });
-//
-//    }
 }
+//    //Create the disposable in the class
+//    CompositeDisposable disposable = new CompositeDisposable();
+//
+//    //Connect the follower to a parking bay
+//    ParkingSiteFollower follower = ParkingSiteFollower.getInstance();
+//    Disposable d = follower.createParkingBayFollower("6126")
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
+//                .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
+//                .subscribe(bay -> {
+//                System.out.println("Value:" + bay.getId()); // sample, other values are id, status, location, zone, recordState
+//                },
+//                throwable -> Log.d("debug", throwable.getMessage()), // do this on error
+//                () -> Log.d("debug", "complete"));
+//
+//    //Dispose when disposing the service or when not needed
+//    disposable.add(d);
+
+
+
