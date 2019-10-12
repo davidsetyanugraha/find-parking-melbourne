@@ -28,7 +28,7 @@ import io.reactivex.schedulers.Schedulers;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
 
-public class DataFeed implements DataFeeder, LifecycleOwner {
+public class DataFeed implements DataFeeder {
     private static final String TAG = "DataFeed";
     private static final String BAYS_FILE = "bays.dat";
     private List<Site> sites;
@@ -44,6 +44,7 @@ public class DataFeed implements DataFeeder, LifecycleOwner {
     }
     public void addBays()
     {
+
         loadBayList();
         if (sites==null)
         {
@@ -51,19 +52,19 @@ public class DataFeed implements DataFeeder, LifecycleOwner {
             api.sitesGet()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP)))
-                    .subscribe(sites -> {
-                                Log.d(TAG, "addBays: Value:"+ sites.get(0).getDescription());
-                                saveBayList(sites);
-                                //System.out.println(TAG+"Value:" + value.get(0).getDescription());
+                    .as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
+                    .subscribe(value ->
+                            {
+                                Log.d(TAG, "addBays: value:"+value.size());
+                                saveBayList(value);
                             },
-                            throwable -> {Log.d(TAG+"-throwable", throwable.getMessage());},
-                            () -> Log.d(TAG+"-completed", "complete"));
+                            throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
         }
         else
         {
             Log.d(TAG, "addBays: "+sites.size());
         }
+
     }
 
     public List<ClusterItem> getBayList() {
@@ -78,7 +79,6 @@ public class DataFeed implements DataFeeder, LifecycleOwner {
     }
 
     @NonNull
-    @Override
     public Lifecycle getLifecycle() {
         return this.lifecycleOwner.getLifecycle();
     }
