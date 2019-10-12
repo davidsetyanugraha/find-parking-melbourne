@@ -1,20 +1,15 @@
 package com.unimelbs.parkingassistant.parkingapi;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-import com.google.gson.internal.LinkedTreeMap;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
-//import retrofit2.Call;
-//import retrofit2.Callback;
-//import retrofit2.Response;
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
@@ -48,12 +43,18 @@ public class ParkingApi {
     private Api api;
 
     public ParkingApi() {
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build();
+
         RxJava2CallAdapterFactory rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io());
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(url)
                 .addConverterFactory(GsonConverterFactory.create()) // Converter library used to convert response into POJO, can be replaced by moshi with MoshiConverterFactory
-                //.client(httpClient.build()) // check if logging is needed later https://futurestud.io/tutorials/retrofit-2-log-requests-and-responses
+                .client(okHttpClient) // check if logging is needed later https://futurestud.io/tutorials/retrofit-2-log-requests-and-responses
                 .addCallAdapterFactory(rxAdapter) //https://github.com/square/retrofit/tree/master/retrofit-adapters/rxjava2
                 .build();
         api = retrofit.create(Api.class);
