@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
@@ -28,10 +27,10 @@ public class ParkingApi {
 
     public interface Api {
         @GET("sites") //Check urls here https://inthecheesefactory.com/blog/retrofit-2.0/en?fb_comment_id=885081521586565_886605554767495
-        Observable<List<Site>> sitesGet();
+        Single<List<Site>> sitesGet();
 
         @GET("sites/state")
-        Observable<List<SiteState>> sitesStateGet(@QueryMap() Map<String, String> query);
+        Single<List<SiteState>> sitesStateGet(@QueryMap() Map<String, String> query);
 
         @POST("sites/state/connection/follow")
         Single<SiteState> follow(@Body FollowCommand params);
@@ -42,7 +41,7 @@ public class ParkingApi {
 
     private Api api;
 
-    public ParkingApi() {
+    private ParkingApi() {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
@@ -71,11 +70,11 @@ public class ParkingApi {
         return instance;
     }
 
-    public Observable<List<Site>> sitesGet() {
+    public Single<List<Site>> sitesGet() {
         return api.sitesGet();
     }
 
-    public Observable<List<SiteState>> sitesStateGet(SitesStateGetQuery query) {
+    public Single<List<SiteState>> sitesStateGet(SitesStateGetQuery query) {
         Map<String,String> parameters = new HashMap<>();
         parameters.put("latitude", String.valueOf(query.getLatitude()));
         parameters.put("longitude", String.valueOf(query.getLongitude()));
@@ -86,11 +85,11 @@ public class ParkingApi {
         return api.sitesStateGet(parameters);
     }
 
-    public Single<SiteState> follow(FollowCommand command) {
+    Single<SiteState> follow(FollowCommand command) {
         return api.follow(command);
     }
 
-    public Completable unfollow(UnfollowCommand command) {
+    Completable unfollow(UnfollowCommand command) {
         return api.unfollow(command);
     }
 }
@@ -103,10 +102,10 @@ public class ParkingApi {
 //                .observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
 //                .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
 //                .subscribe(value -> {
-//                System.out.println("Value:" + value.get(0).getDescription()); // sample, other values are id, status, location, zone, recordState
-//                },
-//                throwable -> Log.d("debug", throwable.getMessage()), // do this on error
-//                () -> Log.d("debug", "complete")); // do this on completion
+//                        System.out.println("Value:" + value.get(0).getDescription()); // sample, other values are id, status, location, zone, recordState
+//                    },
+//                    throwable -> Log.d("debug", throwable.getMessage()) // do this on error
+//                );
 //
 //
 //        SitesStateGetQuery query = new SitesStateGetQuery(-37.796201, 144.958266, null);
@@ -115,7 +114,7 @@ public class ParkingApi {
 //                .observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
 //                .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
 //                .subscribe(value -> {
-//                System.out.println("Value:" + value.get(0).getStatus()); // sample, other values are id, status, location, zone, recordState
-//                },
-//                throwable -> Log.d("debug", throwable.getMessage()), // do this on error
-//                () -> Log.d("debug", "complete")); // do this on completion
+//                        System.out.println("Value:" + value.get(0).getStatus()); // sample, other values are id, status, location, zone, recordState
+//                    },
+//                    throwable -> Log.d("debug", throwable.getMessage()) // do this on error
+//                );
