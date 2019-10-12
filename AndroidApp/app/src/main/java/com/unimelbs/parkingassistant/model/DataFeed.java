@@ -30,8 +30,7 @@ public class DataFeed implements DataFeeder, LifecycleOwner {
                 .observeOn(AndroidSchedulers.mainThread())
                 .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP)))
                 .subscribe(value -> {System.out.println("Value:" + value.get(0).getDescription());},
-                        throwable -> Log.d(TAG+"-throwable", throwable.getMessage()),
-                        () -> Log.d(TAG+"-completed", "complete"));
+                        throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
     }
 
     public List<ClusterItem> getBayList() {
