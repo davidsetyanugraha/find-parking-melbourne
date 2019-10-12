@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 //import retrofit2.Call;
 //import retrofit2.Callback;
@@ -25,6 +27,7 @@ import retrofit2.http.QueryMap;
 public class ParkingApi {
 
     private static final String url = "https://parkingappapi.azurewebsites.net/api/";
+//    private static final String url = "http://10.8.8.8:7071/api/";
 
     private static ParkingApi instance;
 
@@ -36,10 +39,10 @@ public class ParkingApi {
         Observable<List<SiteState>> sitesStateGet(@QueryMap() Map<String, String> query);
 
         @POST("sites/state/connection/follow")
-        Observable<SiteState> follow(@Body FollowCommand params);
+        Single<SiteState> follow(@Body FollowCommand params);
 
         @POST("sites/state/connection/unfollow")
-        Observable<Void> unfollow(@Body UnfollowCommand params);
+        Completable unfollow(@Body UnfollowCommand params);
     }
 
     private Api api;
@@ -82,27 +85,11 @@ public class ParkingApi {
         return api.sitesStateGet(parameters);
     }
 
-    public Observable<SiteState> follow(FollowCommand command) {
+    public Single<SiteState> follow(FollowCommand command) {
         return api.follow(command);
-//        Call call = api.follow(command);
-//
-//        call.enqueue(new Callback() {
-//            @Override
-//            public void onResponse(Call call, Response response) {
-//                /*This is the success callback. Though the response type is JSON, with Retrofit we get the response in the form of WResponse POJO class
-//                 */
-//                System.out.println("Following parking bay");
-//            }
-//            @Override
-//            public void onFailure(Call call, Throwable t) {
-//                /*
-//                Error callback
-//                */
-//            }
-//        });
     }
 
-    public Observable<Void> unfollow(UnfollowCommand command) {
+    public Completable unfollow(UnfollowCommand command) {
         return api.unfollow(command);
     }
 }
