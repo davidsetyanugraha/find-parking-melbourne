@@ -5,22 +5,17 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
-
-import com.google.android.gms.maps.model.LatLng;
-import com.google.maps.android.clustering.ClusterItem;
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
-import com.unimelbs.parkingassistant.parkingapi.Site;
-
-import java.io.File;
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -28,59 +23,83 @@ import io.reactivex.schedulers.Schedulers;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
 
-public class DataFeed implements DataFeeder {
+public class DataFeed {
     private static final String TAG = "DataFeed";
     private static final String BAYS_FILE = "bays.dat";
-    //private List<Site> sites;
+    private static final String BAYS_DETAILS_FILE = "bays_details.dat";
 
     Context context;
-    File baysFile;
-    //private LifecycleObserver lifecycleObserver;
     private LifecycleOwner lifecycleOwner;
-    private List<ClusterItem> bayList;
-    //private List<Bay> bayList;
-
+    private List<Bay> bays;
+    private Hashtable<Integer,BayDetails> baysDetailsHashtable;
 
     public DataFeed (LifecycleOwner mainActivity,
                      Context context) {
         this.lifecycleOwner = mainActivity;
         this.context = context;
+        bays = new ArrayList<>();
+        baysDetailsHashtable = new Hashtable<>();
     }
-    public void addBays()
+
+    public void fetchBays()
     {
-
-        loadBayList();
-        if (bayList==null)
+        loadBaysFromFile();
+        if (bays.size()==0)
         {
-
+            BayAdapter bayAdapter = new BayAdapter();
             ParkingApi api = ParkingApi.getInstance();
+            Log.d(TAG, "fetchBays: started");
+            long startTime = System.currentTimeMillis();
             api.sitesGet()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
                     .subscribe(value ->
                             {
-                                Log.d(TAG, "addBays: value:"+value.size());
-                                saveBayList(convertSites(value));
+                                double duration = (double) (System.currentTimeMillis()-startTime)/1000;
+                                Log.d(TAG, "fetchBays: ended: duration: "+
+                                        duration+" fetched sites:"+
+                                        value.size());
+                                bayAdapter.convertSites(value,this.bays,baysDetailsHashtable);
+                                saveBaysToFile(this.bays);
+                                saveBayDetailsToFile(this.baysDetailsHashtable);
                             },
                             throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
+
          }
         else
         {
-            Log.d(TAG, "addBays: "+bayList.size());
+            loadBayDetailsFromFile();
         }
-
     }
 
-    public List<ClusterItem> getBayList() {
-        addBays();
-        return bayList;
+    public void loadBayDetailsFromFile()
+    {
+        long startTime = System.currentTimeMillis();
+        try
+        {
+            FileInputStream fileInputStream = context.openFileInput(BAYS_DETAILS_FILE);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+            ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
+            baysDetailsHashtable = (Hashtable<Integer, BayDetails>) objectInputStream.readObject();
+            //BayDetails bayDetails = baysDetailsHashtable.values().iterator().next();
+            long duration = (System.currentTimeMillis()-startTime)/1000;
+            Log.d(TAG, "loadBayDetailsFromFile: load ended, duration:"+duration);
+
+            fileInputStream.close();
+            bufferedInputStream.close();
+            objectInputStream.close();
+        }  catch (FileNotFoundException e) {
+            Log.d(TAG, "loadBaysFromFile: FileNotFoundException: "+e.getMessage());
+        } catch (Exception e) {
+            Log.d(TAG, "loadBaysFromFile: general exception: "+e.getMessage());
+        }
     }
 
-    @Override
-    public List<ClusterItem> getItems() {
-        addBays();
-        return this.bayList;
+
+    public List<Bay> getItems() {
+        //fetchBays();
+        return this.bays;
     }
 
     @NonNull
@@ -88,45 +107,40 @@ public class DataFeed implements DataFeeder {
         return this.lifecycleOwner.getLifecycle();
     }
 
-    private void loadBayList()
+    private void loadBaysFromFile()
     {
-        Log.d(TAG, "loadBayList: ");
         try
         {
             FileInputStream fileInputStream = context.openFileInput(BAYS_FILE);
-            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            bayList = (List<ClusterItem>) objectInputStream.readObject();
-            Log.d(TAG, "loadBayList: num of sites: "+bayList.size());
-            Bay bay = (Bay) bayList.get(0);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+            ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
 
-            Log.d(TAG, "loadBayList: first Bay:"+ bay.getBayId());
-            Log.d(TAG, "loadBayList: firt Bay's position:"+bay.getRawPosition()[0]);
+            long startTime = System.currentTimeMillis();
+            bays = (List<Bay>) objectInputStream.readObject();
+            long duration = (System.currentTimeMillis()-startTime)/1000;
+            Log.d(TAG, "loadBaysFromFile: ended, duration:"+duration+" number of sites:"+bays.size());
+
+
+            Bay bay = (Bay) bays.get(0);
+            Log.d(TAG, "loadBaysFromFile: first Bay:"+ bay.getBayId());
+            Log.d(TAG, "loadBaysFromFile: firt Bay's position:"+bay.getRawPosition()[0]);
+
             fileInputStream.close();
             objectInputStream.close();
         }  catch (FileNotFoundException e) {
-            Log.d(TAG, "loadBayList: FileNotFoundException: "+e.getMessage());
+            Log.d(TAG, "loadBaysFromFile: FileNotFoundException: "+e.getMessage());
         } catch (Exception e) {
-            Log.d(TAG, "loadBayList: general exception: "+e.getMessage());
+            Log.d(TAG, "loadBaysFromFile: general exception: "+e.getMessage());
         }
     }
-    private List<Bay> convertSites(List<Site> sites)
+
+    private void saveBaysToFile(List<Bay> list)
     {
-        List<Bay> bays = new ArrayList<>();
-        for (Site site: sites)
-        {
-            double[] position = {site.getLocation().getCoordinates().get(0),site.getLocation().getCoordinates().get(1)};
-            if (position.length==0) Log.d(TAG, "convertSites: position array is zero length");
-            bays.add(new Bay(Integer.parseInt(site.getId()), position));
-        }
-        return bays;
-    }
-    private void saveBayList(List<Bay> list)
-    {
-        Log.d(TAG, "saveBayList: ");
+        Log.d(TAG, "saveBaysToFile: ");
         try {
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            Log.d(TAG, "saveBayList: num of serialisable sites"+list.size());
+            Log.d(TAG, "saveBaysToFile: num of serialisable sites"+list.size());
             objectOutputStream.writeObject(list);
             objectOutputStream.close();
             fileOutputStream.close();
@@ -135,4 +149,18 @@ public class DataFeed implements DataFeeder {
         }
     }
 
+    private void saveBayDetailsToFile(Hashtable<Integer,BayDetails> bayDetailsHashtable)
+    {
+        Log.d(TAG, "saveBaysToFile: ");
+        try {
+            FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_DETAILS_FILE, Context.MODE_PRIVATE);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            Log.d(TAG, "saveBaysToFile: num of serialisable sites"+bayDetailsHashtable.size());
+            objectOutputStream.writeObject(baysDetailsHashtable);
+            objectOutputStream.close();
+            fileOutputStream.close();
+        } catch (Exception e) {
+            Log.d(TAG, "saveBayDetailsToFile: ");
+        }
+    }
 }
