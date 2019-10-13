@@ -27,6 +27,7 @@ import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,10 +37,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private static final String TAG = "TEPA";
+    private static final String TAG = "MapActivity";
     private static String apiKey;
 
     @BindView(R.id.btn_bottom_sheet)
@@ -56,6 +58,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //todo: Add check if data exists
         setContentView(R.layout.activity_maps);
         ButterKnife.bind(this);
 
@@ -191,6 +194,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d("Parking", "Start Parking!");
 
 
+
     }
 
     private void activateAutoCompleteFragment(){
@@ -253,11 +257,36 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
-        DataFeed data = new DataFeed();
-        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<Bay>(this,mMap,data);
+        DataFeed data = new DataFeed(this, getApplicationContext());
+
+        data.fetchBays();
+        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this,mMap,data);
+        List<Bay> testBays = new ArrayList<>();
+        double[] p1 = {-37.80556999462847,144.95412584486132};
+        double[] p2 = {-37.80508340024678,144.94844545541983};
+        testBays.add(new Bay(1001,p1));
+        testBays.add(new Bay(1002,p2));
+        Log.d(TAG, "onMapReady: data.getItem().size:"+data.getItems().size());
+
+
+        //ClusterManager<Bay> clusterManager = new ClusterManager<Bay>(this,this.mMap,data);
+
         mMap.setOnCameraIdleListener(extendedClusterManager);
         mMap.setOnMarkerClickListener(extendedClusterManager);
+        //List<Bay> itemList = data.getItems();
+        //Log.d(TAG, "onMapReady: clusterItems size:"+itemList.size()+" first:"+itemList.get(0).getPosition().longitude);
+        LatLng zoom = new LatLng(p1[0],p1[1]);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoom,10));
         extendedClusterManager.addItems(data.getItems());
+
+
+        /*
+        mMap.setOnCameraIdleListener(clusterManager);
+        mMap.setOnMarkerClickListener(clusterManager);
+        List<Bay> itemList = data.getItems();
+        Log.d(TAG, "onMapReady: clusterItems size:"+itemList.size()+" first:"+itemList.get(0).getPosition().longitude);
+        clusterManager.addItems(itemList);
+        */
 
     }
 }

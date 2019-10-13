@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using FluentValidation;
 using Api.Models;
+using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents;
 
 namespace Api.Functions
 {
@@ -39,7 +41,7 @@ namespace Api.Functions
             [SignalRConnectionInfo(HubName = "SitesState")]SignalRConnectionInfo connectionInfo,
             ILogger log)
         {
-            log.LogInformation("Connection created for client.");
+            log.LogInformation($"Connection created for client {connectionInfo.Url} {connectionInfo.AccessToken}.");
 
             return connectionInfo != null
                 ? (ActionResult)new OkObjectResult(connectionInfo)
@@ -49,16 +51,10 @@ namespace Api.Functions
         [FunctionName("SitesStateConnectionFollow")]
         public static async Task<IActionResult> Follow(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/connection/follow")] Command command,
-            [CosmosDB(
-                databaseName: "parkingdb",
-                collectionName: "sites",
-                ConnectionStringSetting = "CosmosDBConnectionString", Id = "{parkingbayid}")] SiteState siteState,
+            [CosmosDB(ConnectionStringSetting = "CosmosDBConnectionString")] DocumentClient client,
             [SignalR(HubName = "SitesState")] IAsyncCollector<SignalRGroupAction> signalRGroupActions,
             ILogger log)
         {
-            // string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            // var command = JsonConvert.DeserializeObject<Command>(requestBody);
-            
             var validationResult = new CommandValidator().Validate(command);
 
             if (!validationResult.IsValid)
@@ -68,6 +64,21 @@ namespace Api.Functions
                     Error = e.ErrorMessage
                 }));
             }
+
+            DocumentResponse<SiteState> documentResponse;
+            try
+            {
+                documentResponse = await client.ReadDocumentAsync<SiteState>(
+                    UriFactory.CreateDocumentUri("parkingdb", "sitesstate", command.ParkingBayId),
+                    new RequestOptions() { PartitionKey = new PartitionKey(null) });
+            }
+            catch (DocumentClientException e) {
+                if (e.StatusCode == System.Net.HttpStatusCode.NotFound) return new NotFoundResult();
+                else throw;
+            }
+            
+
+            var siteState = documentResponse.Document;
 
             if (siteState == null) {
                 return new NotFoundResult();

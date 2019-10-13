@@ -2,17 +2,27 @@ package com.unimelbs.parkingassistant.model;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
+import com.unimelbs.parkingassistant.parkingapi.Restriction;
+import com.unimelbs.parkingassistant.parkingapi.TheGeom;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Bay implements ClusterItem {
+public class Bay implements ClusterItem, Serializable {
 
     private int bayId;
-    private LatLng position;
-    private List<LatLng> polygon;
-    private List<String> restriction;
+
+    //position[0] Lat, position[1] Lng
+    private double[] position;
+    //private List<double[]> polygon;
+    //private List<String> restriction;
     private String title;
     private String snippet;
+    private TheGeom theGeom;
+    private boolean isAvailable;
+
+
+    private List<Restriction> restrictions;
 
 
     /**
@@ -20,15 +30,24 @@ public class Bay implements ClusterItem {
      * @param bayId
      * @param position
      */
-    public Bay(int bayId, LatLng position) {
+    public Bay(int bayId, double[] position) {
         this.bayId = bayId;
         this.position = position;
     }
-    public Bay(int bayId, LatLng position, List<LatLng> polygon, List<String> restriction, String title, String snippet) {
+
+
+    public Bay(int bayId,
+               double[] position,
+               //List<double[]> polygon,
+               List<Restriction> restrictions,
+               TheGeom theGeom,
+               String title,
+               String snippet) {
         this.bayId = bayId;
         this.position = position;
-        this.polygon = polygon;
-        this.restriction = restriction;
+        //this.polygon = polygon;
+        this.restrictions = restrictions;
+        this.theGeom = theGeom;
         this.title = title;
         this.snippet = snippet;
     }
@@ -37,17 +56,20 @@ public class Bay implements ClusterItem {
      * Getters.
      * @return
      */
-    public List<LatLng> getPolygon() {
+    public double[] getRawPosition() {return this.position;}
+
+    public int getBayId() {return bayId;}
+
+    /*
+    public List<double[]> getPolygon() {
         return polygon;
     }
 
-    public List<String> getRestriction() {
-        return restriction;
-    }
+     */
 
     @Override
     public LatLng getPosition() {
-        return this.position;
+        return new LatLng(this.position[0],this.position[1]);
     }
 
 
@@ -59,5 +81,16 @@ public class Bay implements ClusterItem {
     @Override
     public String getSnippet() {
         return this.snippet;
+    }
+
+    public List<Restriction> getRestrictions() {
+        return restrictions;
+    }
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public void setAvailable(boolean available) {
+        isAvailable = available;
     }
 }
