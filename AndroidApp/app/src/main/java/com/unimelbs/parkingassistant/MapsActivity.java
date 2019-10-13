@@ -132,6 +132,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
         mMap.setOnMarkerClickListener(extendedClusterManager);
+
         //List<Bay> itemList = data.getItems();
         //Log.d(TAG, "onMapReady: clusterItems size:"+itemList.size()+" first:"+itemList.get(0).getPosition().longitude);
         LatLng zoom = new LatLng(p1[0],p1[1]);
