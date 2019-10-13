@@ -1,10 +1,13 @@
 package com.unimelbs.parkingassistant;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -41,6 +44,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @BindView(R.id.btn_bottom_sheet)
     Button btnBottomSheet;
+
+    @BindView(R.id.btn_start_parking)
+    Button btnStartParking;
 
     @BindView(R.id.bottom_sheet)
     LinearLayout layoutBottomSheet;
@@ -96,6 +102,73 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
+        TextView textView = (TextView)findViewById(R.id.alertDialogTextView);
+
+        this.showCustomViewAlertDialog(textView);
+
+    }
+
+    private void showCustomViewAlertDialog(TextView textView) {
+        final TextView textViewTmp = textView;
+
+        Button alertDialogButton = (Button)findViewById(R.id.btn_start_parking);
+
+        alertDialogButton.setOnClickListener(new View.OnClickListener() {
+
+            // Store the created AlertDialog instance.
+            // Because only AlertDialog has cancel method.
+            private AlertDialog alertDialog = null;
+
+            @Override
+            public void onClick(View view) {
+                // Create a alert dialog builder.
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+
+                // Set title value.
+                builder.setTitle("Start Parking");
+
+                // Get custom login form view.
+                final View loginFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
+                // Set above view in alert dialog.
+                builder.setView(loginFormView);
+
+                // Continue button click listener.
+                Button continueButton = (Button)loginFormView.findViewById(R.id.formContinueButton);
+                continueButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        try {
+                            // Close Alert Dialog.
+                            alertDialog.cancel();
+                            textViewTmp.setText("Parking success.");
+                        }catch(Exception ex)
+                        {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+                // Reset button click listener.
+                Button resetButton = (Button)loginFormView.findViewById(R.id.formResetButton);
+                resetButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        try {
+                            EditText duration = (EditText)loginFormView.findViewById(R.id.parkingFormDuration);
+
+                            duration.setText("");
+                        }catch(Exception ex)
+                        {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+                builder.setCancelable(true);
+                alertDialog = builder.create();
+                alertDialog.show();
+            }
+        });
     }
 
     /**
@@ -108,6 +181,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }
+    }
+
+    /**
+     * manually opening / closing bottom sheet on button click
+     */
+    @OnClick(R.id.btn_start_parking)
+    public void startParking() {
+        Log.d("Parking", "Start Parking!");
+
+
     }
 
     private void activateAutoCompleteFragment(){

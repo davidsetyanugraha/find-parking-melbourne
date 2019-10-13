@@ -1,0 +1,46 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TableLayout
+        android:id="@+id/alertDialogLoginForm"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="35dp">
+
+        <!-- Parking duration. -->
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parking Duration:"/>
+            <EditText
+                android:id="@+id/parkingFormDuration"
+                android:lines="1"
+                android:maxLines="1"
+                android:maxLength="18"/>
+        </TableRow>
+
+        <!-- Buttons row. -->
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <Button
+                android:id="@+id/formResetButton"
+                android:text="Reset"/>
+
+            <Button
+                android:id="@+id/formContinueButton"
+                android:text="Continue"/>
+
+
+
+        </TableRow>
+    </TableLayout>
+
+</LinearLayout>
