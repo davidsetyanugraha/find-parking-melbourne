@@ -2,6 +2,7 @@ package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -27,8 +28,10 @@ import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -44,6 +47,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String TAG = "MapActivity";
     private static String apiKey;
 
+    //Bottom sheet and StartParking impl
     @BindView(R.id.btn_bottom_sheet)
     Button btnBottomSheet;
 
@@ -55,13 +59,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     BottomSheetBehavior sheetBehavior;
 
+    //alarm stuff
+    private String EVENT_DATE_TIME = "2019-12-31 10:30:00";
+    private String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private LinearLayout linear_layout_1, linear_layout_2;
+    private TextView tv_hour, tv_minute, tv_second;
+    private Handler handler = new Handler();
+    private Runnable runnable;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //todo: Add check if data exists
         setContentView(R.layout.activity_maps);
         ButterKnife.bind(this);
-
 
         initializeGoogleMapsPlacesApis();
 
@@ -104,6 +116,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
+
+        initUI();
+        countDownStart();
 
         TextView textView = (TextView)findViewById(R.id.alertDialogTextView);
 
@@ -192,10 +207,55 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @OnClick(R.id.btn_start_parking)
     public void startParking() {
         Log.d("Parking", "Start Parking!");
-
-
-
     }
+
+
+    /**** Alarm Impl */
+    private void initUI() {
+        linear_layout_1 = findViewById(R.id.linear_layout_1);
+        linear_layout_2 = findViewById(R.id.linear_layout_2);
+        tv_hour = findViewById(R.id.tv_hour);
+        tv_minute = findViewById(R.id.tv_minute);
+        tv_second = findViewById(R.id.tv_second);
+    }
+
+    private void countDownStart() {
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    handler.postDelayed(this, 1000);
+                    SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+                    Date event_date = dateFormat.parse(EVENT_DATE_TIME);
+                    Date current_date = new Date();
+                    if (!current_date.after(event_date)) {
+                        long diff = event_date.getTime() - current_date.getTime();
+                        long Hours = diff / (60 * 60 * 1000) % 24;
+                        long Minutes = diff / (60 * 1000) % 60;
+                        long Seconds = diff / 1000 % 60;
+                        //
+                        tv_hour.setText(String.format("%02d", Hours));
+                        tv_minute.setText(String.format("%02d", Minutes));
+                        tv_second.setText(String.format("%02d", Seconds));
+                    } else {
+                        linear_layout_1.setVisibility(View.VISIBLE);
+                        linear_layout_2.setVisibility(View.GONE);
+                        handler.removeCallbacks(runnable);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        handler.postDelayed(runnable, 0);
+    }
+
+    protected void onStop() {
+        super.onStop();
+        handler.removeCallbacks(runnable);
+    }
+
+    /**** End of Alarm Impl */
 
     private void activateAutoCompleteFragment(){
 
