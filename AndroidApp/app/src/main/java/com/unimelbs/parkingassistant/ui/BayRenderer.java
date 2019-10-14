@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
@@ -34,12 +35,19 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> {
     @Override
     protected void onClusterItemRendered(Bay clusterItem, Marker marker) {
         super.onClusterItemRendered(clusterItem, marker);
-        if (mMap.getCameraPosition().zoom > 17) {
-            Log.d(TAG, "onClusterItemRendered: zoomed up to: " + mMap.getCameraPosition().zoom);
-        }
+        LatLng topRight = mMap.getProjection().getVisibleRegion().latLngBounds.northeast;
+        LatLng bottomLeft = mMap.getProjection().getVisibleRegion().latLngBounds.southwest;
+        try
+        {
+            if (clusterItem.isDisplayed(topRight,bottomLeft)) {
+                String msg = "Bay ID "+clusterItem.getBayId()+" is displayed"+
+                        "zoom level: "+mMap.getCameraPosition().zoom;
+                Log.d(TAG, "onClusterItemRendered:" +msg );
 
-        Log.d(TAG, "onClusterItemRendered: "+clusterItem.getBayId());
+            }
 
+        } catch (Exception e){
+            Log.d(TAG, "onClusterItemRendered: "+e.getMessage());}
     }
 
 

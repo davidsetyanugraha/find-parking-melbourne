@@ -93,4 +93,24 @@ public class Bay implements ClusterItem, Serializable {
     public void setAvailable(boolean available) {
         isAvailable = available;
     }
+
+    public boolean isDisplayed(LatLng topRight, LatLng bottomLeft) throws Exception
+    {
+        LatLng latLng = getPosition();
+        if (topRight ==null|| bottomLeft ==null)
+        {
+            throw new Exception("projection passed is null");
+        }
+
+        if (getPosition()==null)
+        {
+            throw new Exception("Bay's position is null");
+        }
+
+        if (latLng.latitude<= topRight.latitude&&
+                latLng.latitude>= bottomLeft.latitude&&
+                latLng.longitude<= topRight.longitude&&
+                latLng.longitude>= bottomLeft.longitude) return true;
+        else return false;
+    }
 }
