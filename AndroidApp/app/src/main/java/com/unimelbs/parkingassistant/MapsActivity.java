@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -28,7 +29,8 @@ import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 
-import java.util.ArrayList;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,6 +56,15 @@ public class MapsActivity extends AppCompatActivity
 
     @BindView(R.id.bottom_sheet_maps)
     LinearLayout layoutBottomSheet;
+
+    @BindView(R.id.bay_title)
+    TextView bayTitle;
+
+    @BindView(R.id.bay_position)
+    TextView bayPosition;
+
+    @BindView(R.id.bay_snippet)
+    TextView baySnippet;
 
     @BindView(R.id.btn_direction)
     Button direction;
@@ -127,11 +138,11 @@ public class MapsActivity extends AppCompatActivity
     @OnClick(R.id.btn_parking_bay)
     public void onClickParkingBay() {
         //todo: add onClick Parking bay
-        if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
-            sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        } else {
-            sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        }
+//        if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
+//            sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+//        } else {
+//            sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+//        }
     }
 
     /**
@@ -260,7 +271,7 @@ public class MapsActivity extends AppCompatActivity
         mMap.setOnCameraIdleListener(extendedClusterManager);
         mMap.setOnMarkerClickListener(extendedClusterManager);
         extendedClusterManager.addItems(data.getItems());
-        //extendedClusterManager.setOnClusterItemClickListener(this);
+        extendedClusterManager.setOnClusterItemClickListener(this);
         LatLng zoomPoint;
         if(data.getItems().size()>0){
             zoomPoint=data.getItems().get(0).getPosition();
@@ -271,9 +282,33 @@ public class MapsActivity extends AppCompatActivity
 
     @Override
     public boolean onClusterItemClick(Bay bay) {
-
         Log.d(TAG, "onClusterItemClick: bay clicked:"+bay.getBayId());
+        reRenderBottomSheet(bay);
         return false;
+    }
+
+    private void reRenderBottomSheet(@NotNull Bay bay) {
+        bayTitle.setText(Integer.toString(bay.getBayId()));
+        bayPosition.setText(bay.getPosition().toString());
+
+        String bayStatus;
+
+        if (bay.isAvailable()) {
+            bayStatus = "Available";
+            startParkingButton.setEnabled(true);
+        } else {
+            bayStatus = "Occupied";
+            startParkingButton.setEnabled(false);
+        }
+        baySnippet.setText(bayStatus);
+
+
+        if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
+            sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }
+    //        else {
+    //            sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    //        }
     }
 
 }

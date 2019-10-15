@@ -19,6 +19,7 @@
         android:weightSum="3">
 
         <TextView
+            android:id="@+id/bay_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/activity_margin"
@@ -39,6 +40,7 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/bay_position"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Paneer Tikka 1x2" />
@@ -52,14 +54,11 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/bay_snippet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Flat No 404, Skyline Apartments, Vizag - 500576" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Chicken Fried Rice 1x1" />
 
     <Button
         android:id="@+id/btn_direction"
