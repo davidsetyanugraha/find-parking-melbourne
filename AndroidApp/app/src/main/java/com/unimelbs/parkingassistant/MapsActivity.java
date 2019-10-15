@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -47,14 +46,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static String apiKey;
 
     //Bottom sheet and StartParking impl
-    @BindView(R.id.btn_bottom_sheet)
+    @BindView(R.id.btn_parking_bay)
     Button btnBottomSheet;
-
-    @BindView(R.id.btn_start_parking)
-    Button btnStartParking;
 
     @BindView(R.id.bottom_sheet)
     LinearLayout layoutBottomSheet;
+
+    @BindView(R.id.btn_direction)
+    Button direction;
+
+    @BindView(R.id.btn_start_parking)
+    Button startParkingButton;
 
     BottomSheetBehavior sheetBehavior;
 
@@ -63,25 +65,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         //todo: Add check if data exists
         setContentView(R.layout.activity_maps);
+
+        //ButterKnife is java version of https://developer.android.com/topic/libraries/view-binding
         ButterKnife.bind(this);
 
         initializeGoogleMapsPlacesApis();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        PermissionManager.reqPermission(this,this);
+        PermissionManager.reqPermission(this, this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         activateAutoCompleteFragment();
 
-        //bottom sheet behavior
+        initBottomSheetUI();
+    }
+
+    private void initBottomSheetUI() {
+
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
 
-        /**
-         * bottom sheet state change listener
-         * we are changing button text when sheet changed state
-         * */
         sheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -103,81 +107,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-
-            }
-        });
-
-
-
-        TextView textView = (TextView)findViewById(R.id.alertDialogTextView);
-
-        this.showCustomViewAlertDialog(textView);
-
-    }
-
-    private void showCustomViewAlertDialog(TextView textView) {
-        final TextView textViewTmp = textView;
-
-        Button alertDialogButton = (Button)findViewById(R.id.btn_start_parking);
-
-        alertDialogButton.setOnClickListener(new View.OnClickListener() {
-
-            // Store the created AlertDialog instance.
-            // Because only AlertDialog has cancel method.
-            private AlertDialog alertDialog = null;
-
-            @Override
-            public void onClick(View view) {
-                // Create a alert dialog builder.
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-
-                // Set title value.
-                builder.setTitle("Start Parking");
-
-                // Get custom login form view.
-                final View loginFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
-                // Set above view in alert dialog.
-                builder.setView(loginFormView);
-
-                // Continue button click listener.
-                Button continueButton = (Button)loginFormView.findViewById(R.id.formContinueButton);
-                continueButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        try {
-                            // Close Alert Dialog.
-                            EditText hour = (EditText) loginFormView.findViewById(R.id.parkingFormDuration);
-                            String strHour = hour.getText().toString();
-                            alertDialog.cancel();
-                            triggerIntent(strHour);
-//                            textViewTmp.setText("Parking success.");
-
-                        }catch(Exception ex)
-                        {
-                            ex.printStackTrace();
-                        }
-                    }
-                });
-
-                // Reset button click listener.
-                Button resetButton = (Button)loginFormView.findViewById(R.id.formResetButton);
-                resetButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        try {
-                            EditText duration = (EditText)loginFormView.findViewById(R.id.parkingFormDuration);
-
-                            duration.setText("");
-                        }catch(Exception ex)
-                        {
-                            ex.printStackTrace();
-                        }
-                    }
-                });
-
-                builder.setCancelable(true);
-                alertDialog = builder.create();
-                alertDialog.show();
             }
         });
     }
@@ -190,10 +119,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     /**
-     * manually opening / closing bottom sheet on button click
+     * OnClickLocation ParkingBay
      */
-    @OnClick(R.id.btn_bottom_sheet)
-    public void toggleBottomSheet() {
+    @OnClick(R.id.btn_parking_bay)
+    public void onClickParkingBay() {
+        //todo: add onClick Parking bay
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         } else {
@@ -202,21 +132,65 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * manually opening / closing bottom sheet on button click
+     * Bottom screen Button Start Parking OnClick
+     */
+    @OnClick(R.id.btn_direction)
+    public void direction() {
+        //todo: Add Direction Impl from other Service
+        Log.d("Direction", "direction button clicked");
+    }
+
+    /**
+     * Bottom screen Button Start Parking OnClick
      */
     @OnClick(R.id.btn_start_parking)
     public void startParking() {
-        Log.d("Parking", "Start Parking!");
+        AlertDialog alertDialog;
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+        final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
+        Button continueButton = startParkingFormView.findViewById(R.id.formContinueButton);
+
+        builder.setTitle("Start Parking");
+        builder.setView(startParkingFormView);
+
+        continueButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    EditText hour = startParkingFormView.findViewById(R.id.parkingFormDuration);
+                    String strHour = hour.getText().toString();
+                    triggerIntent(strHour);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        Button resetButton = startParkingFormView.findViewById(R.id.formResetButton);
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    EditText duration = startParkingFormView.findViewById(R.id.parkingFormDuration);
+                    duration.setText("");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        builder.setCancelable(true);
+        alertDialog = builder.create();
+        alertDialog.show();
     }
 
 
-    private void activateAutoCompleteFragment(){
+    private void activateAutoCompleteFragment() {
 
-        List<Place.Field> placeFields = Arrays.asList(Place.Field.ID, Place.Field.NAME,Place.Field.LAT_LNG);
+        List<Place.Field> placeFields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
 
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
 
 
         try {
@@ -236,7 +210,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.addMarker(new MarkerOptions().position(placeLatLng).title(placeName));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(placeLatLng));
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(18));
-                Log.i(TAG, "Place: " + placeName + ", " + place.getId()+ ", " + placeLatLng);
+                Log.i(TAG, "Place: " + placeName + ", " + place.getId() + ", " + placeLatLng);
             }
 
             @Override
@@ -248,7 +222,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void initializeGoogleMapsPlacesApis(){
+    private void initializeGoogleMapsPlacesApis() {
         MapsActivity.apiKey = getResources().getString(R.string.google_maps_key);
         // Initialize the Places SDK
         Places.initialize(getApplicationContext(), apiKey);
@@ -273,13 +247,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         DataFeed data = new DataFeed(this, getApplicationContext());
 
         data.fetchBays();
-        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this,mMap,data);
+        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
         List<Bay> testBays = new ArrayList<>();
-        double[] p1 = {-37.80556999462847,144.95412584486132};
-        double[] p2 = {-37.80508340024678,144.94844545541983};
-        testBays.add(new Bay(1001,p1));
-        testBays.add(new Bay(1002,p2));
-        Log.d(TAG, "onMapReady: data.getItem().size:"+data.getItems().size());
+        double[] p1 = {-37.80556999462847, 144.95412584486132};
+        double[] p2 = {-37.80508340024678, 144.94844545541983};
+        testBays.add(new Bay(1001, p1));
+        testBays.add(new Bay(1002, p2));
+        Log.d(TAG, "onMapReady: data.getItem().size:" + data.getItems().size());
 
 
         //ClusterManager<Bay> clusterManager = new ClusterManager<Bay>(this,this.mMap,data);
@@ -288,8 +262,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMarkerClickListener(extendedClusterManager);
         //List<Bay> itemList = data.getItems();
         //Log.d(TAG, "onMapReady: clusterItems size:"+itemList.size()+" first:"+itemList.get(0).getPosition().longitude);
-        LatLng zoom = new LatLng(p1[0],p1[1]);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoom,10));
+        LatLng zoom = new LatLng(p1[0], p1[1]);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoom, 10));
         extendedClusterManager.addItems(data.getItems());
 
 
