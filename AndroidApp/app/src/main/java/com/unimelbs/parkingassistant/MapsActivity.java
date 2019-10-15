@@ -49,7 +49,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @BindView(R.id.btn_parking_bay)
     Button btnBottomSheet;
 
-    @BindView(R.id.bottom_sheet)
+    @BindView(R.id.bottom_sheet_maps)
     LinearLayout layoutBottomSheet;
 
     @BindView(R.id.btn_direction)

@@ -24,5 +24,6 @@
     </LinearLayout>
 
     <include layout="@layout/alarm_sheet"/>
+    <include layout="@layout/bottom_sheet_parking" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
