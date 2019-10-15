@@ -11,7 +11,7 @@ import com.unimelbs.parkingassistant.model.Bay;
 import java.util.Date;
 
 /**
- * Holds data related to user's session, including details of where they
+ * Holds data2 related to user's session, including details of where they
  * parked, parking time, reminders.
  */
 public class UserSession {

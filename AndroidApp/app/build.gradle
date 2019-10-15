@@ -55,4 +55,6 @@ dependencies {
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
     //Maps Util
     implementation 'com.google.maps.android:android-maps-utils:0.6.1'
+    //Google GSON (JSON library)
+    implementation 'com.google.code.gson:gson:2.8.6'
 }

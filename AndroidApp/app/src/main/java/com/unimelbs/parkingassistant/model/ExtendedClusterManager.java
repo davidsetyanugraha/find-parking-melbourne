@@ -2,6 +2,7 @@ package com.unimelbs.parkingassistant.model;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -53,6 +54,7 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
     @Override
     public boolean onClusterItemClick(Bay bay) {
         Log.d(TAG, "onClusterItemClick: ClickedBay"+bay.getBayId()+" "+((bay.isAvailable())?"Available":"Occupied"));
+        Toast.makeText(context,bay.getBayId()+" "+((bay.isAvailable())?"Available":"Occupied"),Toast.LENGTH_LONG).show();
         return false;
     }
 

@@ -41,7 +41,7 @@ public class MapsActivity extends FragmentActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //todo: Add check if data exists
+        //todo: Add check if data2 exists
         setContentView(R.layout.activity_maps);
 
 
@@ -133,13 +133,12 @@ public class MapsActivity extends FragmentActivity
         mMap.setOnMarkerClickListener(extendedClusterManager);
         extendedClusterManager.addItems(data.getItems());
         //extendedClusterManager.setOnClusterItemClickListener(this);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(data.getItems().get(0).getPosition(),15));
-
-
-
-
-
-
+        LatLng zoomPoint;
+        if(data.getItems().size()>0){
+            zoomPoint=data.getItems().get(0).getPosition();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint,15));
+            data.saveAsJson();
+        }
     }
 
     @Override
@@ -148,4 +147,5 @@ public class MapsActivity extends FragmentActivity
         Log.d(TAG, "onClusterItemClick: bay clicked:"+bay.getBayId());
         return false;
     }
+
 }
