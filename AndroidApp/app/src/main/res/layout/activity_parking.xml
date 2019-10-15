@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#efefef"
-    tools:context=".MapsActivity">
+    tools:context=".ParkingActivity">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
@@ -13,13 +13,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:weightSum="1"
-        tools:context=".MapsActivity">
-
-        <fragment
-            android:id="@+id/autocomplete_fragment"
-            android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        tools:context=".ParkingActivity">
 
         <fragment
             android:id="@+id/map"
@@ -27,22 +21,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <TextView
-            android:id="@+id/alertDialogTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="20dp"/>
-
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_bottom_sheet"
-        android:layout_width="wrap_content"
-        android:layout_marginTop="@dimen/activity_margin"
-        android:layout_gravity="center_horizontal"
-        android:layout_height="wrap_content"
-        android:text="Click Bay" />
-
-    <include layout="@layout/bottom_sheet" />
+    <include layout="@layout/alarm_sheet"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
