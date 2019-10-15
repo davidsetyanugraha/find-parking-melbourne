@@ -22,6 +22,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
@@ -37,8 +38,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MapsActivity extends AppCompatActivity
+        implements OnMapReadyCallback,
+        ClusterManager.OnClusterItemClickListener<Bay>
+{
 
     private GoogleMap mMap;
     public static final String EXTRA_HOUR = "com.unimelbs.parkingassistant.HOUR";
@@ -63,7 +66,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //todo: Add check if data exists
+        //todo: Add check if data2 exists
         setContentView(R.layout.activity_maps);
 
         //ButterKnife is java version of https://developer.android.com/topic/libraries/view-binding
@@ -245,35 +248,32 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
         DataFeed data = new DataFeed(this, getApplicationContext());
+        //UserSession userSession = new UserSession(getApplicationContext());
+
+
+        //LatLng zoomPoint = new LatLng(userSession.getCurrentLocation().getLatitude(),userSession.getCurrentLocation().getLongitude());
+        //Log.d(TAG, "onMapReady: "+zoomPoint.latitude+","+zoomPoint.longitude);
 
         data.fetchBays();
-        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
-        List<Bay> testBays = new ArrayList<>();
-        double[] p1 = {-37.80556999462847, 144.95412584486132};
-        double[] p2 = {-37.80508340024678, 144.94844545541983};
-        testBays.add(new Bay(1001, p1));
-        testBays.add(new Bay(1002, p2));
-        Log.d(TAG, "onMapReady: data.getItem().size:" + data.getItems().size());
-
-
-        //ClusterManager<Bay> clusterManager = new ClusterManager<Bay>(this,this.mMap,data);
+        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this,mMap,data);
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
         mMap.setOnMarkerClickListener(extendedClusterManager);
-        //List<Bay> itemList = data.getItems();
-        //Log.d(TAG, "onMapReady: clusterItems size:"+itemList.size()+" first:"+itemList.get(0).getPosition().longitude);
-        LatLng zoom = new LatLng(p1[0], p1[1]);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoom, 10));
         extendedClusterManager.addItems(data.getItems());
-
-
-        /*
-        mMap.setOnCameraIdleListener(clusterManager);
-        mMap.setOnMarkerClickListener(clusterManager);
-        List<Bay> itemList = data.getItems();
-        Log.d(TAG, "onMapReady: clusterItems size:"+itemList.size()+" first:"+itemList.get(0).getPosition().longitude);
-        clusterManager.addItems(itemList);
-        */
-
+        //extendedClusterManager.setOnClusterItemClickListener(this);
+        LatLng zoomPoint;
+        if(data.getItems().size()>0){
+            zoomPoint=data.getItems().get(0).getPosition();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint,15));
+            data.saveAsJson();
+        }
     }
+
+    @Override
+    public boolean onClusterItemClick(Bay bay) {
+
+        Log.d(TAG, "onClusterItemClick: bay clicked:"+bay.getBayId());
+        return false;
+    }
+
 }

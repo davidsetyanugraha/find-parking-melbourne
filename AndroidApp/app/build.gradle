@@ -66,4 +66,7 @@ dependencies {
 
     //Date Util
     implementation 'org.apache.commons:commons-text:1.6'
+
+    //Google GSON (JSON library)
+    implementation 'com.google.code.gson:gson:2.8.6'
 }
