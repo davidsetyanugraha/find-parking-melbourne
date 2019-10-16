@@ -29,14 +29,6 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_parking_bay"
-        android:layout_width="wrap_content"
-        android:layout_marginTop="@dimen/activity_margin"
-        android:layout_gravity="center_horizontal"
-        android:layout_height="wrap_content"
-        android:text="Click Bay" />
-
     <include layout="@layout/bottom_sheet_maps" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

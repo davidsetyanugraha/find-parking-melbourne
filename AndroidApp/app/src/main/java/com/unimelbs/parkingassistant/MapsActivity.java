@@ -37,7 +37,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,9 +53,6 @@ public class MapsActivity extends AppCompatActivity
     private static String apiKey;
 
     //Bottom sheet and StartParking impl
-    @BindView(R.id.btn_parking_bay)
-    Button btnBottomSheet;
-
     @BindView(R.id.bottom_sheet_maps)
     LinearLayout layoutBottomSheet;
 
@@ -100,52 +96,14 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private void initBottomSheetUI() {
-
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
-
-        sheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        break;
-                    case BottomSheetBehavior.STATE_EXPANDED: {
-                        btnBottomSheet.setText("Close Bay");
-                    }
-                    break;
-                    case BottomSheetBehavior.STATE_COLLAPSED: {
-                        btnBottomSheet.setText("Click Bay");
-                    }
-                    break;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-            }
-        });
+        sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
     private void triggerIntent(String hour) {
         Intent intent = new Intent(this, ParkingActivity.class);
         intent.putExtra(EXTRA_HOUR, hour);
         startActivity(intent);
-    }
-
-
-    /**
-     * OnClickLocation ParkingBay
-     */
-    @OnClick(R.id.btn_parking_bay)
-    public void onClickParkingBay() {
-        //todo: add onClick Parking bay
-//        if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
-//            sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-//        } else {
-//            sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-//        }
     }
 
     /**
@@ -268,6 +226,16 @@ public class MapsActivity extends AppCompatActivity
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
         mMap.setOnMarkerClickListener(extendedClusterManager);
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng arg0)
+            {
+                Log.d(TAG, "onMapClick");
+                if (sheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+                    sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                }
+            }
+        });
         extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
         LatLng zoomPoint;
@@ -288,24 +256,12 @@ public class MapsActivity extends AppCompatActivity
         bayTitle.setText(Integer.toString(bay.getBayId()));
         bayPosition.setText(bay.getPosition().toString());
 
-        String bayStatus;
-
-        if (bay.isAvailable()) {
-            bayStatus = "Available";
-            startParkingButton.setEnabled(true);
-        } else {
-            bayStatus = "Occupied";
-            startParkingButton.setEnabled(false);
-        }
+        String bayStatus = (bay.isAvailable()) ? "Available" : "Occupied";
         baySnippet.setText(bayStatus);
-
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
-    //        else {
-    //            sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-    //        }
     }
 
 
