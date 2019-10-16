@@ -1,6 +1,8 @@
 package com.unimelbs.parkingassistant.model;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -12,15 +14,14 @@ import com.google.gson.GsonBuilder;
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
+import com.unimelbs.parkingassistant.util.Timer;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -33,7 +34,7 @@ import io.reactivex.schedulers.Schedulers;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
 
-public class DataFeed {
+public class DataFeed extends AsyncTask<Void,Void,Void> {
     private static final String TAG = "DataFeed";
     private static final String BAYS_FILE = "bays.dat";
     private static final String BAYS_DETAILS_FILE = "bays_details.dat";
@@ -41,7 +42,7 @@ public class DataFeed {
     private static final String BAYS_DETAILS_JSON_FILE = "bays_details.json";
     private static final long DAY_TO_MILLIS = 1000*60*60*24;
     private static final long MINUTE_TO_MILLIS = 1000*60;
-    private static final int FRESHNESS_INTERVAL_DAYS = 1;
+    private static final int FRESHNESS_INTERVAL_DAYS = 0;
 
     private Context context;
     private LifecycleOwner lifecycleOwner;
@@ -55,23 +56,78 @@ public class DataFeed {
         bays = new ArrayList<>();
         baysDetailsHashtable = new Hashtable<>();
     }
+    class OnlineData extends AsyncTask<Void,Void,Void>
+    {
+        private static final String TAG = "OnlineData";
+        private List<Bay> bays;
+        private Hashtable<Integer,BayDetails> baysDetailsHashtable;
+        private void fetchApiData()
+        {
+            this.bays = new ArrayList<>();
+            this.baysDetailsHashtable = new Hashtable<>();
+            BayAdapter bayAdapter = new BayAdapter();
+            ParkingApi api = ParkingApi.getInstance();
+            Log.d(TAG, "fetchApiData: started");
+            Timer timer = new Timer();
+            timer.start();
+            //Looper.prepare();
+            //Looper looper = Looper.myLooper();
+            api.sitesGet()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
+                    .subscribe(value ->
+                            {
+                                timer.stop();
+                                Log.d(TAG, "fetchApiData: ended: duration: "+
+                                        timer.getDuration()+" fetched sites:"+
+                                        value.size());
+                                ArrayList<Object> conversionResults = bayAdapter.convertSites(value);
+                                this.bays = (ArrayList<Bay>)conversionResults.get(0);
+                                this.baysDetailsHashtable = (Hashtable<Integer, BayDetails>) conversionResults.get(1);
+                                saveBaysToFile(this.bays);
+                                saveBayDetailsToFile(this.baysDetailsHashtable);
+                            },
+                            throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
+
+        }
+        @Override
+        protected Void doInBackground(Void... voids) {
+            this.fetchApiData();
+            return null;
+        }
+    }
+
 
     public void loadData()
     {
         if (dataFilesExist())
         {
-            if(isDataUptodate())
+            if(isDataFresh())
             {
+                loadBaysFromFile();
+                loadBayDetailsFromFile();
                 Log.d(TAG, "loadData: data is uptodate - loading from local file");
             }
             else
             {
+                //This should run in the background
+                //new OnlineData().execute();
+                loadBaysFromFile();
+                loadBayDetailsFromFile();
+                fetchApiData();
                 Log.d(TAG, "loadData: data is stale, showing current data " +
                         "and fetching fresh data from API Asynchronously");
             }
         }
         else
         {
+
+            //new OnlineData().execute();
+
+            loadBaysFromRaw();
+            loadBayDetailsFromRaw();
+            fetchApiData();
             Log.d(TAG, "loadData: data files don't exist. Showing data from res/raw folder"+
                     " and calling the API async to download data");
         }
@@ -89,7 +145,7 @@ public class DataFeed {
         return result;
     }
 
-    private boolean isDataUptodate()
+    private boolean isDataFresh()
     {
         boolean result=true;
         long currentTime = System.currentTimeMillis();
@@ -100,59 +156,43 @@ public class DataFeed {
         return result;
     }
 
-    public void fetchBays()
-    {
-        loadBaysFromFile();
-        if (bays.size()==0)
-        {
-            BayAdapter bayAdapter = new BayAdapter();
-            ParkingApi api = ParkingApi.getInstance();
-            Log.d(TAG, "fetchBays: started");
-            long startTime = System.currentTimeMillis();
-            api.sitesGet()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
-                    .subscribe(value ->
-                            {
-                                double duration = (double) (System.currentTimeMillis()-startTime)/1000;
-                                Log.d(TAG, "fetchBays: ended: duration: "+
-                                        duration+" fetched sites:"+
-                                        value.size());
-                                bayAdapter.convertSites(value,this.bays,baysDetailsHashtable);
-                                saveBaysToFile(this.bays);
-                                saveBayDetailsToFile(this.baysDetailsHashtable);
-                            },
-                            throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
 
-         }
-        else
+    private void loadBayDetailsFromRaw()
+    {
+        Timer timer = new Timer();
+        timer.start();
+
+        try
         {
-            loadBayDetailsFromFile();
+            BufferedInputStream bufferedInputStream =
+                    new BufferedInputStream (context.getResources().openRawResource(R.raw.bays_details));
+            ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
+            baysDetailsHashtable = (Hashtable<Integer, BayDetails>) objectInputStream.readObject();
+
+            Log.d(TAG, "loadBayDetailsFromRaw: completed in "+timer.getDuration()+" seconds. Bay details loaded: "+baysDetailsHashtable.size());
+            bufferedInputStream.close();
+            objectInputStream.close();
+        }  catch (FileNotFoundException e) {
+            Log.d(TAG, "loadBayDetailsFromRaw: FileNotFoundException: "+e.getMessage());
+        } catch (Exception e) {
+            Log.d(TAG, "loadBayDetailsFromRaw: general exception: "+e.getMessage());
         }
     }
 
-    public void loadBayDetailsFromFile()
+    private void loadBaysFromRaw()
     {
-        long startTime = System.currentTimeMillis();
+        Timer timer = new Timer();
+        timer.start();
         try
         {
-            BufferedInputStream bis =
+            BufferedInputStream bufferedInputStream =
                     new BufferedInputStream (context.getResources().openRawResource(R.raw.bays));
-
-            //context.getResources().openRawResource(R.raw.)
-            //InputStream inputStream = getResources().openRawResource(R.raw.radar_search);
-            //context.getResources().openRawResource()
-
-            FileInputStream fileInputStream = context.openFileInput(BAYS_DETAILS_FILE);
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
-            baysDetailsHashtable = (Hashtable<Integer, BayDetails>) objectInputStream.readObject();
-            //BayDetails bayDetails = baysDetailsHashtable.values().iterator().next();
-            long duration = (System.currentTimeMillis()-startTime)/1000;
-            Log.d(TAG, "loadBayDetailsFromFile: load ended, duration:"+duration);
+            bays = (List<Bay>) objectInputStream.readObject();
 
-            fileInputStream.close();
+            timer.stop();
+            Log.d(TAG, "loadBaysFromRaw: completed in "+timer.getDuration()+" seconds. Bays loaded: "+bays.size());
+
             bufferedInputStream.close();
             objectInputStream.close();
         }  catch (FileNotFoundException e) {
@@ -164,7 +204,6 @@ public class DataFeed {
 
 
     public List<Bay> getItems() {
-        //fetchBays();
         return this.bays;
     }
 
@@ -175,25 +214,18 @@ public class DataFeed {
 
     private void loadBaysFromFile()
     {
+        Timer timer = new Timer();
+        timer.start();
         try
         {
-            //FileInputStream fileInputStream = context.openFileInput(BAYS_FILE);
-            //BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-            BufferedInputStream bufferedInputStream =
-                    new BufferedInputStream (context.getResources().openRawResource(R.raw.bays));
+            FileInputStream fileInputStream = context.openFileInput(BAYS_FILE);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
 
-            long startTime = System.currentTimeMillis();
             bays = (List<Bay>) objectInputStream.readObject();
-            long duration = (System.currentTimeMillis()-startTime)/1000;
-            Log.d(TAG, "loadBaysFromFile: ended, duration:"+duration+" number of sites:"+bays.size());
-
-
-            Bay bay = (Bay) bays.get(0);
-            Log.d(TAG, "loadBaysFromFile: first Bay:"+ bay.getBayId());
-            Log.d(TAG, "loadBaysFromFile: firt Bay's position:"+bay.getRawPosition()[0]);
-
-            //fileInputStream.close();
+            timer.stop();
+            Log.d(TAG, "loadBaysFromFile: ended in "+timer.getDuration()+" seconds. Number of bays loaded:"+bays.size());
+            fileInputStream.close();
             objectInputStream.close();
         }  catch (FileNotFoundException e) {
             Log.d(TAG, "loadBaysFromFile: FileNotFoundException: "+e.getMessage());
@@ -202,28 +234,65 @@ public class DataFeed {
         }
     }
 
+    private void loadBayDetailsFromFile()
+    {
+        Timer timer = new Timer();
+        timer.start();
+        try
+        {
+            FileInputStream fileInputStream = context.openFileInput(BAYS_DETAILS_FILE);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+            ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
+
+            this.baysDetailsHashtable = (Hashtable<Integer,BayDetails>) objectInputStream.readObject();
+            timer.stop();
+            Log.d(TAG, "loadBayDetailsFromFile: ended in "+timer.getDuration()+" seconds. Number of bays loaded:"+bays.size());
+            Log.d(TAG, "loadBayDetailsFromFile: first item:"+this.baysDetailsHashtable.values().iterator().next().getRestrictions().get(0));
+            fileInputStream.close();
+            objectInputStream.close();
+        }  catch (FileNotFoundException e) {
+            Log.d(TAG, "\"loadBayDetailsFromFile: FileNotFoundException: "+e.getMessage());
+        } catch (Exception e) {
+            Log.d(TAG, "\"loadBayDetailsFromFile: general exception: "+e.getMessage());
+        }
+    }
+
     private void saveBaysToFile(List<Bay> list)
     {
         Log.d(TAG, "saveBaysToFile: ");
+        File file = new File(context.getFilesDir()+"/"+BAYS_FILE);
+        if (file.exists())
+        {
+            Log.d(TAG, "saveBaysToFile: a file exists, deleting it.");
+            file.delete();
+        }
+
+
         try {
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            Log.d(TAG, "saveBaysToFile: num of serialisable sites"+list.size());
+            Log.d(TAG, "saveBaysToFile: num of bays: "+list.size());
             objectOutputStream.writeObject(list);
             objectOutputStream.close();
             fileOutputStream.close();
         } catch (Exception e) {
-            Log.d("MainActivity", "onCreate: savePerson:"+e.getMessage());
+            Log.d(TAG, "saveBaysToFile: "+e.getMessage());
         }
     }
 
     private void saveBayDetailsToFile(Hashtable<Integer,BayDetails> bayDetailsHashtable)
     {
-        Log.d(TAG, "saveBaysToFile: ");
+        Log.d(TAG, "saveBayDetailsToFile: ");
+        File file = new File(context.getFilesDir()+"/"+BAYS_DETAILS_FILE);
+        if (file.exists())
+        {
+            Log.d(TAG, "saveBayDetailsToFile: a file exists, deleting it.");
+            file.delete();
+        }
         try {
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_DETAILS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            Log.d(TAG, "saveBaysToFile: num of serialisable sites"+bayDetailsHashtable.size());
+            Log.d(TAG, "saveBaysToFile: num of site details: "+bayDetailsHashtable.size());
             objectOutputStream.writeObject(baysDetailsHashtable);
             objectOutputStream.close();
             fileOutputStream.close();
@@ -234,7 +303,7 @@ public class DataFeed {
 
     public void saveAsJson()
     {
-        long startTime = System.currentTimeMillis();
+
         Log.d(TAG, "saveAsJson: started");
         try {
             GsonBuilder gsonBuilder = new GsonBuilder();
@@ -257,7 +326,39 @@ public class DataFeed {
         } catch (Exception e) {
             Log.d(TAG, "saveBayDetailsToFile: ");
         }
-        Log.d(TAG, "saveAsJson: duration:"+(System.currentTimeMillis()-startTime)/1000);
+
+    }
+    private void fetchApiData()
+    {
+        this.bays = new ArrayList<>();
+        this.baysDetailsHashtable = new Hashtable<>();
+        BayAdapter bayAdapter = new BayAdapter();
+        ParkingApi api = ParkingApi.getInstance();
+        Log.d(TAG, "fetchApiData: started");
+        long startTime = System.currentTimeMillis();
+        api.sitesGet()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
+                .subscribe(value ->
+                        {
+                            double duration = (double) (System.currentTimeMillis()-startTime)/1000;
+                            Log.d(TAG, "fetchApiData: ended: duration: "+
+                                    duration+" fetched sites:"+
+                                    value.size());
+                            ArrayList<Object> conversionResults = bayAdapter.convertSites(value);
+                            this.bays = (ArrayList<Bay>)conversionResults.get(0);
+                            this.baysDetailsHashtable = (Hashtable<Integer, BayDetails>) conversionResults.get(1);
+                            saveBaysToFile(this.bays);
+                            saveBayDetailsToFile(this.baysDetailsHashtable);
+                        },
+                        throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
+
     }
 
+    @Override
+    protected Void doInBackground(Void... voids) {
+        loadData();
+        return null;
+    }
 }

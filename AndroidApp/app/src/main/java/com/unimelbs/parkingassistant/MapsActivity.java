@@ -1,7 +1,10 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -259,13 +262,8 @@ public class MapsActivity extends AppCompatActivity
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
         DataFeed data = new DataFeed(this, getApplicationContext());
-        //UserSession userSession = new UserSession(getApplicationContext());
+        data.loadData();
 
-
-        //LatLng zoomPoint = new LatLng(userSession.getCurrentLocation().getLatitude(),userSession.getCurrentLocation().getLongitude());
-        //Log.d(TAG, "onMapReady: "+zoomPoint.latitude+","+zoomPoint.longitude);
-
-        data.fetchBays();
         ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this,mMap,data);
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
@@ -276,7 +274,6 @@ public class MapsActivity extends AppCompatActivity
         if(data.getItems().size()>0){
             zoomPoint=data.getItems().get(0).getPosition();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint,15));
-            data.saveAsJson();
         }
     }
 
@@ -309,6 +306,18 @@ public class MapsActivity extends AppCompatActivity
     //        else {
     //            sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     //        }
+    }
+
+
+    private boolean isInternetEnabled()
+    {
+        boolean result=false;
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        //ConnectivityManager.NetworkCallback networkCallback
+
+        return result;
     }
 
 }

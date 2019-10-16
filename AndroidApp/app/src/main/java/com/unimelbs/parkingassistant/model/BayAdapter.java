@@ -2,6 +2,8 @@ package com.unimelbs.parkingassistant.model;
 
 import android.util.Log;
 import com.unimelbs.parkingassistant.parkingapi.Site;
+
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -17,14 +19,27 @@ public class BayAdapter {
         }
     }
 
+    public ArrayList<Object> convertSites(List<Site> sites)
+    {
+        Log.d(TAG, "convertSites: ");
+        ArrayList<Bay> bays = new ArrayList<>();
+        Hashtable<Integer,BayDetails> bayDetailsHashtable = new Hashtable<>();
+        for (Site site: sites)
+        {
+            bays.add(convertSite(site));
+            bayDetailsHashtable.put(Integer.parseInt(site.getId()),convertSiteDetails(site));
+        }
+        ArrayList<Object> result = new ArrayList<>();
+        result.add(bays);
+        result.add(bayDetailsHashtable);
+        return result;
+    }
+
     public Bay convertSite(Site site)
     {
         double lat = site.getLocation().getCoordinates().get(1);
         double lng = site.getLocation().getCoordinates().get(0);
-
         double[] position = {lat,lng};
-        Log.d(TAG, "convertSite: coordinates("+lat+","+lng+"). position size:"+position.length+
-                "position: "+position[0]+","+position[1]);
         return new Bay(Integer.parseInt(site.getId()), position);
     }
 
