@@ -2,37 +2,29 @@ package com.unimelbs.parkingassistant.model;
 
 import android.util.Log;
 import com.unimelbs.parkingassistant.parkingapi.Site;
-
-import java.util.ArrayList;
-import java.util.Hashtable;
+import com.unimelbs.parkingassistant.util.Timer;
 import java.util.List;
 
 public class BayAdapter {
     private static final String TAG = "BayAdapter";
+    DataFeed dataFeed;
 
-    public void convertSites(List<Site> sites, List<Bay> bays, Hashtable<Integer,BayDetails> bayDetailsHashtable)
+    public BayAdapter(DataFeed dataFeed)
     {
-        for (Site site: sites)
-        {
-            bays.add(convertSite(site));
-            bayDetailsHashtable.put(Integer.parseInt(site.getId()),convertSiteDetails(site));
-        }
+
+        Log.d(TAG, "BayAdapter: dataFeed is:"+dataFeed);
+        this.dataFeed = dataFeed;
     }
 
-    public ArrayList<Object> convertSites(List<Site> sites)
+
+    public void convertSites(List<Site> sites)
     {
-        Log.d(TAG, "convertSites: ");
-        ArrayList<Bay> bays = new ArrayList<>();
-        Hashtable<Integer,BayDetails> bayDetailsHashtable = new Hashtable<>();
-        for (Site site: sites)
-        {
-            bays.add(convertSite(site));
-            bayDetailsHashtable.put(Integer.parseInt(site.getId()),convertSiteDetails(site));
-        }
-        ArrayList<Object> result = new ArrayList<>();
-        result.add(bays);
-        result.add(bayDetailsHashtable);
-        return result;
+        Log.d(TAG, "convertSites: started.");
+        Timer timer = new Timer();
+        timer.start();
+        for (Site site: sites){this.dataFeed.addBay(convertSite(site));}
+        timer.stop();
+        Log.d(TAG, "convertSites: completed in "+timer.getDuration()+" seconds.");
     }
 
     public Bay convertSite(Site site)
@@ -40,24 +32,13 @@ public class BayAdapter {
         double lat = site.getLocation().getCoordinates().get(1);
         double lng = site.getLocation().getCoordinates().get(0);
         double[] position = {lat,lng};
-        return new Bay(Integer.parseInt(site.getId()), position);
+        Bay bay = new Bay(Integer.parseInt(site.getId()),
+                        position,
+                        site.getRestrictions(),
+                        site.getTheGeom(),
+                        site.getDescription(),
+                        site.getDescription());
+        return bay;
     }
 
-    public BayDetails convertSiteDetails(Site site)
-    {
-        BayDetails bayDetails=null;
-        try
-        {
-            bayDetails = new BayDetails(Integer.parseInt(site.getId()),
-                    site.getRestrictions(),
-                    site.getTheGeom()
-            );
-        }
-        catch (Exception e)
-        {
-            Log.d(TAG, "convertSiteDetails: ");
-        }
-
-        return bayDetails;
-    }
 }

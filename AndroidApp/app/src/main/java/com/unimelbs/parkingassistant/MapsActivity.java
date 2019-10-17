@@ -222,8 +222,9 @@ public class MapsActivity extends AppCompatActivity
         Log.d(TAG, "onMapReady: ");
         DataFeed data = new DataFeed(this, getApplicationContext());
         data.loadData();
+        List<Bay> bayList = data.getItems();
         //data.execute();
-
+        //try {Thread.sleep(30000);}catch(Exception e){Log.d(TAG, "onMapReady: "+e.getMessage());}
         ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this,mMap,data);
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
@@ -238,10 +239,15 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
-        extendedClusterManager.addItems(data.getItems());
+        extendedClusterManager.addItems(bayList);
         extendedClusterManager.setOnClusterItemClickListener(this);
         LatLng zoomPoint;
-        if(data.getItems().size()>0){
+        if(bayList.size()>0){
+            String msg = "First bay restriction details: "+
+                    "\t"+bayList.get(0).getRestrictions().get(0).getDescription()+"\n"+
+                    "\t"+bayList.get(0).getRestrictions().get(0).getDuration()+"\n"+
+                    "\t"+bayList.get(0).getTheGeom().getCoordinates().get(0).get(0).get(0).get(0);
+            Log.d(TAG, "onMapReady: "+msg);
             zoomPoint=data.getItems().get(0).getPosition();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint,15));
         }

@@ -20,8 +20,6 @@ public class Bay implements ClusterItem, Serializable {
     private String snippet;
     private TheGeom theGeom;
     private boolean isAvailable;
-
-
     private List<Restriction> restrictions;
 
 
@@ -59,6 +57,8 @@ public class Bay implements ClusterItem, Serializable {
     public double[] getRawPosition() {return this.position;}
 
     public int getBayId() {return bayId;}
+
+    public TheGeom getTheGeom() {return this.theGeom;}
 
     /*
     public List<double[]> getPolygon() {
