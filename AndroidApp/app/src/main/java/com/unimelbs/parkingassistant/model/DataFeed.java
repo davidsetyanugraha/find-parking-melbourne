@@ -2,22 +2,19 @@ package com.unimelbs.parkingassistant.model;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Looper;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.android.gms.maps.model.LatLng;
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
+import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
 import com.unimelbs.parkingassistant.util.Timer;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,7 +23,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -44,6 +40,8 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
     private Context context;
     private LifecycleOwner lifecycleOwner;
     private List<Bay> bays;
+    private ParkingApi api;
+    //private BayStateApi bayStateApi;
 
 
     public DataFeed (LifecycleOwner mainActivity,
@@ -51,16 +49,51 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         this.lifecycleOwner = mainActivity;
         this.context = context;
         this.bays = new ArrayList<>();
+        this.api = ParkingApi.getInstance();
+        //this.bayStateApi = new BayStateApi(this);
     }
-    class OnlineData extends AsyncTask<Void,Void,Void>
+
+    /*
+    class BayStateApi extends AsyncTask<LatLng,Integer,Integer>
     {
-        private static final String TAG = "OnlineData";
+        private static final String TAG = "BayStateApi";
+        private DataFeed dataFeed;
+        public BayStateApi(DataFeed dataFeed, LatLng centrePoint)
+        {
+            this.dataFeed = dataFeed;
+        }
+        private void fetchApiData()
+        {
+            SitesStateGetQuery query = new SitesStateGetQuery(-37.796201, 144.958266, null);
+            dataFeed.api.sitesStateGet(query)
+                .subscribeOn(Schedulers.io())
+                //.observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
+                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
+                .subscribe(value ->
+                        {
+                            System.out.println("Value:" + value.get(0).getStatus()); // sample, other values are id, status, location, zone, recordState
+                        },
+                    throwable -> Log.d("debug", throwable.getMessage()) // do this on error
+                );
+        }
+
+        @Override
+        protected LatLng doInBackground(LatLng...nums) {
+            return new LatLng(50,60);//null;
+        }
+    }
+     */
+
+    class BayDataApi extends AsyncTask<Void,Void,Void>
+    {
+        private static final String TAG = "BayDataApi";
         private BayAdapter bayAdapter;
         private DataFeed dataFeed;
 
-        public OnlineData(DataFeed dataFeed)
+
+        public BayDataApi(DataFeed dataFeed)
         {
-            Log.d(TAG, "OnlineData: passed data feed is:"+dataFeed);
+            Log.d(TAG, "BayDataApi: passed data feed is:"+dataFeed);
             this.dataFeed = dataFeed;
         }
         private void fetchApiData()
@@ -108,7 +141,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
                 Log.d(TAG, "loadData: data is stale, showing current data " +
                         "and fetching fresh data from API.");
                 loadBaysFromFile();
-                new OnlineData(this).execute();
+                new BayDataApi(this).execute();
                 saveBaysToFile();
             }
         }
@@ -117,7 +150,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
             Log.d(TAG, "loadData: data files don't exist. loading from raw/bays."+
                     " Calling the API async to download data");
             loadBaysFromRaw();
-            new OnlineData(this).execute();
+            new BayDataApi(this).execute();
             saveBaysToFile();
         }
     }
@@ -222,10 +255,13 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
     }
 
 
+
+
     @Override
     protected Void doInBackground(Void... voids) {
         loadData();
         return null;
     }
+
 
 }
