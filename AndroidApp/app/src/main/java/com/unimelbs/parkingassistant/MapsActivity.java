@@ -76,6 +76,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate: "+Thread.currentThread().getName());
         //todo: Add check if data2 exists
         setContentView(R.layout.activity_maps);
 
@@ -221,6 +222,7 @@ public class MapsActivity extends AppCompatActivity
         Log.d(TAG, "onMapReady: ");
         DataFeed data = new DataFeed(this, getApplicationContext());
         data.loadData();
+        //data.execute();
 
         ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this,mMap,data);
 

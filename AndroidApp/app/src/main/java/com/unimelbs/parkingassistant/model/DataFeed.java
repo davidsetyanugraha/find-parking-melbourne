@@ -63,19 +63,17 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         private Hashtable<Integer,BayDetails> baysDetailsHashtable;
         private void fetchApiData()
         {
+            Log.d(TAG, "fetchApiData: started on thread:"+Thread.currentThread().getName());
             this.bays = new ArrayList<>();
             this.baysDetailsHashtable = new Hashtable<>();
             BayAdapter bayAdapter = new BayAdapter();
             ParkingApi api = ParkingApi.getInstance();
-            Log.d(TAG, "fetchApiData: started");
             Timer timer = new Timer();
             timer.start();
-            //Looper.prepare();
-            //Looper looper = Looper.myLooper();
             api.sitesGet()
                     .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
+                    //.observeOn(AndroidSchedulers.mainThread())
+                    //.as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
                     .subscribe(value ->
                             {
                                 timer.stop();
@@ -101,23 +99,25 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
 
     public void loadData()
     {
+        Log.d(TAG, "loadData: loading data started on thread: "+Thread.currentThread().getName());
         if (dataFilesExist())
         {
             if(isDataFresh())
             {
+                Log.d(TAG, "loadData: data is fresh - loading from local file.");
                 loadBaysFromFile();
                 loadBayDetailsFromFile();
-                Log.d(TAG, "loadData: data is uptodate - loading from local file");
             }
             else
             {
+                Log.d(TAG, "loadData: data is stale, showing current data " +
+                        "and fetching fresh data from API.");
                 //This should run in the background
                 //new OnlineData().execute();
                 loadBaysFromFile();
                 loadBayDetailsFromFile();
-                fetchApiData();
-                Log.d(TAG, "loadData: data is stale, showing current data " +
-                        "and fetching fresh data from API Asynchronously");
+                new OnlineData().execute();
+                //fetchApiData();
             }
         }
         else
@@ -127,7 +127,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
 
             loadBaysFromRaw();
             loadBayDetailsFromRaw();
-            fetchApiData();
+            new OnlineData().execute();
             Log.d(TAG, "loadData: data files don't exist. Showing data from res/raw folder"+
                     " and calling the API async to download data");
         }
@@ -338,8 +338,8 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         long startTime = System.currentTimeMillis();
         api.sitesGet()
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
+                //.observeOn(AndroidSchedulers.mainThread())
+                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
                 .subscribe(value ->
                         {
                             double duration = (double) (System.currentTimeMillis()-startTime)/1000;
