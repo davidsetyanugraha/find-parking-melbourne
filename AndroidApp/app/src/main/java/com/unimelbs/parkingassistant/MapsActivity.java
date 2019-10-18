@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -59,11 +58,14 @@ public class MapsActivity extends AppCompatActivity
     @BindView(R.id.bay_title)
     TextView bayTitle;
 
-    @BindView(R.id.bay_position)
-    TextView bayPosition;
-
     @BindView(R.id.bay_snippet)
     TextView baySnippet;
+
+    @BindView(R.id.bay_status)
+    TextView bayStatus;
+
+    @BindView(R.id.bay_restriction)
+    TextView bayRestriction;
 
     @BindView(R.id.btn_direction)
     Button direction;
@@ -261,11 +263,26 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
-        bayTitle.setText(Integer.toString(bay.getBayId()));
-        bayPosition.setText(bay.getPosition().toString());
+        String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
+        String position = bay.getPosition().latitude + " , "+ bay.getPosition().longitude;
+        String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
+        bayTitle.setText(title);
+        bayStatus.setText(bayStatusMsg);
 
-        String bayStatus = (bay.isAvailable()) ? "Available" : "Occupied";
-        baySnippet.setText(bayStatus);
+        String restrictionMsg = "";
+
+        for (int i = 0; i < bay.getRestrictions().size(); i++) {
+            restrictionMsg = restrictionMsg +
+                    "Restriction " + (i+1) +": \n"+
+                    "\t"+bay.getRestrictions().get(i).getDescription()+"\n"+
+                    "\t"+bay.getRestrictions().get(i).getDuration()+"\n";
+        }
+
+
+        bayRestriction.setText(restrictionMsg);
+
+
+        baySnippet.setText("BayId = "+Integer.toString(bay.getBayId()));
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);

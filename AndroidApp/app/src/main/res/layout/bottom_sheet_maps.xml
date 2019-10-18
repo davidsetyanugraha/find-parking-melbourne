@@ -24,26 +24,19 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/activity_margin"
             android:layout_weight="2"
-            android:text="Parking Details"
             android:textColor="#444"
             android:textSize="18dp"
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/bay_status"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="right"
-            android:text="2P"
             android:textSize="15dp"
             android:textStyle="bold" />
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/bay_position"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Paneer Tikka 1x2" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -57,8 +50,13 @@
         android:id="@+id/bay_snippet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Flat No 404, Skyline Apartments, Vizag - 500576" />
+       />
 
+    <TextView
+        android:id="@+id/bay_restriction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
 
     <Button
         android:id="@+id/btn_direction"

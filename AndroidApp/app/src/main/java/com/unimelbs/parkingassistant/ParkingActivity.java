@@ -150,7 +150,7 @@ public class ParkingActivity extends AppCompatActivity {
     }
 
     /**
-     * Bottom screen Button Start Parking OnClick
+     * Bottom screen Button Stop Parking OnClick
      */
     @OnClick(R.id.btn_stop_parking)
     public void stopParking() {
