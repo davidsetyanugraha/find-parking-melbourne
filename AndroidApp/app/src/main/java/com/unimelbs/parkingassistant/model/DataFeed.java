@@ -11,6 +11,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
+import com.unimelbs.parkingassistant.parkingapi.SiteState;
 import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
 import com.unimelbs.parkingassistant.util.Timer;
 
@@ -23,6 +24,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -35,11 +37,12 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
     private static final String BAYS_FILE = "bays";
     private static final long DAY_TO_MILLIS = 1000*60*60*24;
     private static final long MINUTE_TO_MILLIS = 1000*60;
-    private static final int FRESHNESS_INTERVAL_DAYS = 0;
+    private static final int FRESHNESS_INTERVAL_DAYS = 1;
 
     private Context context;
     private LifecycleOwner lifecycleOwner;
     private List<Bay> bays;
+    private Hashtable<Integer,Bay> baysHashtable;
     private ParkingApi api;
     //private BayStateApi bayStateApi;
 
@@ -53,11 +56,12 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         //this.bayStateApi = new BayStateApi(this);
     }
 
-    /*
-    class BayStateApi extends AsyncTask<LatLng,Integer,Integer>
+/*
+    class BayStateApi extends AsyncTask<Void,Void,List<SiteState>>
     {
         private static final String TAG = "BayStateApi";
         private DataFeed dataFeed;
+        private List<SiteState> baysStates;
         public BayStateApi(DataFeed dataFeed, LatLng centrePoint)
         {
             this.dataFeed = dataFeed;
@@ -71,18 +75,21 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
                 //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
                 .subscribe(value ->
                         {
+                            baysStates = value;
                             System.out.println("Value:" + value.get(0).getStatus()); // sample, other values are id, status, location, zone, recordState
                         },
                     throwable -> Log.d("debug", throwable.getMessage()) // do this on error
                 );
         }
 
+
         @Override
-        protected LatLng doInBackground(LatLng...nums) {
-            return new LatLng(50,60);//null;
+        protected Void doInBackground(Void...params) {
+            fetchApiData();
+            return null; //new LatLng(50,60);//null;
         }
     }
-     */
+ */
 
     class BayDataApi extends AsyncTask<Void,Void,Void>
     {
