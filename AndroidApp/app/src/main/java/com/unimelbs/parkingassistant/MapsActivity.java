@@ -1,10 +1,19 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -27,10 +37,16 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.maps.android.clustering.ClusterManager;
+import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
+import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.util.PermissionManager;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,9 +54,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.lifecycle.Lifecycle;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.schedulers.Schedulers;
+
+import static com.uber.autodispose.AutoDispose.autoDisposable;
 
 public class MapsActivity extends AppCompatActivity
         implements OnMapReadyCallback,
@@ -51,6 +74,13 @@ public class MapsActivity extends AppCompatActivity
     public static final String EXTRA_HOUR = "com.unimelbs.parkingassistant.HOUR";
     private static final String TAG = "MapActivity";
     private static String apiKey;
+    private Bay selectedBay;
+    // This is the Notification Channel ID.
+    public static final String NOTIFICATION_CHANNEL_ID = "channel_id";
+    //User visible Channel Name
+    public static final String CHANNEL_NAME = "Notification Channel";
+
+
 
     //Bottom sheet and StartParking impl
     @BindView(R.id.bottom_sheet_maps)
@@ -108,12 +138,79 @@ public class MapsActivity extends AppCompatActivity
     }
 
     /**
-     * Bottom screen Button Start Parking OnClick
+     * Bottom screen Button Direction OnClick
      */
     @OnClick(R.id.btn_direction)
     public void direction() {
         //todo: Add Direction Impl from other Service
         Log.d("Direction", "direction button clicked");
+
+        //if(this.selectedBay.isAvailable())
+        if (true)
+        {
+
+
+            LatLng selectedBayLatLng = this.selectedBay.getPosition();
+            String lat = String.valueOf(selectedBayLatLng.latitude);
+            String lon = String.valueOf(selectedBayLatLng.longitude);
+
+
+            // Part of the code below is taken from
+            // https://stackoverflow.com/questions/
+            // 2662531/launching-google-maps-directions
+            // -via-an-intent-on-android?rq=1
+
+            Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat+","+lon);
+            Log.d("Navigation Uri", "Navigation URI is " + navigationIntentUri);
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
+
+
+
+            try
+            {
+                startActivity(mapIntent);
+                subscribeToServerForUpdates(this.selectedBay);
+            }
+            catch(ActivityNotFoundException ex)
+            {
+                try
+                {
+                    Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
+                    startActivity(unrestrictedIntent);
+                }
+                catch(ActivityNotFoundException innerEx)
+                {
+                    Toast.makeText(this, "No Map Application Found, Opening In Browser", Toast.LENGTH_LONG).show();
+                    try {
+                        Uri.Builder builder = new Uri.Builder();
+                        builder.scheme("https")
+                                .authority("www.google.com")
+                                .appendPath("maps")
+                                .appendPath("dir")
+                                .appendPath("")
+                                .appendQueryParameter("api", "1")
+                                .appendQueryParameter("destination", lat + "," + lon);
+                        String url = builder.build().toString();
+                        Log.d("Directions", url);
+                        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        i.setData(Uri.parse(url));
+                        startActivity(i);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.d("Failure", "Failed To Open any navigation method " + e.getMessage() );
+
+                    }
+                }
+            }
+
+        }
+        else {
+            Toast.makeText(this, "Selected Bay Is Occupied.", Toast.LENGTH_LONG).show();
+
+        }
+
     }
 
     /**
@@ -121,6 +218,7 @@ public class MapsActivity extends AppCompatActivity
      */
     @OnClick(R.id.btn_start_parking)
     public void startParking() {
+        //bayStatusChangeNotification();
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
@@ -243,6 +341,7 @@ public class MapsActivity extends AppCompatActivity
         extendedClusterManager.setOnClusterItemClickListener(this);
         LatLng zoomPoint;
         if(bayList.size()>0){
+
             String msg = "First bay restriction details: "+
                     "\t"+bayList.get(0).getRestrictions().get(0).getDescription()+"\n"+
                     "\t"+bayList.get(0).getRestrictions().get(0).getDuration()+"\n"+
@@ -256,11 +355,13 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public boolean onClusterItemClick(Bay bay) {
         Log.d(TAG, "onClusterItemClick: bay clicked:"+bay.getBayId());
+
         reRenderBottomSheet(bay);
         return false;
     }
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
+        this.selectedBay = bay;
         bayTitle.setText(Integer.toString(bay.getBayId()));
         bayPosition.setText(bay.getPosition().toString());
 
@@ -283,5 +384,100 @@ public class MapsActivity extends AppCompatActivity
 
         return result;
     }
+
+    private void subscribeToServerForUpdates(@NotNull Bay selectedBay)
+    {
+
+    CompositeDisposable disposable = new CompositeDisposable();
+
+    //Connect the follower to a parking bay
+    ParkingSiteFollower follower = ParkingSiteFollower.getInstance();
+    Disposable d = follower.createParkingBayFollower(Integer.toString(selectedBay.getBayId()))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
+                .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
+                .subscribe(bay -> {
+                            //Log.v("Notification", "Value:" + bay.getId() + " status of the bay is: " + bay.getStatus()); // sample, other values are id, status, location, zone, recordState
+                            bayStatusChangeNotification();
+                        },
+                throwable -> Log.d("debug", throwable.getMessage()), // do this on error
+                () -> Log.d("debug", "complete"));
+
+    //Dispose when disposing the service or when not needed
+    //disposable.add(d);
+
+    }
+
+    public void bayStatusChangeNotification() {
+
+
+        final int NOTIFICATION_ID = 101;
+        String tittle= "Status Changed";
+        String subject= "Parking Bay Status Changed ";
+        String body= " The status of Selected Parking Bay has changed. Please select a different bay.";
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // Importance applicable to all the notifications in this Channel
+
+
+        //Notification channel should only be created for devices running Android 26
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+
+            NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, CHANNEL_NAME, importance);
+            //Boolean value to set if lights are enabled for Notifications from this Channel
+            notificationChannel.enableLights(true);
+            //Boolean value to set if vibration are enabled for Notifications from this Channel
+            notificationChannel.enableVibration(true);
+            //Sets the color of Notification Light
+            notificationChannel.setLightColor(Color.GREEN);
+            //Set the vibration pattern for notifications. Pattern is in milliseconds with the format {delay,play,sleep,play,sleep...}
+            notificationChannel.setVibrationPattern(new long[] {
+                    500,
+                    500,
+                    500,
+                    500,
+                    500
+            });
+            //Sets whether notifications from these Channel should be visible on Lockscreen or not
+            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            notificationManager.createNotificationChannel(notificationChannel);
+
+        }
+
+        // Notification Channel ID passed
+        // as a parameter here will be
+        // ignored for all the
+        // Android versions below 8.0
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+        builder.setContentTitle("Bay Status");
+        builder.setContentText("The status of selected bay has been changed, Tap to Redirect to app");
+        builder.setSmallIcon(R.drawable.ic_launcher_background);
+        builder.setPriority(NotificationCompat.PRIORITY_MAX);
+        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
+
+        Intent intent = new Intent(this, MapsActivity.class);
+
+        new Intent(this, MapsActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1001, intent, 0);
+        //Following will set the tap action
+        builder.setContentIntent(pendingIntent);
+
+
+        //PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1002, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        //builder.addAction(R.drawable.ic_launcher_background, "Redirect to Nearest Bay", pendingIntent);
+        //builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.icon));
+        Notification notification = builder.build();
+
+
+
+
+        notificationManager.notify(NOTIFICATION_ID, notification);
+
+
+
+        Toast.makeText(this, "Selected Bay Status Has Been Changed", Toast.LENGTH_LONG).show();
+    }
+
 
 }
