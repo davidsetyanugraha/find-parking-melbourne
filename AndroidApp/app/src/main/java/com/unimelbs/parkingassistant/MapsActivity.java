@@ -30,6 +30,7 @@ import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
 import com.unimelbs.parkingassistant.util.PermissionManager;
+import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -136,6 +137,7 @@ public class MapsActivity extends AppCompatActivity
             public void onClick(View view) {
                 try {
                     EditText hour = startParkingFormView.findViewById(R.id.parkingFormDuration);
+
                     String strHour = hour.getText().toString();
                     triggerIntent(strHour);
                 } catch (Exception ex) {
@@ -269,19 +271,8 @@ public class MapsActivity extends AppCompatActivity
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
 
-        String restrictionMsg = "";
-
-        for (int i = 0; i < bay.getRestrictions().size(); i++) {
-            restrictionMsg = restrictionMsg +
-                    "Restriction " + (i+1) +": \n"+
-                    "\t"+bay.getRestrictions().get(i).getDescription()+"\n"+
-                    "\t"+bay.getRestrictions().get(i).getDuration()+"\n";
-        }
-
-
-        bayRestriction.setText(restrictionMsg);
-
-
+        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
+        bayRestriction.setText(bayRestrictionString);
         baySnippet.setText("BayId = "+Integer.toString(bay.getBayId()));
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
