@@ -154,9 +154,10 @@ public class MapsActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy() { //should not unbind the service onStop
-                                 // otherwise it wont interact with server.
+    protected void onDestroy() {
 
+        //should not unbind the service onStop
+        // otherwise it wont interact with server.
         bayUpdateService.disposeSubscription();
         unbindService(connection);
         bayUpdateServiceBound = false;
@@ -168,6 +169,7 @@ public class MapsActivity extends AppCompatActivity
     private void initBottomSheetUI() {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        
     }
 
     private void triggerIntent(String hour) {
