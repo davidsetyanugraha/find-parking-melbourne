@@ -11,6 +11,7 @@ import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.unimelbs.parkingassistant.model.Bay;
+import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
 
 public class BayRenderer extends DefaultClusterRenderer<Bay> {
@@ -18,6 +19,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> {
     private GoogleMap mMap;
     private ClusterManager<Bay> clusterManager;
     private static final String TAG="BayRenderer";
+    private DataFeed dataFeed;
 
     public BayRenderer(Context context, GoogleMap mMap, ClusterManager<Bay> clusterManager)
     {
@@ -27,8 +29,20 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> {
         this.clusterManager = clusterManager;
     }
 
+    public BayRenderer(Context context, 
+                       GoogleMap mMap, 
+                       ClusterManager<Bay> clusterManager,
+                       DataFeed dataFeed)
+    {
+        this(context,mMap,clusterManager);
+        this.dataFeed = dataFeed;
+        
+    }
+
     public void updateBayState(int bayId)
     {
+
+        Log.d(TAG, "updateBayState: ");
 
     }
 

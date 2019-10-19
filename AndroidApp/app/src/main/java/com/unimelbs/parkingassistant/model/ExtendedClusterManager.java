@@ -68,15 +68,12 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
 
     @Override
     public boolean onClusterItemClick(Bay bay) {
-        Log.d(TAG, "onClusterItemClick: ClickedBay"+bay.getBayId()+" "+((bay.isAvailable())?"Available":"Occupied"));
-        Toast.makeText(context,bay.getBayId()+" "+((bay.isAvailable())?"Available":"Occupied"),Toast.LENGTH_LONG).show();
         return false;
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
         super.onMarkerClick(marker);
-        //Log.d(TAG, "onMarkerClick: "+marker.getId());
         return false;
     }
 

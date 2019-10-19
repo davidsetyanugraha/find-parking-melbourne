@@ -332,11 +332,7 @@ public class MapsActivity extends AppCompatActivity
         LatLng zoomPoint;
         if (bayList.size() > 0) {
 
-            String msg = "First bay restriction details: " +
-                    "\t" + bayList.get(0).getRestrictions().get(0).getDescription() + "\n" +
-                    "\t" + bayList.get(0).getRestrictions().get(0).getDuration() + "\n" +
-                    "\t" + bayList.get(0).getTheGeom().getCoordinates().get(0).get(0).get(0).get(0);
-            Log.d(TAG, "onMapReady: " + msg);
+            Log.d(TAG, "onMapReady: Bay items loaded on map.");
             zoomPoint = data.getItems().get(0).getPosition();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
         }
