@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.unimelbs.parkingassistant.model.Bay;
+import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -27,13 +29,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static com.unimelbs.parkingassistant.util.PreferenceManager.PREFERENCE_NAME;
+import static com.unimelbs.parkingassistant.util.PreferenceManager.clearPreference;
+
 public class ParkingActivity extends AppCompatActivity {
 
     //alarm stuff (deprecated)
     private String EVENT_DATE_TIME = "2019-12-31 10:30:00";
     private String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     //alarm stuff
-
     private static final String TAG = "ParkingActivity";
     private Bay selectedBay;
 
@@ -56,6 +60,10 @@ public class ParkingActivity extends AppCompatActivity {
     @BindView(R.id.btn_stop_parking)
     Button stopParkingButton;
 
+    @BindView(R.id.btn_direction)
+    Button directionButton;
+
+
     //count down view
     @BindView(R.id.linear_layout_1)
     LinearLayout linear_layout_1;
@@ -72,12 +80,14 @@ public class ParkingActivity extends AppCompatActivity {
     @BindView(R.id.tv_second)
     TextView tv_second;
 
+    Date endParkingDate;
+
 
     private Handler handler = new Handler();
     private Runnable runnable;
 
     BottomSheetBehavior sheetBehavior;
-
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,14 +96,24 @@ public class ParkingActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         String hourMsg = intent.getStringExtra(MapsActivity.HOUR);
-        this.selectedBay = (Bay) intent.getSerializableExtra(MapsActivity.SELECTED_BAY);
 
-        Log.d(TAG,"park at: "+selectedBay.getTitle());
+        this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
+        if (PreferenceManager.isAvailable(this.prefs)) {
+            Log.d(TAG, "User is having ongoing parking!");
+            this.selectedBay = PreferenceManager.getBayFromSharedPreference(this.prefs);
+            this.endParkingDate = PreferenceManager.getEndDateFromSharedPreference(this.prefs);
+        } else {
+            Log.d(TAG, "User doesn't have ongoing parking!");
+            this.selectedBay = (Bay) intent.getSerializableExtra(MapsActivity.SELECTED_BAY);
+            this.endParkingDate = (Date) DateUtils.addHours(new Date(), Integer.parseInt(hourMsg));
+            PreferenceManager.saveBayToSharedPreferences(this.selectedBay, this.prefs);
+            PreferenceManager.saveEndDateToSharedPreferences(this.endParkingDate, this.prefs);
+        }
 
         //ButterKnife is java version of https://developer.android.com/topic/libraries/view-binding
         ButterKnife.bind(this);
 
-        countDownStart(Integer.parseInt(hourMsg));
+        countDownStart();
 
         initBottomSheetUI();
     }
@@ -121,9 +141,7 @@ public class ParkingActivity extends AppCompatActivity {
         }
     }
 
-    private void countDownStart(int hour) {
-        Date event_date = DateUtils.addHours(new Date(), hour);
-
+    private void countDownStart() {
         runnable = new Runnable() {
             @Override
             public void run() {
@@ -132,8 +150,8 @@ public class ParkingActivity extends AppCompatActivity {
 
                     Date current_date = new Date();
 
-                    if (!current_date.after(event_date)) {
-                        long diff = event_date.getTime() - current_date.getTime();
+                    if (!current_date.after(endParkingDate)) {
+                        long diff = endParkingDate.getTime() - current_date.getTime();
                         long Hours = diff / (60 * 60 * 1000) % 24;
                         long Minutes = diff / (60 * 1000) % 60;
                         long Seconds = diff / 1000 % 60;
@@ -171,6 +189,7 @@ public class ParkingActivity extends AppCompatActivity {
         builder.setMessage("Are you sure to Stop Parking?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        clearPreference(prefs);
                         goToMapsActivity();
                     }
                 })
@@ -186,6 +205,14 @@ public class ParkingActivity extends AppCompatActivity {
         builder.setCancelable(true);
         alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    /**
+     * Bottom screen Button Direction OnClick
+     */
+    @OnClick(R.id.btn_direction)
+    public void direction() {
+        Log.d(TAG,"OnClick: Direction");
     }
 
     private void goToMapsActivity() {
