@@ -44,6 +44,7 @@ import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -345,8 +346,8 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public boolean onClusterItemClick(Bay bay) {
         Log.d(TAG, "onClusterItemClick: bay clicked:" + bay.getBayId());
-
-        reRenderBottomSheet(bay);
+        selectedBay = SerializationUtils.clone(bay);
+        reRenderBottomSheet(selectedBay);
         return false;
     }
 
@@ -356,7 +357,6 @@ public class MapsActivity extends AppCompatActivity
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
-
 
         String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
         bayRestriction.setText(bayRestrictionString);
