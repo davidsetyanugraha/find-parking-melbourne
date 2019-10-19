@@ -21,7 +21,7 @@ public class RestrictionsHelper {
         for (int i = 0; i < restrictions.size(); i++) {
 
         }
-        return false;
+        return true;
     }
 
     public static String getInvalidReason(List<Restriction> restrictions, String strHour) {

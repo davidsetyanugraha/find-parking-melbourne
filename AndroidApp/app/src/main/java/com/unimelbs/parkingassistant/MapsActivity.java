@@ -213,10 +213,11 @@ public class MapsActivity extends AppCompatActivity
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
-        Button continueButton = startParkingFormView.findViewById(R.id.formContinueButton);
+        Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
         builder.setTitle("Start Parking");
         builder.setView(startParkingFormView);
+        alertDialog = builder.create();
 
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -234,6 +235,8 @@ public class MapsActivity extends AppCompatActivity
                         Toast.makeText(getApplicationContext(),
                                 RestrictionsHelper.getInvalidReason(selectedBay.getRestrictions(), strHour),
                                 Toast.LENGTH_LONG).show();
+                    } else {
+                        triggerIntent(strHour);
                     }
 
                 } catch (Exception ex) {
@@ -242,21 +245,21 @@ public class MapsActivity extends AppCompatActivity
             }
         });
 
-        Button resetButton = startParkingFormView.findViewById(R.id.formResetButton);
+        Button resetButton = startParkingFormView.findViewById(R.id.formCancelButton);
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
                     EditText duration = startParkingFormView.findViewById(R.id.parkingFormDuration);
                     duration.setText("");
+                    alertDialog.cancel();
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         });
 
-        builder.setCancelable(true);
-        alertDialog = builder.create();
+        builder.setCancelable(false);
         alertDialog.show();
     }
 
