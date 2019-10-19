@@ -23,9 +23,9 @@ namespace Api.Functions
         static string parkingApiUrl = "https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?%24limit=100000";
         
         [FunctionName("SitesStateImport")]
-        public static async Task<IActionResult> RunAsync(
-            //[TimerTrigger("0 */2 * * * *")]TimerInfo myTimer,
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/import")] Microsoft.AspNetCore.Http.HttpRequest req,
+        public static async Task RunAsync(
+            [TimerTrigger("0 */2 * * * *")]TimerInfo myTimer,
+            //[HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/import")] Microsoft.AspNetCore.Http.HttpRequest req,
             [CosmosDB(ConnectionStringSetting = "CosmosDBConnectionString")] DocumentClient documentClient,
             ILogger log)
         {
@@ -102,7 +102,7 @@ namespace Api.Functions
                 //     new RequestOptions() { PartitionKey = new PartitionKey(null) });
             }
 
-            return new NoContentResult();
+            // return new NoContentResult();
         }
     }
 }
