@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 
@@ -176,6 +177,56 @@ public class MapsActivity extends AppCompatActivity
         startActivity(intent);
     }
 
+    private void navigateToTheSelectedBay()
+    {
+        LatLng selectedBayLatLng = this.selectedBay.getPosition();
+        String lat = String.valueOf(selectedBayLatLng.latitude);
+        String lon = String.valueOf(selectedBayLatLng.longitude);
+
+
+        // Part of the code below is taken from
+        // https://stackoverflow.com/questions/
+        // 2662531/launching-google-maps-directions
+        // -via-an-intent-on-android?rq=1
+
+        Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon);
+        Log.d("Navigation Uri", "Navigation URI is " + navigationIntentUri);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+
+
+        try {
+
+            startActivity(mapIntent);
+
+        } catch (ActivityNotFoundException ex) {
+            try {
+                Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
+                startActivity(unrestrictedIntent);
+            } catch (ActivityNotFoundException innerEx) {
+                Toast.makeText(this, "No Map Application Found, Opening In Browser", Toast.LENGTH_LONG).show();
+                try {
+                    Uri.Builder builder = new Uri.Builder();
+                    builder.scheme("https")
+                            .authority("www.google.com")
+                            .appendPath("maps")
+                            .appendPath("dir")
+                            .appendPath("")
+                            .appendQueryParameter("api", "1")
+                            .appendQueryParameter("destination", lat + "," + lon);
+                    String url = builder.build().toString();
+                    Log.d("Directions", url);
+                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    i.setData(Uri.parse(url));
+                    startActivity(i);
+                } catch (Exception e) {
+                    Log.d("Failure", "Failed To Open any navigation method " + e.getMessage());
+
+                }
+            }
+        }
+    }
+
     /**
      * Bottom screen Button Direction OnClick
      */
@@ -184,60 +235,32 @@ public class MapsActivity extends AppCompatActivity
         //todo: Add Direction Impl from other Service
         Log.d("Direction", "direction button clicked");
 
-        //if(this.selectedBay.isAvailable())
-        if (true) //TODO USe the above line once the site statuses are clear. Right now all are occupied.
+        if(this.selectedBay.isAvailable())
 
         {
-
-
-            LatLng selectedBayLatLng = this.selectedBay.getPosition();
-            String lat = String.valueOf(selectedBayLatLng.latitude);
-            String lon = String.valueOf(selectedBayLatLng.longitude);
-
-
-            // Part of the code below is taken from
-            // https://stackoverflow.com/questions/
-            // 2662531/launching-google-maps-directions
-            // -via-an-intent-on-android?rq=1
-
-            Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon);
-            Log.d("Navigation Uri", "Navigation URI is " + navigationIntentUri);
-            Intent mapIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-            mapIntent.setPackage("com.google.android.apps.maps");
-
-
-            try {
-                bayUpdateService.subscribeToServerForUpdates(this.selectedBay);
-                startActivity(mapIntent);
-
-            } catch (ActivityNotFoundException ex) {
-                try {
-                    Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-                    startActivity(unrestrictedIntent);
-                } catch (ActivityNotFoundException innerEx) {
-                    Toast.makeText(this, "No Map Application Found, Opening In Browser", Toast.LENGTH_LONG).show();
-                    try {
-                        Uri.Builder builder = new Uri.Builder();
-                        builder.scheme("https")
-                                .authority("www.google.com")
-                                .appendPath("maps")
-                                .appendPath("dir")
-                                .appendPath("")
-                                .appendQueryParameter("api", "1")
-                                .appendQueryParameter("destination", lat + "," + lon);
-                        String url = builder.build().toString();
-                        Log.d("Directions", url);
-                        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        i.setData(Uri.parse(url));
-                        startActivity(i);
-                    } catch (Exception e) {
-                        Log.d("Failure", "Failed To Open any navigation method " + e.getMessage());
-
-                    }
-                }
-            }
+            bayUpdateService.subscribeToServerForUpdates(this.selectedBay);
 
         } else {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+            // Add the buttons
+            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    navigateToTheSelectedBay();
+                }
+            });
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User cancelled the dialog
+                }
+            });
+            builder.setMessage("The Bay is occupied. Do you Still want to Navigate")
+                    .setTitle("Bay Status");
+
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
             Toast.makeText(this, "Selected Bay Is Occupied.", Toast.LENGTH_LONG).show();
 
         }
