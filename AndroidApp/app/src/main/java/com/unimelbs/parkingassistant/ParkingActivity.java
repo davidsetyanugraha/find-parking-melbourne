@@ -60,6 +60,10 @@ public class ParkingActivity extends AppCompatActivity {
     @BindView(R.id.btn_stop_parking)
     Button stopParkingButton;
 
+    @BindView(R.id.btn_direction)
+    Button directionButton;
+
+
     //count down view
     @BindView(R.id.linear_layout_1)
     LinearLayout linear_layout_1;
@@ -201,6 +205,14 @@ public class ParkingActivity extends AppCompatActivity {
         builder.setCancelable(true);
         alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    /**
+     * Bottom screen Button Direction OnClick
+     */
+    @OnClick(R.id.btn_direction)
+    public void direction() {
+        Log.d(TAG,"OnClick: Direction");
     }
 
     private void goToMapsActivity() {
