@@ -11,11 +11,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
-
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -47,10 +44,6 @@ import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -58,20 +51,20 @@ import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.lifecycle.Lifecycle;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
 
 public class MapsActivity extends AppCompatActivity
         implements OnMapReadyCallback,
-        ClusterManager.OnClusterItemClickListener<Bay>
-{
+        ClusterManager.OnClusterItemClickListener<Bay> {
 
     private GoogleMap mMap;
     public static final String EXTRA_HOUR = "com.unimelbs.parkingassistant.HOUR";
@@ -82,7 +75,6 @@ public class MapsActivity extends AppCompatActivity
     public static final String NOTIFICATION_CHANNEL_ID = "channel_id";
     //User visible Channel Name
     public static final String CHANNEL_NAME = "Notification Channel";
-
 
 
     //Bottom sheet and StartParking impl
@@ -112,7 +104,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate: "+Thread.currentThread().getName());
+        Log.d(TAG, "onCreate: " + Thread.currentThread().getName());
         //todo: Add check if data2 exists
         setContentView(R.layout.activity_maps);
 
@@ -167,29 +159,21 @@ public class MapsActivity extends AppCompatActivity
             // 2662531/launching-google-maps-directions
             // -via-an-intent-on-android?rq=1
 
-            Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat+","+lon);
+            Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon);
             Log.d("Navigation Uri", "Navigation URI is " + navigationIntentUri);
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
             mapIntent.setPackage("com.google.android.apps.maps");
 
 
-
-
-            try
-            {
+            try {
                 subscribeToServerForUpdates(this.selectedBay);
                 startActivity(mapIntent);
 
-            }
-            catch(ActivityNotFoundException ex)
-            {
-                try
-                {
+            } catch (ActivityNotFoundException ex) {
+                try {
                     Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
                     startActivity(unrestrictedIntent);
-                }
-                catch(ActivityNotFoundException innerEx)
-                {
+                } catch (ActivityNotFoundException innerEx) {
                     Toast.makeText(this, "No Map Application Found, Opening In Browser", Toast.LENGTH_LONG).show();
                     try {
                         Uri.Builder builder = new Uri.Builder();
@@ -205,17 +189,14 @@ public class MapsActivity extends AppCompatActivity
                         Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         i.setData(Uri.parse(url));
                         startActivity(i);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.d("Failure", "Failed To Open any navigation method " + e.getMessage() );
+                    } catch (Exception e) {
+                        Log.d("Failure", "Failed To Open any navigation method " + e.getMessage());
 
                     }
                 }
             }
 
-        }
-        else {
+        } else {
             Toast.makeText(this, "Selected Bay Is Occupied.", Toast.LENGTH_LONG).show();
 
         }
@@ -333,14 +314,13 @@ public class MapsActivity extends AppCompatActivity
         List<Bay> bayList = data.getItems();
         //data.execute();
         //try {Thread.sleep(30000);}catch(Exception e){Log.d(TAG, "onMapReady: "+e.getMessage());}
-        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this,mMap,data);
+        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
         mMap.setOnMarkerClickListener(extendedClusterManager);
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
-            public void onMapClick(LatLng arg0)
-            {
+            public void onMapClick(LatLng arg0) {
                 Log.d(TAG, "onMapClick");
                 if (sheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
                     sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -350,42 +330,37 @@ public class MapsActivity extends AppCompatActivity
         extendedClusterManager.addItems(bayList);
         extendedClusterManager.setOnClusterItemClickListener(this);
         LatLng zoomPoint;
-        if(bayList.size()>0){
+        if (bayList.size() > 0) {
 
-            String msg = "First bay restriction details: "+
-                    "\t"+bayList.get(0).getRestrictions().get(0).getDescription()+"\n"+
-                    "\t"+bayList.get(0).getRestrictions().get(0).getDuration()+"\n"+
-                    "\t"+bayList.get(0).getTheGeom().getCoordinates().get(0).get(0).get(0).get(0);
-            Log.d(TAG, "onMapReady: "+msg);
-            zoomPoint=data.getItems().get(0).getPosition();
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint,15));
+            String msg = "First bay restriction details: " +
+                    "\t" + bayList.get(0).getRestrictions().get(0).getDescription() + "\n" +
+                    "\t" + bayList.get(0).getRestrictions().get(0).getDuration() + "\n" +
+                    "\t" + bayList.get(0).getTheGeom().getCoordinates().get(0).get(0).get(0).get(0);
+            Log.d(TAG, "onMapReady: " + msg);
+            zoomPoint = data.getItems().get(0).getPosition();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
         }
     }
 
     @Override
     public boolean onClusterItemClick(Bay bay) {
-        Log.d(TAG, "onClusterItemClick: bay clicked:"+bay.getBayId());
+        Log.d(TAG, "onClusterItemClick: bay clicked:" + bay.getBayId());
 
         reRenderBottomSheet(bay);
         return false;
     }
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
-
-        this.selectedBay = bay;
-        bayTitle.setText(Integer.toString(bay.getBayId()));
-        bayPosition.setText(bay.getPosition().toString());
-
         String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
-        String position = bay.getPosition().latitude + " , "+ bay.getPosition().longitude;
+        String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
-\
+
 
         String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
         bayRestriction.setText(bayRestrictionString);
-        baySnippet.setText("BayId = "+Integer.toString(bay.getBayId()));
+        baySnippet.setText("BayId = " + Integer.toString(bay.getBayId()));
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
@@ -393,9 +368,8 @@ public class MapsActivity extends AppCompatActivity
     }
 
 
-    private boolean isInternetEnabled()
-    {
-        boolean result=false;
+    private boolean isInternetEnabled() {
+        boolean result = false;
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -405,14 +379,13 @@ public class MapsActivity extends AppCompatActivity
     }
 
 
-    private void subscribeToServerForUpdates(@NotNull Bay selectedBay)
-    {
+    private void subscribeToServerForUpdates(@NotNull Bay selectedBay) {
 
-    CompositeDisposable disposable = new CompositeDisposable();
+        CompositeDisposable disposable = new CompositeDisposable();
 
-    //Connect the follower to a parking bay
-    ParkingSiteFollower follower = ParkingSiteFollower.getInstance();
-    Disposable d = follower.createParkingBayFollower(Integer.toString(selectedBay.getBayId()))
+        //Connect the follower to a parking bay
+        ParkingSiteFollower follower = ParkingSiteFollower.getInstance();
+        Disposable d = follower.createParkingBayFollower(Integer.toString(selectedBay.getBayId()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
                 .as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
@@ -420,11 +393,11 @@ public class MapsActivity extends AppCompatActivity
                             //Log.v("Notification", "Value:" + bay.getId() + " status of the bay is: " + bay.getStatus()); // sample, other values are id, status, location, zone, recordState
                             bayStatusChangeNotification();
                         },
-                throwable -> Log.d("debug", throwable.getMessage()), // do this on error
-                () -> Log.d("debug", "complete"));
+                        throwable -> Log.d("debug", throwable.getMessage()), // do this on error
+                        () -> Log.d("debug", "complete"));
 
-    //Dispose when disposing the service or when not needed
-    //disposable.add(d);
+        //Dispose when disposing the service or when not needed
+        //disposable.add(d);
 
     }
 
@@ -432,9 +405,9 @@ public class MapsActivity extends AppCompatActivity
 
 
         final int NOTIFICATION_ID = 101;
-        String title= "Bay Status Changed";
-        String subject= "Parking Bay Status Changed ";
-        String body= "The status of selected bay has been changed, Tap to Redirect to app";
+        String title = "Bay Status Changed";
+        String subject = "Parking Bay Status Changed ";
+        String body = "The status of selected bay has been changed, Tap to Redirect to app";
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         // Importance applicable to all the notifications in this Channel
 
@@ -451,7 +424,7 @@ public class MapsActivity extends AppCompatActivity
             //Sets the color of Notification Light
             notificationChannel.setLightColor(Color.GREEN);
             //Set the vibration pattern for notifications. Pattern is in milliseconds with the format {delay,play,sleep,play,sleep...}
-            notificationChannel.setVibrationPattern(new long[] {
+            notificationChannel.setVibrationPattern(new long[]{
                     500,
                     500,
                     500,
@@ -490,15 +463,11 @@ public class MapsActivity extends AppCompatActivity
         Notification notification = builder.build();
 
 
-
-
         notificationManager.notify(NOTIFICATION_ID, notification);
-
 
 
         Toast.makeText(this, "Selected Bay Status Has Been Changed", Toast.LENGTH_LONG).show();
     }
-
 
 
 }
