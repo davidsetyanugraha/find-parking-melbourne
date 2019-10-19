@@ -184,8 +184,8 @@ public class MapsActivity extends AppCompatActivity
         //todo: Add Direction Impl from other Service
         Log.d("Direction", "direction button clicked");
 
-        //if(this.selectedBay.isAvailable())
-        if (true) //TODO USe the above line once the site statuses are clear. Right now all are occupied.
+        if(this.selectedBay.isAvailable())
+        //if (true) //TODO USe the above line once the site statuses are clear. Right now all are occupied.
 
         {
 
