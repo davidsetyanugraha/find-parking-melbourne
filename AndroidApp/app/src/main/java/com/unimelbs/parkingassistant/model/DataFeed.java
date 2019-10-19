@@ -52,7 +52,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
     }
 
 /*
-    class BayStateApi extends AsyncTask<Void,Void,List<SiteState>>
+    class BayStateApi extends AsyncTask<Void,Void,Void>
     {
         private static final String TAG = "BayStateApi";
         private DataFeed dataFeed;

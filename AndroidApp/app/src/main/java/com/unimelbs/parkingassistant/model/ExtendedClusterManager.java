@@ -5,6 +5,7 @@ import android.location.Location;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -60,30 +61,41 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
         LatLng topRight = mMap.getProjection().getVisibleRegion().latLngBounds.northeast;
         LatLng bottomLeft = mMap.getProjection().getVisibleRegion().latLngBounds.southwest;
 
+        LatLng cameraFocus = mMap.getCameraPosition().target;
+
         //Used to calculate distance shown on screen
         LatLng topLeft = new LatLng(topRight.latitude,bottomLeft.longitude);
-        long height = Math.round(DistanceUtil.getDistanceS(topLeft,bottomLeft));
-        long width =  Math.round(DistanceUtil.getDistanceS(topRight,topLeft));
-        long diameter = Math.round(Math.sqrt((height*height)+(width*width)));
-        String msg = "height: "+height+", width: "+width+", diameter: "+diameter+", radius:"+diameter/2;
-        Log.d(TAG, "onCameraIdle: height:"+msg);
+
 
         //Calculating the radius of the circle including the Visible rectangle of the map.
         long radius =Math.round(DistanceUtil.getDistanceS(topRight,bottomLeft)/2);
+        Log.d(TAG, "onCameraIdle: current view radius:"+radius);
+
         if (radius<250)
         {
             if (circleCentre==null)
             {
+                
                 circleCentre = mMap.getCameraPosition().target;
+                Log.d(TAG, "onCameraIdle: initial circle set. Position:"+circleCentre.toString());
             }
             else
             {
-
+                long cameraMoveDistance =
+                        Math.round(DistanceUtil.getDistanceS(circleCentre,cameraFocus));
+                long boundary = cameraMoveDistance+radius;
+                if (boundary>STATE_API_CIRCLE_RADIUS)
+                {
+                    Log.d(TAG, "onCameraIdle: Moved out of the boundary Need to call the state API again");
+                    mMap.moveCamera(CameraUpdateFactory.zoomBy(0.0001f));
+                    circleCentre=cameraFocus;
+                }
+                else
+                {
+                    Log.d(TAG, "onCameraIdle: moving within boundaries.");
+                }
             }
         }
-
-
-        Log.d(TAG, "onClusterItemRendered: radius:"+radius+" meters.");
     }
 
     @Override

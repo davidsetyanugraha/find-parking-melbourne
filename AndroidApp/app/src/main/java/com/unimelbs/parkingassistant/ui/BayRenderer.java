@@ -14,7 +14,9 @@ import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
 
-public class BayRenderer extends DefaultClusterRenderer<Bay> {
+public class BayRenderer extends DefaultClusterRenderer<Bay>
+    implements GoogleMap.OnCameraIdleListener    
+    {
     private Context context;
     private GoogleMap mMap;
     private ClusterManager<Bay> clusterManager;
@@ -27,6 +29,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> {
         this.context = context;
         this.mMap = mMap;
         this.clusterManager = clusterManager;
+
     }
 
     public BayRenderer(Context context, 
@@ -72,5 +75,9 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> {
             Log.d(TAG, "onClusterItemRendered: "+e.getMessage());}
     }
 
-
-}
+        @Override
+        public void onCameraIdle() {
+            Log.d(TAG, "onCameraIdle: ");
+                    
+        }
+    }
