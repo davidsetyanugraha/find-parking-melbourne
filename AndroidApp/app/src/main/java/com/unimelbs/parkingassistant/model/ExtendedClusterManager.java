@@ -28,6 +28,9 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
     private GoogleMap mMap;
     private final float AVAILABLE_BAY_COLOR = BitmapDescriptorFactory.HUE_GREEN;
     private final float OCCUPIED_BAY_COLOR = BitmapDescriptorFactory.HUE_RED;
+    private final double STATE_API_CIRCLE_RADIUS = 1000;
+    private LatLng circleCentre;
+
 
 
     /**
@@ -59,9 +62,26 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
 
         //Used to calculate distance shown on screen
         LatLng topLeft = new LatLng(topRight.latitude,bottomLeft.longitude);
+        long height = Math.round(DistanceUtil.getDistanceS(topLeft,bottomLeft));
+        long width =  Math.round(DistanceUtil.getDistanceS(topRight,topLeft));
+        long diameter = Math.round(Math.sqrt((height*height)+(width*width)));
+        String msg = "height: "+height+", width: "+width+", diameter: "+diameter+", radius:"+diameter/2;
+        Log.d(TAG, "onCameraIdle: height:"+msg);
 
-        long radius =Math.round(DistanceUtil.getDistanceS(topLeft,topRight)/2);
-                //Location.distanceBetween(topLeft.latitude,topLeft.longitude,topRight.latitude,topRight.longitude,);
+        //Calculating the radius of the circle including the Visible rectangle of the map.
+        long radius =Math.round(DistanceUtil.getDistanceS(topRight,bottomLeft)/2);
+        if (radius<250)
+        {
+            if (circleCentre==null)
+            {
+                circleCentre = mMap.getCameraPosition().target;
+            }
+            else
+            {
+
+            }
+        }
+
 
         Log.d(TAG, "onClusterItemRendered: radius:"+radius+" meters.");
     }
