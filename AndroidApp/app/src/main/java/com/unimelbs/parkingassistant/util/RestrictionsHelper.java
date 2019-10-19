@@ -17,14 +17,17 @@ public class RestrictionsHelper {
         return  restrictionMsg;
     }
 
-//    public static String checkHour(List<Restriction> restrictions, ) {
-//        String restrictionMsg = "";
-//        for (int i = 0; i < restrictions.size(); i++) {
-//            restrictionMsg = restrictionMsg +
-//                    "Restriction " + (i+1) +": \n"+
-//                    "\t"+restrictions.get(i).getDescription()+"\n"+
-//                    "\t"+restrictions.get(i).getDuration()+"\n";
-//        }
-//        return  restrictionMsg;
-//    }
+    public static boolean isValid(List<Restriction> restrictions, String strHour) {
+        for (int i = 0; i < restrictions.size(); i++) {
+
+        }
+        return false;
+    }
+
+    public static String getInvalidReason(List<Restriction> restrictions, String strHour) {
+        for (int i = 0; i < restrictions.size(); i++) {
+
+        }
+        return "Invalid Input";
+    }
 }

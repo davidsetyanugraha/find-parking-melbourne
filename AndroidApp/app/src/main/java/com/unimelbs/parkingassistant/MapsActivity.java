@@ -223,9 +223,19 @@ public class MapsActivity extends AppCompatActivity
             public void onClick(View view) {
                 try {
                     EditText hour = startParkingFormView.findViewById(R.id.parkingFormDuration);
-
                     String strHour = hour.getText().toString();
-                    triggerIntent(strHour);
+
+                    //@todo add validation from selectedBay
+                    if (strHour.isEmpty()) {
+                        Toast.makeText(getApplicationContext(),
+                                "Input cannot be blank",
+                                Toast.LENGTH_LONG).show();
+                    } else if (! RestrictionsHelper.isValid(selectedBay.getRestrictions(), strHour)){
+                        Toast.makeText(getApplicationContext(),
+                                RestrictionsHelper.getInvalidReason(selectedBay.getRestrictions(), strHour),
+                                Toast.LENGTH_LONG).show();
+                    }
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
