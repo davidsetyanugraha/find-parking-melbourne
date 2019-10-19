@@ -44,6 +44,7 @@ import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -67,7 +68,8 @@ public class MapsActivity extends AppCompatActivity
         ClusterManager.OnClusterItemClickListener<Bay> {
 
     private GoogleMap mMap;
-    public static final String EXTRA_HOUR = "com.unimelbs.parkingassistant.HOUR";
+    public static final String HOUR = "com.unimelbs.parkingassistant.HOUR";
+    public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
     private static final String TAG = "MapActivity";
     private static String apiKey;
     private Bay selectedBay;
@@ -131,7 +133,8 @@ public class MapsActivity extends AppCompatActivity
 
     private void triggerIntent(String hour) {
         Intent intent = new Intent(this, ParkingActivity.class);
-        intent.putExtra(EXTRA_HOUR, hour);
+        intent.putExtra(HOUR, hour);
+        intent.putExtra(SELECTED_BAY, selectedBay);
         startActivity(intent);
     }
 
@@ -212,40 +215,53 @@ public class MapsActivity extends AppCompatActivity
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
-        Button continueButton = startParkingFormView.findViewById(R.id.formContinueButton);
+        Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
         builder.setTitle("Start Parking");
         builder.setView(startParkingFormView);
+        alertDialog = builder.create();
 
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
                     EditText hour = startParkingFormView.findViewById(R.id.parkingFormDuration);
-
                     String strHour = hour.getText().toString();
-                    triggerIntent(strHour);
+
+                    //@todo add validation from selectedBay
+                    if (strHour.isEmpty()) {
+                        Toast.makeText(getApplicationContext(),
+                                "Input cannot be blank",
+                                Toast.LENGTH_LONG).show();
+                    } else if (! RestrictionsHelper.isValid(selectedBay.getRestrictions(), strHour)){
+                        Toast.makeText(getApplicationContext(),
+                                RestrictionsHelper.getInvalidReason(selectedBay.getRestrictions(), strHour),
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        triggerIntent(strHour);
+                    }
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         });
 
-        Button resetButton = startParkingFormView.findViewById(R.id.formResetButton);
+        Button resetButton = startParkingFormView.findViewById(R.id.formCancelButton);
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
                     EditText duration = startParkingFormView.findViewById(R.id.parkingFormDuration);
                     duration.setText("");
+                    alertDialog.cancel();
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         });
 
-        builder.setCancelable(true);
-        alertDialog = builder.create();
+        builder.setCancelable(false);
         alertDialog.show();
     }
 
@@ -341,8 +357,8 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public boolean onClusterItemClick(Bay bay) {
         Log.d(TAG, "onClusterItemClick: bay clicked:" + bay.getBayId());
-
-        reRenderBottomSheet(bay);
+        selectedBay = SerializationUtils.clone(bay);
+        reRenderBottomSheet(selectedBay);
         return false;
     }
 
@@ -352,7 +368,6 @@ public class MapsActivity extends AppCompatActivity
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
-
 
         String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
         bayRestriction.setText(bayRestrictionString);

@@ -19,21 +19,21 @@
         android:weightSum="3">
 
         <TextView
+            android:id="@+id/bay_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/activity_margin"
             android:layout_weight="2"
-            android:text="Parking Details"
             android:textColor="#444"
             android:textSize="18dp"
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/bay_status"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="right"
-            android:text="2P"
             android:textSize="15dp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -41,31 +41,28 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Paneer Tikka 1x2" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/activity_margin"
+        android:layout_marginTop="10dp"
         android:text="More Info"
         android:textColor="#444"
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/bay_snippet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Flat No 404, Skyline Apartments, Vizag - 500576" />
+        />
 
     <TextView
+        android:id="@+id/bay_restriction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Chicken Fried Rice 1x1" />
+        />
 
     <Button
         android:id="@+id/btn_stop_parking"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="10dp"
         android:background="@color/quantum_deeporange900"
         android:foreground="?attr/selectableItemBackground"
         android:text="Stop Parking"
