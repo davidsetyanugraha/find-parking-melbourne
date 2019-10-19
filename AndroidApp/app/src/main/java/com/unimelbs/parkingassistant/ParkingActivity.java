@@ -29,6 +29,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static com.unimelbs.parkingassistant.util.PreferenceManager.PREFERENCE_NAME;
 import static com.unimelbs.parkingassistant.util.PreferenceManager.clearPreference;
 
 public class ParkingActivity extends AppCompatActivity {
@@ -92,18 +93,17 @@ public class ParkingActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String hourMsg = intent.getStringExtra(MapsActivity.HOUR);
 
-        this.prefs = getPreferences(MODE_PRIVATE);
-        this.selectedBay = PreferenceManager.getBayFromSharedPreference(this.prefs);
-        this.endParkingDate = PreferenceManager.getEndDateFromSharedPreference(this.prefs);
-
-        if ((this.selectedBay == null) && (this.endParkingDate == null)) {
+        this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
+        if (PreferenceManager.isAvailable(this.prefs)) {
+            Log.d(TAG, "User is having ongoing parking!");
+            this.selectedBay = PreferenceManager.getBayFromSharedPreference(this.prefs);
+            this.endParkingDate = PreferenceManager.getEndDateFromSharedPreference(this.prefs);
+        } else {
             Log.d(TAG, "User doesn't have ongoing parking!");
             this.selectedBay = (Bay) intent.getSerializableExtra(MapsActivity.SELECTED_BAY);
             this.endParkingDate = (Date) DateUtils.addHours(new Date(), Integer.parseInt(hourMsg));
             PreferenceManager.saveBayToSharedPreferences(this.selectedBay, this.prefs);
             PreferenceManager.saveEndDateToSharedPreferences(this.endParkingDate, this.prefs);
-        } else {
-            Log.d(TAG, "User is having ongoing parking!");
         }
 
         //ButterKnife is java version of https://developer.android.com/topic/libraries/view-binding

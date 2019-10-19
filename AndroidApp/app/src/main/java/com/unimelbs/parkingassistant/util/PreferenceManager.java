@@ -9,15 +9,22 @@ import com.unimelbs.parkingassistant.model.Bay;
 import java.util.Date;
 
 public class PreferenceManager {
+    public static final String PREFERENCE_NAME = "com.unimelbs.parkingassistant";
     public static final String PARKING_BAY = "com.unimelbs.parkingassistant.bayHistory";
     public static final String PARKING_END_DATE = "com.unimelbs.parkingassistant.bayEndDate";
+
+    public static Boolean isAvailable(SharedPreferences prefs) {
+        String jsonParking = prefs.getString(PARKING_BAY, "");
+        String jsonEndDate = prefs.getString(PARKING_END_DATE, "");
+        return ((jsonParking != "") && (jsonEndDate != ""));
+    }
 
     public static void saveBayToSharedPreferences(Bay selectedBay, SharedPreferences prefs) {
         SharedPreferences.Editor prefsEditor = prefs.edit();
         Gson gson = new Gson();
         String json = gson.toJson(selectedBay);
         prefsEditor.putString(PARKING_BAY, json);
-        prefsEditor.commit();
+        prefsEditor.apply();
     }
 
     public static void saveEndDateToSharedPreferences(Date endParkingDate, SharedPreferences prefs) {
@@ -25,7 +32,7 @@ public class PreferenceManager {
         Gson gson = new Gson();
         String json = gson.toJson(endParkingDate);
         prefsEditor.putString(PARKING_END_DATE, json);
-        prefsEditor.commit();
+        prefsEditor.apply();
     }
 
     public static Bay getBayFromSharedPreference(SharedPreferences prefs) {

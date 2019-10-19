@@ -1,17 +1,15 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
-
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -21,9 +19,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
-
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -39,13 +34,12 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.maps.android.clustering.ClusterManager;
-
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
-
 import com.unimelbs.parkingassistant.util.BayUpdateService;
 import com.unimelbs.parkingassistant.util.PermissionManager;
+import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
 import org.apache.commons.lang3.SerializationUtils;
@@ -54,15 +48,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
+import androidx.appcompat.app.AppCompatActivity;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
-import static com.uber.autodispose.AutoDispose.autoDisposable;
+import static com.unimelbs.parkingassistant.util.PreferenceManager.PREFERENCE_NAME;
 
 public class MapsActivity extends AppCompatActivity
         implements OnMapReadyCallback,
@@ -102,12 +93,13 @@ public class MapsActivity extends AppCompatActivity
     Button startParkingButton;
 
     BottomSheetBehavior sheetBehavior;
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate: " + Thread.currentThread().getName());
-        //todo: Add check if data2 exists
+
         setContentView(R.layout.activity_maps);
 
         //ButterKnife is java version of https://developer.android.com/topic/libraries/view-binding
@@ -124,6 +116,31 @@ public class MapsActivity extends AppCompatActivity
         activateAutoCompleteFragment();
 
         initBottomSheetUI();
+    }
+
+    private void showRevisitAlertDialog() {
+        AlertDialog alertDialog;
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+
+        builder.setTitle("Continue Parking");
+        builder.setMessage("Do you want to return into your Parking page?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        goToParkingActivity();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Context context = getApplicationContext();
+                        int duration = Toast.LENGTH_SHORT;
+                        Toast toast = Toast.makeText(context, "Cancel", duration);
+                        toast.show();
+                    }
+                });
+
+        builder.setCancelable(true);
+        alertDialog = builder.create();
+        alertDialog.show();
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -170,7 +187,12 @@ public class MapsActivity extends AppCompatActivity
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
-    private void triggerIntent(String hour) {
+    private void goToParkingActivity() {
+        Intent intent = new Intent(this, ParkingActivity.class);
+        startActivity(intent);
+    }
+
+    private void goToParkingActivity(String hour) {
         Intent intent = new Intent(this, ParkingActivity.class);
         intent.putExtra(HOUR, hour);
         intent.putExtra(SELECTED_BAY, selectedBay);
@@ -298,7 +320,7 @@ public class MapsActivity extends AppCompatActivity
                                 RestrictionsHelper.getInvalidReason(selectedBay.getRestrictions(), strHour),
                                 Toast.LENGTH_LONG).show();
                     } else {
-                        triggerIntent(strHour);
+                        goToParkingActivity(strHour);
                     }
 
                 } catch (Exception ex) {
@@ -411,6 +433,20 @@ public class MapsActivity extends AppCompatActivity
             Log.d(TAG, "onMapReady: Bay items loaded on map.");
             zoomPoint = data.getItems().get(0).getPosition();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
+        }
+
+        checkIfThereIsParking();
+    }
+
+    private void checkIfThereIsParking() {
+        Log.d(TAG, "OnStart");
+        //todo: Add check if data2 exists
+        this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
+        if (PreferenceManager.isAvailable(this.prefs)) {
+            Log.d(TAG, "User is having ongoing parking!");
+            showRevisitAlertDialog();
+        } else {
+            Log.d(TAG, "User doesn't have ongoing parking!");
         }
     }
 
