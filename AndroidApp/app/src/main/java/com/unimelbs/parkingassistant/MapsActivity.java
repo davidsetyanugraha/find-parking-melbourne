@@ -11,9 +11,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
+
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -43,6 +45,7 @@ import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
 import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.util.PermissionManager;
+import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -89,11 +92,14 @@ public class MapsActivity extends AppCompatActivity
     @BindView(R.id.bay_title)
     TextView bayTitle;
 
-    @BindView(R.id.bay_position)
-    TextView bayPosition;
-
     @BindView(R.id.bay_snippet)
     TextView baySnippet;
+
+    @BindView(R.id.bay_status)
+    TextView bayStatus;
+
+    @BindView(R.id.bay_restriction)
+    TextView bayRestriction;
 
     @BindView(R.id.btn_direction)
     Button direction;
@@ -235,6 +241,7 @@ public class MapsActivity extends AppCompatActivity
             public void onClick(View view) {
                 try {
                     EditText hour = startParkingFormView.findViewById(R.id.parkingFormDuration);
+
                     String strHour = hour.getText().toString();
                     triggerIntent(strHour);
                 } catch (Exception ex) {
@@ -364,12 +371,21 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
+
         this.selectedBay = bay;
         bayTitle.setText(Integer.toString(bay.getBayId()));
         bayPosition.setText(bay.getPosition().toString());
 
-        String bayStatus = (bay.isAvailable()) ? "Available" : "Occupied";
-        baySnippet.setText(bayStatus);
+        String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
+        String position = bay.getPosition().latitude + " , "+ bay.getPosition().longitude;
+        String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
+        bayTitle.setText(title);
+        bayStatus.setText(bayStatusMsg);
+\
+
+        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
+        bayRestriction.setText(bayRestrictionString);
+        baySnippet.setText("BayId = "+Integer.toString(bay.getBayId()));
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
@@ -387,6 +403,7 @@ public class MapsActivity extends AppCompatActivity
 
         return result;
     }
+
 
     private void subscribeToServerForUpdates(@NotNull Bay selectedBay)
     {
@@ -481,6 +498,7 @@ public class MapsActivity extends AppCompatActivity
 
         Toast.makeText(this, "Selected Bay Status Has Been Changed", Toast.LENGTH_LONG).show();
     }
+
 
 
 }
