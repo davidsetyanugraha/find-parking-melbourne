@@ -10,11 +10,7 @@ public class BayAdapter {
     DataFeed dataFeed;
 
     public BayAdapter(DataFeed dataFeed)
-    {
-
-        Log.d(TAG, "BayAdapter: dataFeed is:"+dataFeed);
-        this.dataFeed = dataFeed;
-    }
+    {this.dataFeed = dataFeed;}
 
 
     public void convertSites(List<Site> sites)
@@ -22,9 +18,10 @@ public class BayAdapter {
         Log.d(TAG, "convertSites: started.");
         Timer timer = new Timer();
         timer.start();
-        for (Site site: sites){this.dataFeed.addBay(convertSite(site));}
+        for (Site site: sites){
+            this.dataFeed.addBay(convertSite(site));}
         timer.stop();
-        Log.d(TAG, "convertSites: completed in "+timer.getDuration()+" seconds.");
+        Log.d(TAG, "convertSites: completed in "+timer.getDurationInSeconds()+" seconds.");
     }
 
     public Bay convertSite(Site site)

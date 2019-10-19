@@ -4,15 +4,10 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-import com.google.android.gms.maps.model.LatLng;
-import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
-import com.unimelbs.parkingassistant.parkingapi.SiteState;
-import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
 import com.unimelbs.parkingassistant.util.Timer;
 
 import java.io.BufferedInputStream;
@@ -27,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
@@ -52,6 +46,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         this.lifecycleOwner = mainActivity;
         this.context = context;
         this.bays = new ArrayList<>();
+        this.baysHashtable = new Hashtable<Integer,Bay>();
         this.api = ParkingApi.getInstance();
         //this.bayStateApi = new BayStateApi(this);
     }
@@ -100,7 +95,6 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
 
         public BayDataApi(DataFeed dataFeed)
         {
-            Log.d(TAG, "BayDataApi: passed data feed is:"+dataFeed);
             this.dataFeed = dataFeed;
         }
         private void fetchApiData()
@@ -118,7 +112,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
                             {
                                 timer.stop();
                                 Log.d(TAG, "fetchApiData: completed in "+
-                                        timer.getDuration()+" seconds. # of Fetched sites:"+
+                                        timer.getDurationInSeconds()+" seconds. # of Fetched sites:"+
                                         value.size());
                                 bayAdapter.convertSites(value);
                             },
@@ -128,6 +122,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         @Override
         protected Void doInBackground(Void... voids) {
             this.fetchApiData();
+            this.dataFeed.saveBaysToFile();
             return null;
         }
     }
@@ -149,17 +144,15 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
                         "and fetching fresh data from API.");
                 loadBaysFromFile();
                 new BayDataApi(this).execute();
-                saveBaysToFile();
             }
         }
         else
         {
-            Log.d(TAG, "loadData: data files don't exist. loading from raw/bays."+
-                    " Calling the API async to download data");
+            Log.d(TAG, "loadData: data file does not exist. Attempting loading from raw/bays.");
             loadBaysFromRaw();
             new BayDataApi(this).execute();
-            saveBaysToFile();
         }
+        this.bays = new ArrayList<>(this.baysHashtable.values());
     }
 
     private boolean dataFilesExist()
@@ -181,7 +174,8 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
 
 
     public List<Bay> getItems() {
-        Log.d(TAG, "getItems: bays has "+bays.size()+" entries.");
+        Log.d(TAG, "getItems: List<bays> has "+bays.size()+" entries. "+
+                "Hastable<Bay> has "+this.baysHashtable.size()+" entries.");
         return this.bays;
     }
 
@@ -195,10 +189,12 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
             FileInputStream fileInputStream = context.openFileInput(BAYS_FILE);
             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
-
-            this.bays = (List<Bay>) objectInputStream.readObject();
+            this.baysHashtable = (Hashtable<Integer, Bay>) objectInputStream.readObject();
             timer.stop();
-            Log.d(TAG, "loadBaysFromFile: ended in "+timer.getDuration()+" seconds. Number of bays loaded:"+this.bays.size());
+            Log.d(TAG, "loadBaysFromFile: ended in "+
+                    timer.getDurationInSeconds()+
+                    " seconds. Number of bays loaded:"+
+                    this.baysHashtable.size());
             fileInputStream.close();
             objectInputStream.close();
         }  catch (FileNotFoundException e) {
@@ -211,23 +207,33 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
     {
         Timer timer = new Timer();
         timer.start();
-        try
+        int rawFileId = context.getResources().
+                getIdentifier("bays",
+                        "raw",
+                        "com.unimelbs.parkingassistant");
+        if (rawFileId!=0)
         {
-            BufferedInputStream bufferedInputStream =
-                    new BufferedInputStream (context.getResources().openRawResource(R.raw.bays));
+            try
+            {
+                BufferedInputStream bufferedInputStream =
+                        new BufferedInputStream (context.getResources().openRawResource(rawFileId));
+                ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
+                //bays = (List<Bay>) objectInputStream.readObject();
+                baysHashtable = (Hashtable<Integer, Bay>) objectInputStream.readObject();
+                timer.stop();
+                Log.d(TAG, "loadBaysFromRaw: completed in "+timer.getDurationInSeconds()+" seconds. Bays loaded: "+bays.size());
 
-            ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
-            bays = (List<Bay>) objectInputStream.readObject();
-
-            timer.stop();
-            Log.d(TAG, "loadBaysFromRaw: completed in "+timer.getDuration()+" seconds. Bays loaded: "+bays.size());
-
-            bufferedInputStream.close();
-            objectInputStream.close();
-        }  catch (FileNotFoundException e) {
-            Log.d(TAG, "loadBaysFromFile: FileNotFoundException: "+e.getMessage());
-        } catch (Exception e) {
-            Log.d(TAG, "loadBaysFromFile: general exception: "+e.getMessage());
+                bufferedInputStream.close();
+                objectInputStream.close();
+            }  catch (FileNotFoundException e) {
+                Log.d(TAG, "loadBaysFromRaw: FileNotFoundException: "+e.getMessage());
+            } catch (Exception e) {
+                Log.d(TAG, "loadBaysFromRaw: general exception: "+e.getMessage());
+            }
+        }
+        else
+        {
+            Log.d(TAG, "loadBaysFromRaw: bays file does not exist.");
         }
     }
 
@@ -247,7 +253,8 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             Log.d(TAG, "saveBaysToFile: num of bays: "+this.bays.size());
-            objectOutputStream.writeObject(this.bays);
+            //objectOutputStream.writeObject(this.bays);
+            objectOutputStream.writeObject(this.baysHashtable);
             objectOutputStream.close();
             fileOutputStream.close();
         } catch (Exception e) {
@@ -258,7 +265,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
 
     public void addBay(Bay bay)
     {
-        this.bays.add(bay);
+        this.baysHashtable.put(bay.getBayId(),bay);
     }
 
 

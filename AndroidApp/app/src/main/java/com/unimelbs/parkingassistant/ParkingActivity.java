@@ -14,12 +14,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.unimelbs.parkingassistant.model.Bay;
+import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Date;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -32,9 +34,29 @@ public class ParkingActivity extends AppCompatActivity {
     private String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     //alarm stuff
 
+    private static final String TAG = "ParkingActivity";
+    private Bay selectedBay;
+
+    //bottom sheet view
     @BindView(R.id.bottom_sheet_parking)
     LinearLayout layoutBottomSheet;
 
+    @BindView(R.id.bay_title)
+    TextView bayTitle;
+
+    @BindView(R.id.bay_snippet)
+    TextView baySnippet;
+
+    @BindView(R.id.bay_status)
+    TextView bayStatus;
+
+    @BindView(R.id.bay_restriction)
+    TextView bayRestriction;
+
+    @BindView(R.id.btn_stop_parking)
+    Button stopParkingButton;
+
+    //count down view
     @BindView(R.id.linear_layout_1)
     LinearLayout linear_layout_1;
 
@@ -50,8 +72,6 @@ public class ParkingActivity extends AppCompatActivity {
     @BindView(R.id.tv_second)
     TextView tv_second;
 
-    @BindView(R.id.btn_stop_parking)
-    Button stopParkingButton;
 
     private Handler handler = new Handler();
     private Runnable runnable;
@@ -65,50 +85,40 @@ public class ParkingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_parking);
 
         Intent intent = getIntent();
-        String message = intent.getStringExtra(MapsActivity.EXTRA_HOUR);
+        String hourMsg = intent.getStringExtra(MapsActivity.HOUR);
+        this.selectedBay = (Bay) intent.getSerializableExtra(MapsActivity.SELECTED_BAY);
+
+        Log.d(TAG,"park at: "+selectedBay.getTitle());
 
         //ButterKnife is java version of https://developer.android.com/topic/libraries/view-binding
         ButterKnife.bind(this);
 
-        // testing purpose only
-//        Context context = getApplicationContext();
-//        int duration = Toast.LENGTH_SHORT;
-//        Toast toast = Toast.makeText(context, message, duration);
-//        toast.show();
-        // testing purpose only
-
-        countDownStart(Integer.parseInt(message));
+        countDownStart(Integer.parseInt(hourMsg));
 
         initBottomSheetUI();
     }
 
     private void initBottomSheetUI() {
-
+        //change layout
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
+        sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        renderBottomSheet(selectedBay);
+    }
 
-        sheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        break;
-                    case BottomSheetBehavior.STATE_EXPANDED: {
-                        Log.d("sheetBehavior", "expanded");
-                    }
-                    break;
-                    case BottomSheetBehavior.STATE_COLLAPSED: {
-                        Log.d("sheetBehavior", "collapsed");
-                    }
-                    break;
-                }
-            }
+    private void renderBottomSheet(@NotNull Bay bay) {
+        String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
+        String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
+        String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
+        bayTitle.setText(title);
+        bayStatus.setText(bayStatusMsg);
 
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-            }
-        });
+        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
+        bayRestriction.setText(bayRestrictionString);
+        baySnippet.setText("BayId = " + Integer.toString(bay.getBayId()));
+
+        if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
+            sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }
     }
 
     private void countDownStart(int hour) {

@@ -28,16 +28,19 @@
 
         <!-- Buttons row. -->
         <TableRow
+            android:layout_marginTop="15dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
-            <Button
-                android:id="@+id/formResetButton"
-                android:text="Reset"/>
 
             <Button
-                android:id="@+id/formContinueButton"
-                android:text="Continue"/>
+                android:id="@+id/formCancelButton"
+                android:paddingLeft="10dp"
+                android:text="Cancel"/>
+
+            <Button
+                android:id="@+id/formSubmitButton"
+                android:text="Submit"/>
 
 
 
