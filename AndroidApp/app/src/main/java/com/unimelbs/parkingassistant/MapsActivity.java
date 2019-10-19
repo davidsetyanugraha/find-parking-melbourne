@@ -68,7 +68,8 @@ public class MapsActivity extends AppCompatActivity
         ClusterManager.OnClusterItemClickListener<Bay> {
 
     private GoogleMap mMap;
-    public static final String EXTRA_HOUR = "com.unimelbs.parkingassistant.HOUR";
+    public static final String HOUR = "com.unimelbs.parkingassistant.HOUR";
+    public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
     private static final String TAG = "MapActivity";
     private static String apiKey;
     private Bay selectedBay;
@@ -132,7 +133,8 @@ public class MapsActivity extends AppCompatActivity
 
     private void triggerIntent(String hour) {
         Intent intent = new Intent(this, ParkingActivity.class);
-        intent.putExtra(EXTRA_HOUR, hour);
+        intent.putExtra(HOUR, hour);
+        intent.putExtra(SELECTED_BAY, selectedBay);
         startActivity(intent);
     }
 

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.unimelbs.parkingassistant.model.Bay;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -32,6 +33,9 @@ public class ParkingActivity extends AppCompatActivity {
     private String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     //alarm stuff
 
+    private static final String TAG = "ParkingActivity";
+    private Bay selectedBay;
+    
     @BindView(R.id.bottom_sheet_parking)
     LinearLayout layoutBottomSheet;
 
@@ -65,17 +69,13 @@ public class ParkingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_parking);
 
         Intent intent = getIntent();
-        String message = intent.getStringExtra(MapsActivity.EXTRA_HOUR);
+        String message = intent.getStringExtra(MapsActivity.HOUR);
+        this.selectedBay = (Bay) intent.getSerializableExtra(MapsActivity.SELECTED_BAY);
+
+        Log.d(TAG,"park at: "+selectedBay.getTitle());
 
         //ButterKnife is java version of https://developer.android.com/topic/libraries/view-binding
         ButterKnife.bind(this);
-
-        // testing purpose only
-//        Context context = getApplicationContext();
-//        int duration = Toast.LENGTH_SHORT;
-//        Toast toast = Toast.makeText(context, message, duration);
-//        toast.show();
-        // testing purpose only
 
         countDownStart(Integer.parseInt(message));
 
