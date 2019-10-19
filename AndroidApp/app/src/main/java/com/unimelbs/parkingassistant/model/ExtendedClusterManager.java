@@ -56,21 +56,14 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
         super.onCameraIdle();
         LatLng topRight = mMap.getProjection().getVisibleRegion().latLngBounds.northeast;
         LatLng bottomLeft = mMap.getProjection().getVisibleRegion().latLngBounds.southwest;
-        LatLng topLeft = new LatLng(topRight.latitude,bottomLeft.longitude);
-        Location loc1 = new Location("p1");
-        Location loc2 = new Location("p2");
-        loc1.setLatitude(topLeft.latitude);
-        loc1.setLongitude(topLeft.longitude);
-        loc2.setLatitude(topRight.latitude);
-        loc2.setLongitude(topRight.longitude);
 
-        long rad = Math.round((double)loc1.distanceTo(loc2)/2);
-        long radius =
+        //Used to calculate distance shown on screen
+        LatLng topLeft = new LatLng(topRight.latitude,bottomLeft.longitude);
+
+        long radius =Math.round(DistanceUtil.getDistanceS(topLeft,topRight)/2);
                 //Location.distanceBetween(topLeft.latitude,topLeft.longitude,topRight.latitude,topRight.longitude,);
 
-                Math.round((DistanceUtil.getDistance(topLeft,topRight)/2)*1000);
-        Log.d(TAG, "onClusterItemRendered: radius:"+
-                radius+" rad:"+rad);
+        Log.d(TAG, "onClusterItemRendered: radius:"+radius+" meters.");
     }
 
     @Override

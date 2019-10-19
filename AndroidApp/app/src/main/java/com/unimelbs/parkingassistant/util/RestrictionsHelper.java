@@ -23,7 +23,7 @@ public class RestrictionsHelper {
 //            restrictionMsg = restrictionMsg +
 //                    "Restriction " + (i+1) +": \n"+
 //                    "\t"+restrictions.get(i).getDescription()+"\n"+
-//                    "\t"+restrictions.get(i).getDuration()+"\n";
+//                    "\t"+restrictions.get(i).getDurationInSeconds()+"\n";
 //        }
 //        return  restrictionMsg;
 //    }

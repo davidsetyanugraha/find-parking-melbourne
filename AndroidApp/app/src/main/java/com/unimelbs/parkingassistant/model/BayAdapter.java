@@ -24,7 +24,7 @@ public class BayAdapter {
         timer.start();
         for (Site site: sites){this.dataFeed.addBay(convertSite(site));}
         timer.stop();
-        Log.d(TAG, "convertSites: completed in "+timer.getDuration()+" seconds.");
+        Log.d(TAG, "convertSites: completed in "+timer.getDurationInSeconds()+" seconds.");
     }
 
     public Bay convertSite(Site site)

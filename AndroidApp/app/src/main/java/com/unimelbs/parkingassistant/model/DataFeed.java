@@ -4,15 +4,10 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-import com.google.android.gms.maps.model.LatLng;
-import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
 import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
-import com.unimelbs.parkingassistant.parkingapi.SiteState;
-import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
 import com.unimelbs.parkingassistant.util.Timer;
 
 import java.io.BufferedInputStream;
@@ -27,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
@@ -118,7 +112,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
                             {
                                 timer.stop();
                                 Log.d(TAG, "fetchApiData: completed in "+
-                                        timer.getDuration()+" seconds. # of Fetched sites:"+
+                                        timer.getDurationInSeconds()+" seconds. # of Fetched sites:"+
                                         value.size());
                                 bayAdapter.convertSites(value);
                             },
@@ -198,7 +192,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
 
             this.bays = (List<Bay>) objectInputStream.readObject();
             timer.stop();
-            Log.d(TAG, "loadBaysFromFile: ended in "+timer.getDuration()+" seconds. Number of bays loaded:"+this.bays.size());
+            Log.d(TAG, "loadBaysFromFile: ended in "+timer.getDurationInSeconds()+" seconds. Number of bays loaded:"+this.bays.size());
             fileInputStream.close();
             objectInputStream.close();
         }  catch (FileNotFoundException e) {
@@ -220,7 +214,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
             bays = (List<Bay>) objectInputStream.readObject();
 
             timer.stop();
-            Log.d(TAG, "loadBaysFromRaw: completed in "+timer.getDuration()+" seconds. Bays loaded: "+bays.size());
+            Log.d(TAG, "loadBaysFromRaw: completed in "+timer.getDurationInSeconds()+" seconds. Bays loaded: "+bays.size());
 
             bufferedInputStream.close();
             objectInputStream.close();
