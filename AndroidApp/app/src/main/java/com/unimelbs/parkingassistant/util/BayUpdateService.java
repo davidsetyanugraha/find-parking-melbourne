@@ -43,8 +43,12 @@ public class BayUpdateService extends Service {
     public static final String NOTIFICATION_CHANNEL_ID = "channel_id";
     //User visible Channel Name
     public static final String CHANNEL_NAME = "Notification Channel";
+    final int NOTIFICATION_ID = 101;
 
     public CompositeDisposable disposable;
+    NotificationManager notificationManager;
+
+
 
 
 
@@ -75,6 +79,12 @@ public class BayUpdateService extends Service {
     public void onDestroy() {
 
         disposeSubscription();
+        try{
+            notificationManager.cancel(NOTIFICATION_ID);
+        } catch(Exception e){
+            Log.e("ServiceOnDestroy", "notification was not cancelled onServiceDestroy");
+        }
+
         super.onDestroy();
         Log.d("BayUpdateService", "onDestroy executed with bay disposed");
     }
@@ -118,14 +128,14 @@ public class BayUpdateService extends Service {
 
         if(bay.getStatus().toLowerCase().equals("present")){ //present means a car is present so not available
             disposeSubscription();
-            final int NOTIFICATION_ID = 101;
+
             String title = "Bay Status Changed";
             String subject = "Parking Bay Status Changed ";
             String body = "The status of selected bay has been changed, Tap to Redirect to app";
-            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
             // Importance applicable to all the notifications in this Channel
 
-
+            notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             //Notification channel should only be created for devices running Android 26
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 int importance = NotificationManager.IMPORTANCE_HIGH;
@@ -158,7 +168,7 @@ public class BayUpdateService extends Service {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
             builder.setContentTitle(title);
             builder.setContentText(body);
-            builder.setSmallIcon(R.drawable.ic_launcher_background);
+            builder.setSmallIcon(R.mipmap.exclaimination);
             builder.setPriority(NotificationCompat.PRIORITY_MAX);
             builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
             builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
@@ -185,7 +195,7 @@ public class BayUpdateService extends Service {
                 Log.e("Error", "Error occured in raising notification");
             }
 
-            Toast.makeText(this, "Selected Bay Status Has Been Changed", Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "Selected Bay Status Has Been Changed", Toast.LENGTH_LONG).show();
 
 
         }

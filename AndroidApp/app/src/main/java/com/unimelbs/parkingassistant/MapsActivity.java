@@ -236,7 +236,6 @@ public class MapsActivity extends AppCompatActivity
         Log.d("Direction", "direction button clicked");
 
         if(this.selectedBay.isAvailable())
-
         {
             bayUpdateService.subscribeToServerForUpdates(this.selectedBay);
 
@@ -261,7 +260,7 @@ public class MapsActivity extends AppCompatActivity
             AlertDialog dialog = builder.create();
             dialog.show();
 
-            Toast.makeText(this, "Selected Bay Is Occupied.", Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "Selected Bay Is Occupied.", Toast.LENGTH_LONG).show();
 
         }
 
