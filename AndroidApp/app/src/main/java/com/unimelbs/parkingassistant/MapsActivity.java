@@ -146,7 +146,8 @@ public class MapsActivity extends AppCompatActivity
         Log.d("Direction", "direction button clicked");
 
         //if(this.selectedBay.isAvailable())
-        if (true)
+        if (true) //TODO USe the above line once the site statuses are clear. Right now all are occupied.
+
         {
 
 
@@ -167,10 +168,12 @@ public class MapsActivity extends AppCompatActivity
 
 
 
+
             try
             {
-                startActivity(mapIntent);
                 subscribeToServerForUpdates(this.selectedBay);
+                startActivity(mapIntent);
+
             }
             catch(ActivityNotFoundException ex)
             {
@@ -412,9 +415,9 @@ public class MapsActivity extends AppCompatActivity
 
 
         final int NOTIFICATION_ID = 101;
-        String tittle= "Status Changed";
+        String title= "Bay Status Changed";
         String subject= "Parking Bay Status Changed ";
-        String body= " The status of Selected Parking Bay has changed. Please select a different bay.";
+        String body= "The status of selected bay has been changed, Tap to Redirect to app";
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         // Importance applicable to all the notifications in this Channel
 
@@ -449,8 +452,8 @@ public class MapsActivity extends AppCompatActivity
         // ignored for all the
         // Android versions below 8.0
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-        builder.setContentTitle("Bay Status");
-        builder.setContentText("The status of selected bay has been changed, Tap to Redirect to app");
+        builder.setContentTitle(title);
+        builder.setContentText(body);
         builder.setSmallIcon(R.drawable.ic_launcher_background);
         builder.setPriority(NotificationCompat.PRIORITY_MAX);
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
