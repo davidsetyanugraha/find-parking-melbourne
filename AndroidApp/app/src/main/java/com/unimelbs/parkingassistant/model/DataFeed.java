@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
 
@@ -38,6 +40,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
     private List<Bay> bays;
     private Hashtable<Integer,Bay> baysHashtable;
     private ParkingApi api;
+    private PublishSubject<List<Bay>> baysSubject = PublishSubject.create();
     //private BayStateApi bayStateApi;
 
 
@@ -49,6 +52,11 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         this.baysHashtable = new Hashtable<Integer,Bay>();
         this.api = ParkingApi.getInstance();
         //this.bayStateApi = new BayStateApi(this);
+    }
+
+    public Observable<List<Bay>> getBaysObservable() {
+        return baysSubject;
+        //TODO: Call baysSubject.onNext(<<<the new array here>>); when needed
     }
 
 /*
