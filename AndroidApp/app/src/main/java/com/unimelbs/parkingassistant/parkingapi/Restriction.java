@@ -3,7 +3,9 @@ package com.unimelbs.parkingassistant.parkingapi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Restriction {
+import java.io.Serializable;
+
+public class Restriction implements Serializable {
 
     @SerializedName("description")
     @Expose
