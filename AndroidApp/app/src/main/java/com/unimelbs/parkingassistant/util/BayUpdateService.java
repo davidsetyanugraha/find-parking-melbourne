@@ -49,10 +49,6 @@ public class BayUpdateService extends Service {
     NotificationManager notificationManager;
 
 
-
-
-
-
     /**
      * Class used for the client Binder.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with IPC.
@@ -86,7 +82,7 @@ public class BayUpdateService extends Service {
         }
 
         super.onDestroy();
-        Log.d("BayUpdateService", "onDestroy executed with bay disposed");
+        Log.d("ServiceOnDestroy", "onDestroy executed and bay dispose called");
     }
 
     public void subscribeToServerForUpdates(@NotNull Bay selectedBay) {
