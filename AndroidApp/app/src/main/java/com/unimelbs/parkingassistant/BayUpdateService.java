@@ -1,4 +1,4 @@
-package com.unimelbs.parkingassistant.util;
+package com.unimelbs.parkingassistant;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -12,15 +12,10 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 
 import androidx.core.app.NotificationCompat;
-import androidx.lifecycle.Lifecycle;
 
-import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider;
-import com.unimelbs.parkingassistant.MapsActivity;
-import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.parkingapi.SiteState;
@@ -170,8 +165,7 @@ public class BayUpdateService extends Service {
             builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
 
             Intent intent = new Intent(this, MapsActivity.class);
-
-            new Intent(this, MapsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 1001, intent, 0);
             //Following will set the tap action
             builder.setContentIntent(pendingIntent);
