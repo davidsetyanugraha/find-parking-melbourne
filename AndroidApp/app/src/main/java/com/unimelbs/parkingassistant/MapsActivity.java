@@ -128,12 +128,9 @@ public class MapsActivity extends AppCompatActivity
                         goToParkingActivity();
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        Context context = getApplicationContext();
-                        int duration = Toast.LENGTH_SHORT;
-                        Toast toast = Toast.makeText(context, "Cancel", duration);
-                        toast.show();
+                        PreferenceManager.clearPreference(prefs);
                     }
                 });
 
