@@ -32,8 +32,6 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
     private final double STATE_API_CIRCLE_RADIUS = 1000;
     private LatLng circleCentre;
 
-
-
     /**
      * Constructors.
      * @param context
@@ -57,7 +55,11 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
 
     @Override
     public void onCameraIdle() {
+
         super.onCameraIdle();
+        Log.d(TAG, "onCameraIdle: ");
+        /*
+        
         LatLng topRight = mMap.getProjection().getVisibleRegion().latLngBounds.northeast;
         LatLng bottomLeft = mMap.getProjection().getVisibleRegion().latLngBounds.southwest;
 
@@ -75,7 +77,7 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
         {
             if (circleCentre==null)
             {
-                
+
                 circleCentre = mMap.getCameraPosition().target;
                 Log.d(TAG, "onCameraIdle: initial circle set. Position:"+circleCentre.toString());
             }
@@ -96,6 +98,7 @@ public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManage
                 }
             }
         }
+         */
     }
 
     @Override

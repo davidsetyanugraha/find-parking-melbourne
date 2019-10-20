@@ -3,6 +3,7 @@ package com.unimelbs.parkingassistant.ui;
 import android.content.Context;
 import android.util.Log;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -78,6 +79,5 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         @Override
         public void onCameraIdle() {
             Log.d(TAG, "onCameraIdle: ");
-                    
         }
     }
