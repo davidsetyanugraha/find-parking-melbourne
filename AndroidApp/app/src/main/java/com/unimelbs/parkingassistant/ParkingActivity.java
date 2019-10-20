@@ -227,8 +227,12 @@ public class ParkingActivity extends AppCompatActivity {
     }
 
     private void goToMapsActivity() {
-        Intent intent = new Intent(this, MapsActivity.class);
-        startActivity(intent);
+        //Intent intent = new Intent(this, MapsActivity.class);
+        //startActivity(intent);
+
+        Intent openMapsActivity = new Intent(ParkingActivity.this, MapsActivity.class);
+        openMapsActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityIfNeeded(openMapsActivity, 0);
     }
 
     private void walkToTheSelectedBay()

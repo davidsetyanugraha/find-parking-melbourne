@@ -39,7 +39,7 @@
             android:value="AIzaSyBRbC-vfnY8dUcAc_JWyaKxnILpE55bTxQ" />
 
         <service
-            android:name=".util.BayUpdateService"
+            android:name=".BayUpdateService"
             android:enabled="true"
             android:exported="true"></service>
     </application>
