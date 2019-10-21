@@ -124,6 +124,16 @@ public class MapsActivity extends AppCompatActivity
         startService(bayMonitorServiceIntent);
         bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+    }
     private ServiceConnection connection = new ServiceConnection() {
 
         @Override
@@ -172,12 +182,7 @@ public class MapsActivity extends AppCompatActivity
     /** Defines callbacks for service binding, passed to bindService() */
 
 
-    @Override
-    protected void onStart() {
-        super.onStart();
 
-
-    }
 
     @Override
     protected void onDestroy() {
@@ -281,7 +286,7 @@ public class MapsActivity extends AppCompatActivity
             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     // TODO MUST REMOVE SUBSCRIPTION BELOW
-                    //bayUpdateService.subscribeToServerForUpdates(selectedBay);
+                    bayUpdateService.subscribeToServerForUpdates(selectedBay);
                     navigateToTheSelectedBay();
 
                 }

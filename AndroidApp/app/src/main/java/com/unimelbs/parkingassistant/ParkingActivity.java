@@ -267,4 +267,29 @@ public class ParkingActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        // Codes added with support
+        // from StackOVerFlow :)
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+        // Bottom sheet has not been defined as fragment
+        // So count should be zero
+        if (count == 0) {
+            if (sheetBehavior!=null && sheetBehavior.getState() !=
+                    BottomSheetBehavior.STATE_HIDDEN) {
+                sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+            }
+            // Double back press to exit app
+            else {
+                super.onBackPressed();
+
+            }
+            //sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        } else {
+            getSupportFragmentManager().popBackStack();
+        }
+
+    }
+
 }
