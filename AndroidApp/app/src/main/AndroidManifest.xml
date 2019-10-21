@@ -42,6 +42,10 @@
             android:name=".BayUpdateService"
             android:enabled="true"
             android:exported="true"></service>
+
+        <receiver
+            android:name=".broadcastreceivers.ForegroundServiceStopper">
+        </receiver>
     </application>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />

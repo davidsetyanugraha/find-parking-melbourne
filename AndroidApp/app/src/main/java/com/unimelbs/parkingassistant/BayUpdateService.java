@@ -20,6 +20,7 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.unimelbs.parkingassistant.broadcastreceivers.ForegroundServiceStopper;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.parkingapi.SiteState;
@@ -82,6 +83,7 @@ public class BayUpdateService extends Service {
             return BayUpdateService.this;
         }
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -172,7 +174,7 @@ public class BayUpdateService extends Service {
     }
     @Override
     public void onDestroy() {
-
+        stopForeground(true);
         isServiceRunning = false;
         if(hasSubscribed) {
 
@@ -311,7 +313,7 @@ public class BayUpdateService extends Service {
         try {
             String title = "Bay Status";
             String subject = "Parking Bay Status Changed ";
-            String body = "The Application Has Been Killed. Not tracking any parking bay for updates";
+            String body = "Bay tracking has stopped";
 
 
 
@@ -378,21 +380,15 @@ public class BayUpdateService extends Service {
                 String subject = "Parking Bay Status Changed ";
                 String body = "Selected bay "+ bay.getId()+ " occupied. Tap to select new bay. ";
 
-
-                //notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID_BAY_UPDATE);
 
-                Intent notificationIntent = getPackageManager()
+                Intent applicationIntent = getPackageManager()
                         .getLaunchIntentForPackage(getPackageName())
                         .setPackage(null)
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+                PendingIntent pendingIntentToGoApp = PendingIntent.getActivity(this, 0, applicationIntent, 0);
 
-                /* If you need to set broadcast receiver to update app*/
-                //PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1002, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                //builder.addAction(R.drawable.ic_launcher_background, "Redirect to Nearest Bay", pendingIntent);
-                //builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.icon));
+
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     int importance = NotificationManager.IMPORTANCE_HIGH;
@@ -425,7 +421,7 @@ public class BayUpdateService extends Service {
                 builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                 builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
                 //Following will set the tap action
-                builder.setContentIntent(pendingIntent);
+                builder.setContentIntent(pendingIntentToGoApp);
 
 
                 Notification notification = builder.build();
@@ -438,7 +434,7 @@ public class BayUpdateService extends Service {
 
                 notificationManager.notify(BAY_STATUS_UPDATE_NOTIFICATION_ID, notification);
 
-                startForeground(BAY_STATUS_UPDATE_NOTIFICATION_ID , notification);
+                //startForeground(BAY_STATUS_UPDATE_NOTIFICATION_ID , notification);
 
 
 
@@ -460,16 +456,19 @@ public class BayUpdateService extends Service {
 
 
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID_BAY_FOLLOW);
-            Intent notificationIntent = new Intent(getApplicationContext(), MapsActivity.class);
-            //notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this,
+                    NOTIFICATION_CHANNEL_ID_BAY_FOLLOW);
+
+            Intent intentHide = new Intent(this, ForegroundServiceStopper.class);
+            PendingIntent exitNavigation = PendingIntent.getBroadcast(this,
+                    (int) System.currentTimeMillis(), intentHide, PendingIntent.FLAG_CANCEL_CURRENT);;
+
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 int importance = NotificationManager.IMPORTANCE_LOW;
 
-                NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID_BAY_FOLLOW, CHANNEL_NAME, importance);
+                NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID_BAY_FOLLOW,
+                        CHANNEL_NAME, importance);
                 //Boolean value to set if lights are enabled for Notifications from this Channel
                 notificationChannel.enableLights(true);
                 //Sets the color of Notification Light
@@ -486,8 +485,10 @@ public class BayUpdateService extends Service {
             builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
             builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
 
+            builder.addAction(0, "Stop Following Bay", exitNavigation);
+
             // No need to tap enable this notification
-            builder.setContentIntent(contentPendingIntent);
+            //builder.setContentIntent(contentPendingIntent);
 
             Notification notification = builder.build();
 
