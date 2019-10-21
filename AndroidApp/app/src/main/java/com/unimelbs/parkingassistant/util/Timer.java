@@ -1,5 +1,10 @@
 package com.unimelbs.parkingassistant.util;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Formatter;
+
 public class Timer {
     private static final int MILLIS_TO_SECONDS=1000;
     private long startTime;
@@ -22,5 +27,12 @@ public class Timer {
 
     public long getDurationInSeconds(){return this.duration/MILLIS_TO_SECONDS;}
     public long getDuration() { return duration;}
+
+    public static String convertToTimestamp(long time)
+    {
+        Date d = new Date(time);
+        Format f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+        return f.format(d);
+    }
 
 }

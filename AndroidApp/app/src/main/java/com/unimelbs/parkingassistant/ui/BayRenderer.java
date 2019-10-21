@@ -1,6 +1,7 @@
 package com.unimelbs.parkingassistant.ui;
 
 import android.content.Context;
+import android.media.TimedMetaData;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -16,6 +17,11 @@ import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
+import com.unimelbs.parkingassistant.util.Timer;
+
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class BayRenderer extends DefaultClusterRenderer<Bay>
     implements GoogleMap.OnCameraIdleListener    
@@ -29,7 +35,9 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
     private final float OCCUPIED_BAY_COLOR = BitmapDescriptorFactory.HUE_RED;
     private final double STATE_API_CIRCLE_RADIUS = 1000;
     private final double STREET_VIEW_RADIUS = 250;
+    private final int STATUS_FRESHNESS_INTERVAL=120;
     private LatLng circleCentre;
+    private long lastBayStatusUpdateTime;
 
 
     public BayRenderer(Context context, GoogleMap mMap, ClusterManager<Bay> clusterManager)
@@ -88,24 +96,46 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
                 if (circleCentre==null)
                 {
                     circleCentre = mMap.getCameraPosition().target;
-                    Log.d(TAG, "onCameraIdle: initial circle set. Position:"+circleCentre.toString());
-                    Log.d(TAG, "onCameraIdle: updating bays + removing markers + re-add");
+                    Log.d(TAG, "onCameraIdle: initial circle set. Position:"+
+                            circleCentre.toString()+" updating bays + refreshing map");
+                    lastBayStatusUpdateTime = System.currentTimeMillis();
+
+                    //String lastTimeStr = new SimpleDateFormat(new Date(lastBayStatusUpdateTime),"")
+                    Log.d(TAG, "onCameraIdle: initial circle set. Position:"+
+                            circleCentre.toString()+" updating bays + refreshing map at "+
+                            Timer.convertToTimestamp(lastBayStatusUpdateTime));
                     dataFeed.updateStates(circleCentre);
                 }
                 else
                 {
-                    long cameraMoveDistance =
-                            Math.round(DistanceUtil.getDistanceS(circleCentre,cameraFocus));
-                    long boundary = cameraMoveDistance+radius;
-                    if (boundary>STATE_API_CIRCLE_RADIUS)
+                    long dataLifeInSeconds = (System.currentTimeMillis()-lastBayStatusUpdateTime)/1000;
+                    Log.d(TAG, "onCameraIdle: data life: "+dataLifeInSeconds);
+                    if (dataLifeInSeconds>STATUS_FRESHNESS_INTERVAL)
                     {
-                        Log.d(TAG, "onCameraIdle: Moved out of the boundary Need to call the state API again");
-                        circleCentre=cameraFocus;
+                        Log.d(TAG, "onCameraIdle: current data timestamp: "+
+                                Timer.convertToTimestamp(lastBayStatusUpdateTime)+
+                                " system time: "+Timer.convertToTimestamp(System.currentTimeMillis())+
+                                ". State data is old, refreshing it.");
                         dataFeed.updateStates(circleCentre);
+                        lastBayStatusUpdateTime = System.currentTimeMillis();
                     }
                     else
                     {
-                        Log.d(TAG, "onCameraIdle: moving within boundaries.");
+                        long cameraMoveDistance =
+                                Math.round(DistanceUtil.getDistanceS(circleCentre,cameraFocus));
+                        long boundary = cameraMoveDistance+radius;
+                        if (boundary>STATE_API_CIRCLE_RADIUS)
+                        {
+                            Log.d(TAG, "onCameraIdle: Moved out of the boundary Need to call the state API again");
+                            circleCentre=cameraFocus;
+                            lastBayStatusUpdateTime=System.currentTimeMillis();
+                            dataFeed.updateStates(circleCentre);
+                        }
+                        else
+                        {
+                            Log.d(TAG, "onCameraIdle: moving within boundaries."+
+                                    "State data timestamp:"+Timer.convertToTimestamp(lastBayStatusUpdateTime));
+                        }
                     }
                 }
             }

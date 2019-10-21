@@ -287,27 +287,32 @@ public class DataFeed {
 
     private void updateStates(List<SiteState> list)
     {
-        Log.d(TAG, "updateStates: table includes:"+baysHashtable.size());
+        int found=0;
+        int notFound=0;
+        Timer timer=new Timer();
+        Log.d(TAG, "updateStates: Bay table includes:"+baysHashtable.size()+" "+
+                "State data includes: "+list.size());
+        timer.start();
         for (SiteState siteState: list)
         {
             String strState = siteState.getStatus();
 
             int id = Integer.parseInt(siteState.getId());
             boolean state = (strState.equals("Present"))?false:true;
-            Log.d(TAG, "updateStates: api_id:"+siteState.getId()+
-                    "raw state:"+ strState+
-                    " state:"+state);
             if (baysHashtable.get(id)!=null)
             {
-                Log.d(TAG, "updateStates: site ("+id+") found.");
+                found++;
                 baysHashtable.get(Integer.parseInt(siteState.getId())).setAvailable(state);
             }
             else
             {
-                Log.d(TAG, "updateStates: site ("+id+") NOT FOUND.");
-            }
+                notFound++;
 
+            }
         }
+        timer.stop();
+        Log.d(TAG, "updateStates: completed in "+timer.getDurationInSeconds()+" "+
+                found+" states found. "+notFound+" states not found.");
     }
 
     public void updateStates(LatLng centre)
