@@ -287,8 +287,7 @@ public class MapsActivity extends AppCompatActivity
             // Add the buttons
             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    // TODO MUST REMOVE SUBSCRIPTION BELOW
-                    bayUpdateService.subscribeToServerForUpdates(selectedBay);
+
                     navigateToTheSelectedBay();
 
                 }
