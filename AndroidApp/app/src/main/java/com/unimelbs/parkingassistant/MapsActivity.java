@@ -1,7 +1,6 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,7 +8,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -34,12 +32,10 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
-import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
@@ -218,56 +214,6 @@ public class MapsActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    private void navigateToTheSelectedBay()
-    {
-        LatLng selectedBayLatLng = this.selectedBay.getPosition();
-        String lat = String.valueOf(selectedBayLatLng.latitude);
-        String lon = String.valueOf(selectedBayLatLng.longitude);
-
-
-        // Part of the code below is taken from
-        // https://stackoverflow.com/questions/
-        // 2662531/launching-google-maps-directions
-        // -via-an-intent-on-android?rq=1
-
-        Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon);
-        Log.d("Navigation Uri", "Navigation URI is " + navigationIntentUri);
-        Intent mapIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-        mapIntent.setPackage("com.google.android.apps.maps");
-
-
-        try {
-
-            startActivity(mapIntent);
-
-        } catch (ActivityNotFoundException ex) {
-            try {
-                Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-                startActivity(unrestrictedIntent);
-            } catch (ActivityNotFoundException innerEx) {
-                Toast.makeText(this, "No Map Application Found, Opening In Browser", Toast.LENGTH_LONG).show();
-                try {
-                    Uri.Builder builder = new Uri.Builder();
-                    builder.scheme("https")
-                            .authority("www.google.com")
-                            .appendPath("maps")
-                            .appendPath("dir")
-                            .appendPath("")
-                            .appendQueryParameter("api", "1")
-                            .appendQueryParameter("destination", lat + "," + lon);
-                    String url = builder.build().toString();
-                    Log.d("Directions", url);
-                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    i.setData(Uri.parse(url));
-                    startActivity(i);
-                } catch (Exception e) {
-                    Log.d("Failure", "Failed To Open any navigation method " + e.getMessage());
-
-                }
-            }
-        }
-    }
-
     /**
      * Bottom screen Button Direction OnClick
      */
@@ -278,17 +224,20 @@ public class MapsActivity extends AppCompatActivity
 
         if(this.selectedBay.isAvailable())
         {
+            bayUpdateService.navigateToTheSelectedBayWithSubscription(this.selectedBay, true);
 
-            bayUpdateService.subscribeToServerForUpdates(this.selectedBay);
-
-        } else {
+        }
+        else
+            {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-            // Add the buttons
+
             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-
-                    navigateToTheSelectedBay();
+                    // In this version of app we do not support
+                    // occupied to present status switch over.
+                    // Hence if a bay is occupied, we wont monitor it.
+                    bayUpdateService.navigateToTheSelectedBayWithSubscription(selectedBay, false);
 
                 }
             });
@@ -297,7 +246,7 @@ public class MapsActivity extends AppCompatActivity
                     // User cancelled the dialog
                 }
             });
-            builder.setMessage("The Bay is occupied. Do you Still want to Navigate")
+            builder.setMessage("The Bay is occupied. Do you Still want to Navigate?")
                     .setTitle("Bay Status");
 
 
@@ -309,6 +258,7 @@ public class MapsActivity extends AppCompatActivity
         }
 
     }
+
 
     /**
      * Bottom screen Button Start Parking OnClick
