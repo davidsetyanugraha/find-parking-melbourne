@@ -8,14 +8,14 @@ import com.unimelbs.parkingassistant.parkingapi.TheGeom;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Represents a parking bay.
+ */
 public class Bay implements ClusterItem, Serializable {
 
     private int bayId;
-
-    //position[0] Lat, position[1] Lng
     private double[] position;
     //private List<double[]> polygon;
-    //private List<String> restriction;
     private String title;
     private String snippet;
     private TheGeom theGeom;
@@ -36,14 +36,12 @@ public class Bay implements ClusterItem, Serializable {
 
     public Bay(int bayId,
                double[] position,
-               //List<double[]> polygon,
                List<Restriction> restrictions,
                TheGeom theGeom,
                String title,
                String snippet) {
         this.bayId = bayId;
         this.position = position;
-        //this.polygon = polygon;
         this.restrictions = restrictions;
         this.theGeom = theGeom;
         this.title = title;
@@ -84,25 +82,5 @@ public class Bay implements ClusterItem, Serializable {
 
     public void setAvailable(boolean available) {
         isAvailable = available;
-    }
-
-    public boolean isDisplayed(LatLng topRight, LatLng bottomLeft) throws Exception
-    {
-        LatLng latLng = getPosition();
-        if (topRight ==null|| bottomLeft ==null)
-        {
-            throw new Exception("projection passed is null");
-        }
-
-        if (getPosition()==null)
-        {
-            throw new Exception("Bay's position is null");
-        }
-
-        if (latLng.latitude<= topRight.latitude&&
-                latLng.latitude>= bottomLeft.latitude&&
-                latLng.longitude<= topRight.longitude&&
-                latLng.longitude>= bottomLeft.longitude) return true;
-        else return false;
     }
 }

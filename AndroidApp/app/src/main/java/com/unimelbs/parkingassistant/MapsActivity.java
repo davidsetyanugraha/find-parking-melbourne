@@ -34,7 +34,6 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
@@ -427,8 +426,13 @@ public class MapsActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
-        DataFeed data = new DataFeed(this, getApplicationContext());
-        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
+        DataFeed data = new DataFeed(getApplicationContext());
+        //ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
+        ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap);
+        extendedClusterManager.setRenderer(new BayRenderer(this,
+                mMap,
+                extendedClusterManager,
+                data));
         data.setClusterManager(extendedClusterManager);
         data.loadData();
 
