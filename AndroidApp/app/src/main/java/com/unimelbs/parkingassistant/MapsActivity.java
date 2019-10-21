@@ -34,10 +34,12 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
+import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
@@ -431,14 +433,14 @@ public class MapsActivity extends AppCompatActivity
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
         DataFeed data = new DataFeed(this, getApplicationContext());
-        data.loadData();
-        List<Bay> bayList = data.getItems();
-        //data.execute();
-        //try {Thread.sleep(30000);}catch(Exception e){Log.d(TAG, "onMapReady: "+e.getMessage());}
         ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
+        data.setClusterManager(extendedClusterManager);
+        data.loadData();
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
+
         mMap.setOnMarkerClickListener(extendedClusterManager);
+
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng arg0) {
@@ -448,13 +450,15 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
-        extendedClusterManager.addItems(bayList);
+        extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
         LatLng zoomPoint;
-        if (bayList.size() > 0) {
-
-            Log.d(TAG, "onMapReady: Bay items loaded on map.");
+        if (data.getItems().size() > 0) {
             zoomPoint = data.getItems().get(0).getPosition();
+            Log.d(TAG, "onMapReady: first bay:"+
+                    data.getItems().get(0).getBayId()+" "+
+                    data.getItems().get(0).getPosition()+" "+
+                    data.getItems().get(0).isAvailable());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
         }
 
