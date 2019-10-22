@@ -74,6 +74,9 @@ public class ParkingActivity extends AppCompatActivity {
     @BindView(R.id.linear_layout_2)
     LinearLayout linear_layout_2;
 
+    @BindView(R.id.tv_day)
+    TextView tv_day;
+
     @BindView(R.id.tv_hour)
     TextView tv_hour;
 
@@ -155,13 +158,15 @@ public class ParkingActivity extends AppCompatActivity {
 
                     if (!current_date.after(endParkingDate)) {
                         long diff = endParkingDate.getTime() - current_date.getTime();
-                        long Hours = diff / (60 * 60 * 1000) % 24;
-                        long Minutes = diff / (60 * 1000) % 60;
-                        long Seconds = diff / 1000 % 60;
+                        long days = diff / (24 * 60 * 60 * 1000);
+                        long hours = diff / (60 * 60 * 1000) % 24;
+                        long minutes = diff / (60 * 1000) % 60;
+                        long seconds = diff / 1000 % 60;
                         //
-                        tv_hour.setText(String.format("%02d", Hours));
-                        tv_minute.setText(String.format("%02d", Minutes));
-                        tv_second.setText(String.format("%02d", Seconds));
+                        tv_day.setText(String.format("%02d", days));
+                        tv_hour.setText(String.format("%02d", hours));
+                        tv_minute.setText(String.format("%02d", minutes));
+                        tv_second.setText(String.format("%02d", seconds));
                     } else {
                         linear_layout_1.setVisibility(View.VISIBLE);
                         linear_layout_2.setVisibility(View.GONE);

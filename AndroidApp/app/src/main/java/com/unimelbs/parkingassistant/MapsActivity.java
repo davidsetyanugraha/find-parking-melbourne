@@ -47,11 +47,9 @@ import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -74,8 +72,7 @@ public class MapsActivity extends AppCompatActivity
 
     BayUpdateService bayUpdateService;
     boolean bayUpdateServiceBound = false;
-    int mYear, mMonth, mDay, mHour, mMinute;
-    int sYear, sMonth, sDay, sHour, sMinute;
+    int year, month, day, hour, minute;
 
 
     @BindView(R.id.restrictionLayout)
@@ -299,16 +296,17 @@ public class MapsActivity extends AppCompatActivity
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
 
+        int mYear = currentTime.getYear();
+        int mMonth = currentTime.getMonthValue();
+        int mDay = currentTime.getDayOfMonth();
+        int mHour = currentTime.getHour();
+        int mMinute = currentTime.getMinute();
+
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-//                    TimePicker timePicker = startParkingFormView.findViewById(R.id.timePicker1);
-//
-//                    int timePickerHour = timePicker.getHour();
-//                    int timePickerMins = timePicker.getMinute();
-//                    Log.d(TAG, ""+mYear+":"+mHour+":"+mMinute);
-                    LocalDateTime toDate = LocalDateTime.of(sYear,sMonth,sDay,sHour,sMinute);
+                    LocalDateTime toDate = LocalDateTime.of(year, month, day, hour, minute);
                     Log.d(TAG, toDate.toString());
                     Log.d(TAG, currentTime.toString());
 
@@ -354,14 +352,6 @@ public class MapsActivity extends AppCompatActivity
         selectDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG,"ONLCIKSECLDATE");
-                // Get Current Date
-                final Calendar c = Calendar.getInstance();
-                mYear = c.get(Calendar.YEAR);
-                mMonth = c.get(Calendar.MONTH);
-                mDay = c.get(Calendar.DAY_OF_MONTH);
-
-
                 DatePickerDialog datePickerDialog = new DatePickerDialog(MapsActivity.this,
                         new DatePickerDialog.OnDateSetListener() {
 
@@ -370,10 +360,9 @@ public class MapsActivity extends AppCompatActivity
                                                   int monthOfYear, int dayOfMonth) {
 
                                 txtDate.setText(dayOfMonth + "-" + (monthOfYear + 1) + "-" + year);
-                                sDay = dayOfMonth;
-                                sMonth = monthOfYear + 1;
-                                sYear = year;
-
+                                day = dayOfMonth;
+                                month = monthOfYear + 1;
+                                MapsActivity.this.year = year;
                             }
                         }, mYear, mMonth, mDay);
                 datePickerDialog.show();
@@ -386,12 +375,6 @@ public class MapsActivity extends AppCompatActivity
         selectTimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG,"ONLCIKSECLTIME");
-                // Get Current Time
-                final Calendar c = Calendar.getInstance();
-                mHour = c.get(Calendar.HOUR_OF_DAY);
-                mMinute = c.get(Calendar.MINUTE);
-
                 // Launch Time Picker Dialog
                 TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
                         new TimePickerDialog.OnTimeSetListener() {
@@ -401,8 +384,8 @@ public class MapsActivity extends AppCompatActivity
                                                   int minute) {
 
                                 txtTime.setText(hourOfDay + ":" + minute);
-                                sHour = hourOfDay;
-                                sMinute = minute;
+                                hour = hourOfDay;
+                                MapsActivity.this.minute = minute;
                             }
                         }, mHour, mMinute, false);
                 timePickerDialog.show();
