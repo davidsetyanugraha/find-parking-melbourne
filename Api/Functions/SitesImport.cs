@@ -19,6 +19,7 @@ namespace Api.Functions
         static string restrictionsApiUrl = "https://data.melbourne.vic.gov.au/resource/ntht-5rk7.json?%24limit=10000";
         static string baysApiUrl = "https://data.melbourne.vic.gov.au/resource/wuf8-susg.json?%24limit=100000";
 
+        // Sync all the sites using the city of Melbourne API
         [FunctionName("SitesImport")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/import")] HttpRequest req,
@@ -68,22 +69,25 @@ namespace Api.Functions
 
             log.LogInformation($"Bays downloaded at: {DateTime.Now}");
 
+            // Retrieve the sensors and compose the object to store
             using (HttpResponseMessage sens = await client.GetAsync(sensorsApiUrl))
             {
                 log.LogInformation($"Sensors downloaded at: {DateTime.Now}");
                 using (HttpContent content_sens = sens.Content)
                 {
+                    //get the results of the query
                     dynamic result_sens = JsonConvert.DeserializeObject(await content_sens.ReadAsStringAsync());
 
                     foreach (var item_sens in result_sens)
                     {
+                        //get the corresponding bays and restrictions
                         dynamic item_res = null;
                         dict_res.TryGetValue(item_sens.bay_id.ToString(), out item_res);
                         dynamic item_bay = null;
                         dict_bay.TryGetValue(item_sens.st_marker_id.ToString(), out item_bay);
 
+                        // compose the restrictions
                         List<dynamic> restrictions = new List<dynamic>();
-
                         for (int i = 1; i < 7; i++)
                         {
                             if (item_res?["description" + i] != null)
@@ -104,6 +108,7 @@ namespace Api.Functions
                             }  
                         }
 
+                        // Compose the new object
                         var newObject = new {
                             id = item_sens.bay_id.ToString(),
                             sourceReferences = new {
@@ -111,7 +116,7 @@ namespace Api.Functions
                                 markerId = item_sens.st_marker_id.ToString(),
                             },
                             description = item_bay?.rd_seg_dsc,
-                            the_geom = item_bay?.the_geom,
+                            polygon = ConvertGeometry(item_bay?.the_geom),
                             restrictions = restrictions,
                             location = new Point(
                                 (double)item_sens.location?.longitude,
@@ -119,11 +124,29 @@ namespace Api.Functions
                             )
                         };
 
+                        if (newObject.polygon == null)
+                        {
+                            log.LogInformation($"This bay does not have a related polygon {newObject.id}");
+                        }
+                        // Add the object to the database
                         await documents.AddAsync(newObject);
                     }
                     log.LogInformation($"Total parkings processed {result_sens.Count}");
                 }
                 return new NoContentResult();
+            }
+        }
+
+        private static dynamic ConvertGeometry(dynamic the_geom)
+        {
+            if (the_geom == null || the_geom.type != "MultiPolygon"
+                || the_geom.coordinates.Count != 1 || the_geom.coordinates[0].Count != 1)
+            {
+                return null;
+            }
+            else
+            {
+                return the_geom.coordinates[0][0];
             }
         }
     }
