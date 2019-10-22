@@ -60,41 +60,6 @@ public class DataFeed {
         //TODO: Call baysSubject.onNext(<<<the new array here>>); when needed
     }
 
-/*
-    class BayStateApi extends AsyncTask<Void,Void,List<SiteState>>
-    {
-        private static final String TAG = "BayStateApi";
-        private DataFeed dataFeed;
-        private List<SiteState> baysStates;
-        public BayStateApi(DataFeed dataFeed, LatLng centrePoint)
-        {
-            this.dataFeed = dataFeed;
-        }
-        private void fetchApiData()
-        {
-            SitesStateGetQuery query = new SitesStateGetQuery(-37.796201, 144.958266, null);
-            dataFeed.api.sitesStateGet(query)
-                .subscribeOn(Schedulers.io())
-                //.observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
-                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
-                .subscribe(value ->
-                        {
-                            baysStates = value;
-                            System.out.println("Value:" + value.get(0).getStatus()); // sample, other values are id, status, location, zone, recordState
-                        },
-                    throwable -> Log.d("debug", throwable.getMessage()) // do this on error
-                );
-        }
-
-
-        @Override
-        protected Void doInBackground(Void...params) {
-            fetchApiData();
-            return null; //new LatLng(50,60);//null;
-        }
-    }
- */
-
     /**
      * Calls a back-end API that caches Bay data from the city of
      * Melbourne Open Data API. This task runs on a separate thread.
