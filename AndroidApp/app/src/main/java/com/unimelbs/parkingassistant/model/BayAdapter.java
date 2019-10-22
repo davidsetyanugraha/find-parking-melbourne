@@ -49,7 +49,7 @@ public class BayAdapter {
         Bay bay = new Bay(Integer.parseInt(site.getId()),
                         position,
                         site.getRestrictions(),
-                        site.getTheGeom(),
+                        site.getPolygon(),
                         site.getDescription(),
                         site.getDescription());
         return bay;

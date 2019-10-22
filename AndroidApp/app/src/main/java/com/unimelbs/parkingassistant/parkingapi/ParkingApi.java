@@ -20,8 +20,8 @@ import retrofit2.http.QueryMap;
 
 public class ParkingApi {
 
-    private static final String url = "https://parkingappapi.azurewebsites.net/api/";
-//    private static final String url = "http://10.8.8.8:7071/api/";
+//    private static final String url = "https://parkingappapi.azurewebsites.net/api/";
+    private static final String url = "http://10.8.8.8:7071/api/";
 
     private static ParkingApi instance;
 

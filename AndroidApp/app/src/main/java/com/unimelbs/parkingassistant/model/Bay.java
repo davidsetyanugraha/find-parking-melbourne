@@ -18,7 +18,7 @@ public class Bay implements ClusterItem, Serializable {
     //private List<double[]> polygon;
     private String title;
     private String snippet;
-    private TheGeom theGeom;
+    private List<Double[]> polygon;
     private boolean isAvailable;
     private List<Restriction> restrictions;
 
@@ -37,13 +37,13 @@ public class Bay implements ClusterItem, Serializable {
     public Bay(int bayId,
                double[] position,
                List<Restriction> restrictions,
-               TheGeom theGeom,
+               List<Double[]> polygon,
                String title,
                String snippet) {
         this.bayId = bayId;
         this.position = position;
         this.restrictions = restrictions;
-        this.theGeom = theGeom;
+        this.polygon = polygon;
         this.title = title;
         this.snippet = snippet;
     }
@@ -56,7 +56,7 @@ public class Bay implements ClusterItem, Serializable {
 
     public int getBayId() {return bayId;}
 
-    public TheGeom getTheGeom() {return this.theGeom;}
+    public List<Double[]> getPolygon() {return this.polygon;}
 
     @Override
     public LatLng getPosition() {
