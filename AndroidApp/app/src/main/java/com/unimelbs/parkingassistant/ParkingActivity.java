@@ -45,6 +45,10 @@ public class ParkingActivity extends AppCompatActivity {
     private Bay selectedBay;
 
     //bottom sheet view
+
+    @BindView(R.id.restrictionLayout)
+    LinearLayout layoutRestrictions;
+
     @BindView(R.id.bottom_sheet_parking)
     LinearLayout layoutBottomSheet;
 
@@ -57,10 +61,7 @@ public class ParkingActivity extends AppCompatActivity {
     @BindView(R.id.bay_status)
     TextView bayStatus;
 
-    @BindView(R.id.bay_restriction)
-    TextView bayRestriction;
-
-    @BindView(R.id.btn_stop_parking)
+    @BindView(R.id.btn_parking)
     Button stopParkingButton;
 
     @BindView(R.id.btn_direction)
@@ -128,19 +129,26 @@ public class ParkingActivity extends AppCompatActivity {
         //change layout
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-        renderBottomSheet(selectedBay);
+        stopParkingButton.setText("Stop Parking");
+        //@todo: encapsulate bottomScreen in class to reduce redundancy
+        reRenderBottomSheet(selectedBay);
     }
 
-    private void renderBottomSheet(@NotNull Bay bay) {
+    private void reRenderBottomSheet(@NotNull Bay bay) {
         String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
         String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
 
+        layoutRestrictions.removeAllViews();
+        for (int i = 0; i < bay.getRestrictions().size(); i++) {
+            Button tv = new Button(getApplicationContext());
+            tv.setText(bay.getRestrictions().get(i).getDescription());
+            layoutRestrictions.addView(tv);
+        }
+
         String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
-        bayRestriction.setText(bayRestrictionString);
-        baySnippet.setText("BayId = " + Integer.toString(bay.getBayId()));
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
@@ -188,7 +196,7 @@ public class ParkingActivity extends AppCompatActivity {
     /**
      * Bottom screen Button Stop Parking OnClick
      */
-    @OnClick(R.id.btn_stop_parking)
+    @OnClick(R.id.btn_parking)
     public void stopParking() {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(ParkingActivity.this);

@@ -107,7 +107,7 @@ public class MapsActivity extends AppCompatActivity
     @BindView(R.id.btn_direction)
     Button direction;
 
-    @BindView(R.id.btn_start_parking)
+    @BindView(R.id.btn_parking)
     Button startParkingButton;
 
     BottomSheetBehavior sheetBehavior;
@@ -284,7 +284,7 @@ public class MapsActivity extends AppCompatActivity
     /**
      * Bottom screen Button Start Parking OnClick
      */
-    @OnClick(R.id.btn_start_parking)
+    @OnClick(R.id.btn_parking)
     public void startParking() {
         //bayStatusChangeNotification();
         AlertDialog alertDialog;
@@ -541,6 +541,8 @@ public class MapsActivity extends AppCompatActivity
     public boolean onClusterItemClick(Bay bay) {
         Log.d(TAG, "onClusterItemClick: bay clicked:" + bay.getBayId());
         selectedBay = SerializationUtils.clone(bay);
+
+        //@todo: encapsulate bottomScreen in class to reduce redundancy
         reRenderBottomSheet(selectedBay);
         return false;
     }
