@@ -19,7 +19,10 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 
 
@@ -37,6 +40,8 @@ public class DataFeed {
     private List<Bay> bays;
     private Hashtable<Integer,Bay> baysHashtable;
     private ParkingApi api;
+    private PublishSubject<List<Bay>> baysSubject = PublishSubject.create();
+    //private BayStateApi bayStateApi;
     private ClusterManager<Bay> clusterManager;
 
 
@@ -50,6 +55,45 @@ public class DataFeed {
         this.api = ParkingApi.getInstance();
     }
 
+    public Observable<List<Bay>> getBaysObservable() {
+        return baysSubject;
+        //TODO: Call baysSubject.onNext(<<<the new array here>>); when needed
+    }
+
+/*
+    class BayStateApi extends AsyncTask<Void,Void,List<SiteState>>
+    {
+        private static final String TAG = "BayStateApi";
+        private DataFeed dataFeed;
+        private List<SiteState> baysStates;
+        public BayStateApi(DataFeed dataFeed, LatLng centrePoint)
+        {
+            this.dataFeed = dataFeed;
+        }
+        private void fetchApiData()
+        {
+            SitesStateGetQuery query = new SitesStateGetQuery(-37.796201, 144.958266, null);
+            dataFeed.api.sitesStateGet(query)
+                .subscribeOn(Schedulers.io())
+                //.observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
+                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
+                .subscribe(value ->
+                        {
+                            baysStates = value;
+                            System.out.println("Value:" + value.get(0).getStatus()); // sample, other values are id, status, location, zone, recordState
+                        },
+                    throwable -> Log.d("debug", throwable.getMessage()) // do this on error
+                );
+        }
+
+
+        @Override
+        protected Void doInBackground(Void...params) {
+            fetchApiData();
+            return null; //new LatLng(50,60);//null;
+        }
+    }
+ */
 
     /**
      * Calls a back-end API that caches Bay data from the city of

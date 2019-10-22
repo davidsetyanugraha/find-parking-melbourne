@@ -22,6 +22,7 @@ namespace Api.Functions
         static HttpClient httpClient = new HttpClient();
         static string parkingApiUrl = "https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?%24limit=100000";
         
+        // Runs every 2 minutes to update the parking bays state
         [FunctionName("SitesStateImport")]
         public static async Task RunAsync(
             [TimerTrigger("0 */2 * * * *")]TimerInfo myTimer,
@@ -31,6 +32,7 @@ namespace Api.Functions
         {
             log.LogInformation($"Sites State import starting at: {DateTime.Now}");
 
+            //Query all the old objects in the db
             Uri collectionUri = UriFactory.CreateDocumentCollectionUri("parkingdb", "sitesstate");
             IDocumentQuery<SiteState> query = documentClient.CreateDocumentQuery<SiteState>(collectionUri,
                new FeedOptions() { PartitionKey = new PartitionKey(null) })
@@ -48,6 +50,7 @@ namespace Api.Functions
                 using (HttpContent content = res.Content)
                 {
                     var lastUpdate = DateTime.UtcNow;
+                    //Retrieve the values from the api
                     dynamic result = JsonConvert.DeserializeObject(await content.ReadAsStringAsync());
 
                     log.LogInformation($"Sites State import origin downloaded at: {DateTime.Now}. Total sites {result.Count}");
@@ -68,6 +71,7 @@ namespace Api.Functions
                         
                         SiteState oldSite;
                         
+                        //Replace the old values when they changed
                         if (!oldSites.TryGetValue(newSite.Id, out oldSite))
                         {
                             newSites.Add(newSite);
@@ -87,11 +91,13 @@ namespace Api.Functions
 
             log.LogInformation($"Sites State import processed at: {DateTime.Now}. Sites to upsert {newSites.Count}. Sites to delete {oldSites.Count}");
 
+            // Do the update
             foreach (var item in newSites)
             {
                 await documentClient.UpsertDocumentAsync(collectionUri, item);
             }
 
+            // Stablish a time to live if the bay was removed
             foreach (var keyPair in oldSites)
             {
                 keyPair.Value.RecordState = SiteState.EntityState.Deleted;

@@ -8,6 +8,7 @@ namespace Api.Functions
 {
     public static class SitesGet
     {
+        //Retrieves all the parking bays
         [FunctionName("SitesGet")]
         public static HttpResponseMessage Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "sites/")] HttpRequestMessage req,
