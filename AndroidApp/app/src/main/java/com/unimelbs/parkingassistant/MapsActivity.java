@@ -1,7 +1,6 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,7 +8,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -100,7 +98,12 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         Log.d(TAG, "onCreate: " + Thread.currentThread().getName());
+
+        // Bind to BayUpdateService
+        bindToBayUpdateService();
 
         setContentView(R.layout.activity_maps);
 
@@ -119,11 +122,18 @@ public class MapsActivity extends AppCompatActivity
 
         initBottomSheetUI();
 
-        // Bind to BayUpdateService
-        Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
-        bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
-        startService(bayMonitorServiceIntent);
-        bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
+
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
     }
     private ServiceConnection connection = new ServiceConnection() {
 
@@ -173,12 +183,7 @@ public class MapsActivity extends AppCompatActivity
     /** Defines callbacks for service binding, passed to bindService() */
 
 
-    @Override
-    protected void onStart() {
-        super.onStart();
 
-
-    }
 
     @Override
     protected void onDestroy() {
@@ -212,56 +217,6 @@ public class MapsActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    private void navigateToTheSelectedBay()
-    {
-        LatLng selectedBayLatLng = this.selectedBay.getPosition();
-        String lat = String.valueOf(selectedBayLatLng.latitude);
-        String lon = String.valueOf(selectedBayLatLng.longitude);
-
-
-        // Part of the code below is taken from
-        // https://stackoverflow.com/questions/
-        // 2662531/launching-google-maps-directions
-        // -via-an-intent-on-android?rq=1
-
-        Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon);
-        Log.d("Navigation Uri", "Navigation URI is " + navigationIntentUri);
-        Intent mapIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-        mapIntent.setPackage("com.google.android.apps.maps");
-
-
-        try {
-
-            startActivity(mapIntent);
-
-        } catch (ActivityNotFoundException ex) {
-            try {
-                Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-                startActivity(unrestrictedIntent);
-            } catch (ActivityNotFoundException innerEx) {
-                Toast.makeText(this, "No Map Application Found, Opening In Browser", Toast.LENGTH_LONG).show();
-                try {
-                    Uri.Builder builder = new Uri.Builder();
-                    builder.scheme("https")
-                            .authority("www.google.com")
-                            .appendPath("maps")
-                            .appendPath("dir")
-                            .appendPath("")
-                            .appendQueryParameter("api", "1")
-                            .appendQueryParameter("destination", lat + "," + lon);
-                    String url = builder.build().toString();
-                    Log.d("Directions", url);
-                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    i.setData(Uri.parse(url));
-                    startActivity(i);
-                } catch (Exception e) {
-                    Log.d("Failure", "Failed To Open any navigation method " + e.getMessage());
-
-                }
-            }
-        }
-    }
-
     /**
      * Bottom screen Button Direction OnClick
      */
@@ -272,18 +227,20 @@ public class MapsActivity extends AppCompatActivity
 
         if(this.selectedBay.isAvailable())
         {
+            bayUpdateService.navigateToTheSelectedBayWithSubscription(this.selectedBay, true);
 
-            bayUpdateService.subscribeToServerForUpdates(this.selectedBay);
-
-        } else {
+        }
+        else
+            {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-            // Add the buttons
+
             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    // TODO MUST REMOVE SUBSCRIPTION BELOW
-                    //bayUpdateService.subscribeToServerForUpdates(selectedBay);
-                    navigateToTheSelectedBay();
+                    // In this version of app we do not support
+                    // occupied to present status switch over.
+                    // Hence if a bay is occupied, we wont monitor it.
+                    bayUpdateService.navigateToTheSelectedBayWithSubscription(selectedBay, false);
 
                 }
             });
@@ -292,7 +249,7 @@ public class MapsActivity extends AppCompatActivity
                     // User cancelled the dialog
                 }
             });
-            builder.setMessage("The Bay is occupied. Do you Still want to Navigate")
+            builder.setMessage("The Bay is occupied. Do you Still want to Navigate?")
                     .setTitle("Bay Status");
 
 
@@ -304,6 +261,7 @@ public class MapsActivity extends AppCompatActivity
         }
 
     }
+
 
     /**
      * Bottom screen Button Start Parking OnClick
@@ -371,6 +329,8 @@ public class MapsActivity extends AppCompatActivity
 
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        autocompleteFragment.setCountry("AU");
 
 
         try {
@@ -451,14 +411,26 @@ public class MapsActivity extends AppCompatActivity
         });
         extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
-        LatLng zoomPoint;
+
+
+        Bay focusPoint;
+        int zoomLevel = 15 ;
         if (data.getItems().size() > 0) {
-            zoomPoint = data.getItems().get(0).getPosition();
-            Log.d(TAG, "onMapReady: first bay:"+
-                    data.getItems().get(0).getBayId()+" "+
-                    data.getItems().get(0).getPosition()+" "+
-                    data.getItems().get(0).isAvailable());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
+            focusPoint = data.getItems().get(0);
+
+            // When resuming from a previously
+            // selected bay, zoom to previously
+            // selected bay.
+            if(BayUpdateService.selectedBayId != null){
+                focusPoint = BayUpdateService.selectedBayId;
+                zoomLevel = 20;
+            }
+
+            Log.d(TAG, "onMapReady: Zoomed bay:"+
+                    focusPoint.getBayId()+" "+
+                    focusPoint.getPosition()+" "+
+                    focusPoint.isAvailable());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), zoomLevel));
         }
 
         checkIfThereIsParking();
@@ -548,6 +520,15 @@ public class MapsActivity extends AppCompatActivity
         } else {
             getSupportFragmentManager().popBackStack();
         }
+
+    }
+
+    private void bindToBayUpdateService(){
+
+        Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
+        bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
+        startService(bayMonitorServiceIntent);
+        bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
 
     }
 
