@@ -494,6 +494,7 @@ public class BayUpdateService extends Service {
 
             try {
                 notificationManager.cancel(BAY_STATUS_UPDATE_NOTIFICATION_ID);
+                //notificationManager.cancelAll();
             }catch (Exception e){
                 Log.e("CancelNotifyService", "Failed to cancel notification BAY_STATUS_UPDATE_NOTIFICATION_ID ");
             }
