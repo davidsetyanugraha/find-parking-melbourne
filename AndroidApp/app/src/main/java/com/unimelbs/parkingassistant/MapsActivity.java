@@ -37,7 +37,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
-import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
 import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
@@ -478,6 +477,7 @@ public class MapsActivity extends AppCompatActivity
 
     @Override
     public boolean onClusterItemClick(Bay bay) {
+
         Log.d(TAG, "onClusterItemClick: bay clicked:" + bay.getBayId());
         selectedBay = SerializationUtils.clone(bay);
         reRenderBottomSheet(selectedBay);
