@@ -3,6 +3,7 @@ package com.unimelbs.parkingassistant.util;
 import android.location.Location;
 import android.util.Log;
 
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
 
@@ -62,6 +63,19 @@ public class DistanceUtil {
         //timer.stop();
         //Log.d(TAG, "getDistanceS: completed in: "+timer.getDuration());
         return res;
+    }
+
+
+    public static double getRadius(GoogleMap mMap)
+    {
+        double radius = 0;
+        if (mMap!=null)
+        {
+            LatLng topRight = mMap.getProjection().getVisibleRegion().latLngBounds.northeast;
+            LatLng bottomLeft = mMap.getProjection().getVisibleRegion().latLngBounds.southwest;
+            radius = Math.round(DistanceUtil.getDistanceS(topRight,bottomLeft)/2);
+        }
+        return radius;
     }
 
 

@@ -18,6 +18,10 @@ import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
 
+/**
+ *
+ * @param <T>
+ */
 public class ExtendedClusterManager<T extends ClusterItem> extends ClusterManager
         implements
         GoogleMap.OnCameraIdleListener,

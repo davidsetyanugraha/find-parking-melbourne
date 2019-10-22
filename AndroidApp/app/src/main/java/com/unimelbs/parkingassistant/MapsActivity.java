@@ -385,8 +385,13 @@ public class MapsActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
-        DataFeed data = new DataFeed(this, getApplicationContext());
-        ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
+        DataFeed data = new DataFeed(getApplicationContext());
+        //ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
+        ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap);
+        extendedClusterManager.setRenderer(new BayRenderer(this,
+                mMap,
+                extendedClusterManager,
+                data));
         data.setClusterManager(extendedClusterManager);
         data.loadData();
 

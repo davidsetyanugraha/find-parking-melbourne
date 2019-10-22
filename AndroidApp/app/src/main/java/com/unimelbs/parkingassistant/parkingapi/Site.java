@@ -3,6 +3,7 @@ package com.unimelbs.parkingassistant.parkingapi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Site {
@@ -13,9 +14,9 @@ public class Site {
     @SerializedName("description")
     @Expose
     private String description;
-    @SerializedName("the_geom")
+    @SerializedName("polygon")
     @Expose
-    private TheGeom theGeom;
+    private List<Double[]> polygon;
     @SerializedName("restrictions")
     @Expose
     private List<Restriction> restrictions = null;
@@ -39,12 +40,12 @@ public class Site {
         this.description = description;
     }
 
-    public TheGeom getTheGeom() {
-        return theGeom;
+    public List<Double[]> getPolygon() {
+        return polygon;
     }
 
-    public void setTheGeom(TheGeom theGeom) {
-        this.theGeom = theGeom;
+    public void setPolygon(List<Double[]> polygon) {
+        this.polygon = polygon;
     }
 
     public List<Restriction> getRestrictions() {

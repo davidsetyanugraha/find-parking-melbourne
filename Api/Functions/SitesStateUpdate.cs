@@ -34,6 +34,7 @@ namespace Api.Functions
             }
         }
 
+        // Update the parking bay status without relying on the update from the api
         //https://markheath.net/post/azure-functions-rest-csharp-bindings
         //http://dontcodetired.com/blog/post/Different-Ways-to-Parse-Http-Request-Data-in-Http-triggered-Azure-Functions
         [FunctionName("SitesStateUpdate")]

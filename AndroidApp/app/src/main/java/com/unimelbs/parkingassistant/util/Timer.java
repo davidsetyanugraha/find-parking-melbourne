@@ -3,19 +3,15 @@ package com.unimelbs.parkingassistant.util;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Formatter;
 
+/**
+ * Utility class used to measure performance of different ways of showing data on the map.
+ */
 public class Timer {
     private static final int MILLIS_TO_SECONDS=1000;
     private long startTime;
     private long duration;
-    private String TAG;
 
-    public Timer()
-    {
-        this.TAG = TAG;
-
-    }
     public void start()
     {
         this.startTime = System.currentTimeMillis();
@@ -26,13 +22,10 @@ public class Timer {
     }
 
     public long getDurationInSeconds(){return this.duration/MILLIS_TO_SECONDS;}
-    public long getDuration() { return duration;}
-
     public static String convertToTimestamp(long time)
     {
         Date d = new Date(time);
         Format f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
         return f.format(d);
     }
-
 }

@@ -42,14 +42,15 @@ namespace Api.Functions
             }
         }
 
+        // Get the state of the parking bays giving a point and a distance
         [FunctionName("SitesStateGet")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "sites/state")] Query message,
             [CosmosDB(ConnectionStringSetting = "CosmosDBConnectionString")] DocumentClient client,
             ILogger log)
         {
+            // Validate input
             var validationResult = new QueryValidator().Validate(message);
-
             if (!validationResult.IsValid)
             {
                 return new BadRequestObjectResult(validationResult.Errors.Select(e => new {
@@ -60,6 +61,7 @@ namespace Api.Functions
             
             log.LogInformation("Finding points at the requested distance.");
 
+            //Query the database to find the parking bays
             Uri collectionUri = UriFactory.CreateDocumentCollectionUri("parkingdb", "sitesstate");
             // The distance is in meters according to https://stackoverflow.com/questions/54453190/what-units-does-st-distance-return
             var distance = message.Distance ?? 1000;

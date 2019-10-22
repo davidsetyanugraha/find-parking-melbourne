@@ -17,6 +17,7 @@ namespace Api.Functions
     //https://docs.microsoft.com/en-us/azure/azure-signalr/signalr-quickstart-azure-functions-csharp
     public static class SitesStateChangeFeed
     {
+        // Excecutes every time there is a change in the db
         [FunctionName("SitesStateChangeFeed")]
         public static void Run(
             [CosmosDBTrigger(
@@ -36,9 +37,11 @@ namespace Api.Functions
 
             foreach (var document in input)
             {
+                //If the bay was updated
                 if (document.GetPropertyValue<string>("recordState") !=
                     SiteState.EntityState.Created.ToString())
                 {
+                    //Signal the connected client
                     signalRMessages.AddAsync(
                     new SignalRMessage 
                     {
