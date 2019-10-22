@@ -7,7 +7,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="35dp">
+        android:padding="35dp"
+        android:stretchColumns="*">
 
 
 
@@ -22,28 +23,31 @@
                 android:lines="1"
                 android:inputType = "number"
                 android:maxLines="1"
-                android:maxLength="18"/>
+                android:maxLength="30"
+                android:enabled="false"/>
             <Button
                 android:id="@+id/btn_date"
                 android:paddingLeft="10dp"
-                android:text="Select Date"/>
+                android:text="Change Date"/>
 
         </TableRow>
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="wrap_content"
+            android:weightSum="1">
 
             <EditText
                 android:id="@+id/in_time"
                 android:lines="1"
                 android:inputType = "number"
                 android:maxLines="1"
-                android:maxLength="18"/>
+                android:maxLength="30"
+                android:enabled="false"/>
             <Button
                 android:id="@+id/btn_time"
                 android:paddingLeft="10dp"
-                android:text="Select Time"/>
+                android:text="Change Time"/>
 
         </TableRow>
 

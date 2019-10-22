@@ -50,6 +50,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -383,7 +384,20 @@ public class MapsActivity extends AppCompatActivity
                             public void onTimeSet(TimePicker view, int hourOfDay,
                                                   int minute) {
 
-                                txtTime.setText(hourOfDay + ":" + minute);
+                                String am_pm = "";
+
+                                Calendar datetime = Calendar.getInstance();
+                                datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                                datetime.set(Calendar.MINUTE, minute);
+
+                                if (datetime.get(Calendar.AM_PM) == Calendar.AM)
+                                    am_pm = "AM";
+                                else if (datetime.get(Calendar.AM_PM) == Calendar.PM)
+                                    am_pm = "PM";
+
+                                String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
+
+                                txtTime.setText(strHrsToShow + ":" + String.format("%02d", minute) + " " + am_pm);
                                 hour = hourOfDay;
                                 MapsActivity.this.minute = minute;
                             }
