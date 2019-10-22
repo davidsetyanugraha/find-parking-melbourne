@@ -36,6 +36,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
+import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
@@ -410,10 +411,11 @@ public class MapsActivity extends AppCompatActivity
         });
         extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
+
+
         Bay focusPoint;
         int zoomLevel = 15 ;
         if (data.getItems().size() > 0) {
-
             focusPoint = data.getItems().get(0);
 
             // When resuming from a previously
