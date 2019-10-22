@@ -13,27 +13,54 @@
 
         <!-- Parking duration. -->
 
-        <TimePicker
-            android:id="@+id/timePicker1"
-            android:timePickerMode="spinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
 
-<!--        <TableRow-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent" >-->
+            <EditText
+                android:id="@+id/in_date"
+                android:lines="1"
+                android:inputType = "number"
+                android:maxLines="1"
+                android:maxLength="18"/>
+            <Button
+                android:id="@+id/btn_date"
+                android:paddingLeft="10dp"
+                android:text="Select Date"/>
 
-<!--            <TextView-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Duration (hours):"/>-->
-<!--            <EditText-->
-<!--                android:id="@+id/parkingFormDuration"-->
-<!--                android:lines="1"-->
-<!--                android:inputType = "number"-->
-<!--                android:maxLines="1"-->
-<!--                android:maxLength="18"/>-->
-<!--        </TableRow>-->
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <EditText
+                android:id="@+id/in_time"
+                android:lines="1"
+                android:inputType = "number"
+                android:maxLines="1"
+                android:maxLength="18"/>
+            <Button
+                android:id="@+id/btn_time"
+                android:paddingLeft="10dp"
+                android:text="Select Time"/>
+
+        </TableRow>
+
+<!--        <DatePicker-->
+<!--            android:id="@+id/datePicker1"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:datePickerMode="spinner"-->
+<!--            android:calendarViewShown="false"/>-->
+
+<!--        <TimePicker-->
+<!--            android:id="@+id/timePicker1"-->
+<!--            android:timePickerMode="spinner"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content" />-->
+
+
 
 <!--        <TableRow-->
 <!--            android:layout_width="match_parent"-->

@@ -1,6 +1,8 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,6 +16,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -47,6 +51,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -69,6 +74,8 @@ public class MapsActivity extends AppCompatActivity
 
     BayUpdateService bayUpdateService;
     boolean bayUpdateServiceBound = false;
+    int mYear, mMonth, mDay, mHour, mMinute;
+    int sYear, sMonth, sDay, sHour, sMinute;
 
 
     @BindView(R.id.restrictionLayout)
@@ -286,8 +293,9 @@ public class MapsActivity extends AppCompatActivity
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
         Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
+
         LocalDateTime currentTime = LocalDateTime.now();
-        builder.setTitle("Set return time \n" + currentTime.toLocalDate());
+        builder.setTitle("Set return time");
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
 
@@ -295,12 +303,14 @@ public class MapsActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 try {
-                    TimePicker timePicker = startParkingFormView.findViewById(R.id.timePicker1);
-
-                    int timePickerHour = timePicker.getHour();
-                    int timePickerMins = timePicker.getMinute();
-
-                    LocalDateTime toDate = LocalDate.now().atTime(timePickerHour,timePickerMins);
+//                    TimePicker timePicker = startParkingFormView.findViewById(R.id.timePicker1);
+//
+//                    int timePickerHour = timePicker.getHour();
+//                    int timePickerMins = timePicker.getMinute();
+//                    Log.d(TAG, ""+mYear+":"+mHour+":"+mMinute);
+                    LocalDateTime toDate = LocalDateTime.of(sYear,sMonth,sDay,sHour,sMinute);
+                    Log.d(TAG, toDate.toString());
+                    Log.d(TAG, currentTime.toString());
 
                     Long seconds = ChronoUnit.SECONDS.between(currentTime, toDate);
 
@@ -335,6 +345,68 @@ public class MapsActivity extends AppCompatActivity
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+            }
+        });
+
+
+        Button selectDateButton = startParkingFormView.findViewById(R.id.btn_date);
+        EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
+        selectDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG,"ONLCIKSECLDATE");
+                // Get Current Date
+                final Calendar c = Calendar.getInstance();
+                mYear = c.get(Calendar.YEAR);
+                mMonth = c.get(Calendar.MONTH);
+                mDay = c.get(Calendar.DAY_OF_MONTH);
+
+
+                DatePickerDialog datePickerDialog = new DatePickerDialog(MapsActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
+
+                            @Override
+                            public void onDateSet(DatePicker view, int year,
+                                                  int monthOfYear, int dayOfMonth) {
+
+                                txtDate.setText(dayOfMonth + "-" + (monthOfYear + 1) + "-" + year);
+                                sDay = dayOfMonth;
+                                sMonth = monthOfYear + 1;
+                                sYear = year;
+
+                            }
+                        }, mYear, mMonth, mDay);
+                datePickerDialog.show();
+            }
+        });
+
+        Button selectTimeButton = startParkingFormView.findViewById(R.id.btn_time);
+        EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
+
+        selectTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG,"ONLCIKSECLTIME");
+                // Get Current Time
+                final Calendar c = Calendar.getInstance();
+                mHour = c.get(Calendar.HOUR_OF_DAY);
+                mMinute = c.get(Calendar.MINUTE);
+
+                // Launch Time Picker Dialog
+                TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
+                        new TimePickerDialog.OnTimeSetListener() {
+
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay,
+                                                  int minute) {
+
+                                txtTime.setText(hourOfDay + ":" + minute);
+                                sHour = hourOfDay;
+                                sMinute = minute;
+                            }
+                        }, mHour, mMinute, false);
+                timePickerDialog.show();
+
             }
         });
 
@@ -556,6 +628,5 @@ public class MapsActivity extends AppCompatActivity
         bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
 
     }
-
 
 }
