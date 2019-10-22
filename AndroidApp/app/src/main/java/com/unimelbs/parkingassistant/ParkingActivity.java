@@ -1,10 +1,12 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -14,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
@@ -59,6 +62,10 @@ public class ParkingActivity extends AppCompatActivity {
 
     @BindView(R.id.btn_stop_parking)
     Button stopParkingButton;
+
+    @BindView(R.id.btn_direction)
+    Button directionButton;
+
 
     //count down view
     @BindView(R.id.linear_layout_1)
@@ -203,9 +210,61 @@ public class ParkingActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
+    /**
+     * Bottom screen Button Direction OnClick
+     */
+    @OnClick(R.id.btn_direction)
+    public void direction() {
+
+
+        try
+        {
+            walkToTheSelectedBay();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Unable to show walking direction to parked car ", Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void goToMapsActivity() {
-        Intent intent = new Intent(this, MapsActivity.class);
-        startActivity(intent);
+        //Intent intent = new Intent(this, MapsActivity.class);
+        //startActivity(intent);
+
+        Intent openMapsActivity = new Intent(ParkingActivity.this, MapsActivity.class);
+        openMapsActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityIfNeeded(openMapsActivity, 0);
+    }
+
+    private void walkToTheSelectedBay()
+    {
+        LatLng selectedBayLatLng = this.selectedBay.getPosition();
+        String lat = String.valueOf(selectedBayLatLng.latitude);
+        String lon = String.valueOf(selectedBayLatLng.longitude);
+
+
+        // Part of the code below is taken from
+        // https://stackoverflow.com/questions/
+        // 2662531/launching-google-maps-directions
+        // -via-an-intent-on-android?rq=1
+
+        Uri walkIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon+"&mode=w");
+        Log.d("Walk Uri", "Walk URI is " + walkIntentUri);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, walkIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+
+
+        try {
+            startActivity(mapIntent);
+
+        } catch (ActivityNotFoundException ex) {
+            try {
+                Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, walkIntentUri);
+                startActivity(unrestrictedIntent);
+            } catch (ActivityNotFoundException innerEx) {
+                Toast.makeText(this, "No Map Application Found ", Toast.LENGTH_LONG).show();
+
+            }
+        }
     }
 
 }

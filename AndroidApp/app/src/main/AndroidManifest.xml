@@ -13,11 +13,13 @@
         <activity
             android:name=".ParkingActivity"
             android:label="@string/title_activity_parking"
+            android:noHistory="true"
             android:theme="@style/AppTheme" />
 
         <activity
             android:name=".MapsActivity"
-            android:label="@string/title_activity_maps">
+            android:label="@string/title_activity_maps"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -37,7 +39,7 @@
             android:value="AIzaSyBRbC-vfnY8dUcAc_JWyaKxnILpE55bTxQ" />
 
         <service
-            android:name=".util.BayUpdateService"
+            android:name=".BayUpdateService"
             android:enabled="true"
             android:exported="true"></service>
     </application>

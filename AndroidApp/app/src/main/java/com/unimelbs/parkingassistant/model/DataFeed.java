@@ -6,8 +6,13 @@ import android.util.Log;
 
 import androidx.lifecycle.LifecycleOwner;
 
+import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
+import com.unimelbs.parkingassistant.parkingapi.SiteState;
+import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
+import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Timer;
 
 import java.io.BufferedInputStream;
@@ -28,12 +33,13 @@ import io.reactivex.subjects.PublishSubject;
 
 import static com.uber.autodispose.AutoDispose.autoDisposable;
 
-public class DataFeed extends AsyncTask<Void,Void,Void> {
+public class DataFeed {
     private static final String TAG = "DataFeed";
     private static final String BAYS_FILE = "bays";
     private static final long DAY_TO_MILLIS = 1000*60*60*24;
     private static final long MINUTE_TO_MILLIS = 1000*60;
     private static final int FRESHNESS_INTERVAL_DAYS = 1;
+    private final double STATE_API_CIRCLE_RADIUS = 1000;
 
     private Context context;
     private LifecycleOwner lifecycleOwner;
@@ -42,13 +48,22 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
     private ParkingApi api;
     private PublishSubject<List<Bay>> baysSubject = PublishSubject.create();
     //private BayStateApi bayStateApi;
+    private ClusterManager<Bay> clusterManager;
 
+    public ClusterManager<Bay> getClusterManager()
+    {
+        return clusterManager;
+    }
+
+    public void setClusterManager(ClusterManager<Bay> clusterManager)
+    {
+        this.clusterManager = clusterManager;
+    }
 
     public DataFeed (LifecycleOwner mainActivity,
                      Context context) {
         this.lifecycleOwner = mainActivity;
         this.context = context;
-        this.bays = new ArrayList<>();
         this.baysHashtable = new Hashtable<Integer,Bay>();
         this.api = ParkingApi.getInstance();
         //this.bayStateApi = new BayStateApi(this);
@@ -135,6 +150,40 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         }
     }
 
+    class BayStateApi extends AsyncTask<Void,Void,Void>
+    {
+        LatLng centre;
+        ClusterManager<Bay> clusterManager;
+        public BayStateApi(LatLng centre, ClusterManager<Bay> clusterManager)
+        {
+            this.centre = centre;
+            this.clusterManager = clusterManager;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid)
+        {
+            super.onPostExecute(aVoid);
+            Log.d(TAG, "onPostExecute: clearing current cluster items + re-adding them.");
+            this.clusterManager.getMarkerCollection().clear();
+            this.clusterManager.clearItems();
+            this.clusterManager.addItems(getItems());
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids)
+        {
+            SitesStateGetQuery query = new SitesStateGetQuery(centre.latitude,centre.longitude,STATE_API_CIRCLE_RADIUS);
+            api.sitesStateGet(query)
+                .subscribeOn(Schedulers.io())
+                //.observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
+                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
+                .subscribe(value -> {updateStates(value);},
+                        throwable -> Log.d(TAG, "BayStateApi: "+throwable.getMessage()) // do this on error
+                );
+            return null;
+        }
+    }
 
     public void loadData()
     {
@@ -182,9 +231,12 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
 
 
     public List<Bay> getItems() {
-        Log.d(TAG, "getItems: List<bays> has "+bays.size()+" entries. "+
-                "Hastable<Bay> has "+this.baysHashtable.size()+" entries.");
-        return this.bays;
+        if (bays==null)
+        {
+            bays = new ArrayList<>(baysHashtable.values());
+            Log.d(TAG, "getItems: bays list is empty, creating it. "+bays.size()+ " bays added.");
+        }
+        return bays;
     }
 
 
@@ -229,7 +281,7 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
                 //bays = (List<Bay>) objectInputStream.readObject();
                 baysHashtable = (Hashtable<Integer, Bay>) objectInputStream.readObject();
                 timer.stop();
-                Log.d(TAG, "loadBaysFromRaw: completed in "+timer.getDurationInSeconds()+" seconds. Bays loaded: "+bays.size());
+                Log.d(TAG, "loadBaysFromRaw: completed in "+timer.getDurationInSeconds()+" seconds. Bays loaded: "+baysHashtable.size());
 
                 bufferedInputStream.close();
                 objectInputStream.close();
@@ -260,13 +312,13 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         try {
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            Log.d(TAG, "saveBaysToFile: num of bays: "+this.bays.size());
+            Log.d(TAG, "saveBaysToFile: num of bays: "+baysHashtable.size());
             //objectOutputStream.writeObject(this.bays);
-            objectOutputStream.writeObject(this.baysHashtable);
+            objectOutputStream.writeObject(baysHashtable);
             objectOutputStream.close();
             fileOutputStream.close();
         } catch (Exception e) {
-            Log.d(TAG, "saveBaysToFile: "+e.getMessage());
+            Log.d(TAG, "saveBaysToFile: exception:"+e.getMessage());
         }
     }
 
@@ -276,14 +328,39 @@ public class DataFeed extends AsyncTask<Void,Void,Void> {
         this.baysHashtable.put(bay.getBayId(),bay);
     }
 
+    private void updateStates(List<SiteState> list)
+    {
+        int found=0;
+        int notFound=0;
+        Timer timer=new Timer();
+        Log.d(TAG, "updateStates: Bay table includes:"+baysHashtable.size()+" "+
+                "State data includes: "+list.size());
+        timer.start();
+        for (SiteState siteState: list)
+        {
+            String strState = siteState.getStatus();
 
+            int id = Integer.parseInt(siteState.getId());
+            boolean state = (strState.equals("Present"))?false:true;
+            if (baysHashtable.get(id)!=null)
+            {
+                found++;
+                baysHashtable.get(Integer.parseInt(siteState.getId())).setAvailable(state);
+            }
+            else
+            {
+                notFound++;
 
-
-    @Override
-    protected Void doInBackground(Void... voids) {
-        loadData();
-        return null;
+            }
+        }
+        timer.stop();
+        Log.d(TAG, "updateStates: completed in "+timer.getDurationInSeconds()+" "+
+                found+" states found. "+notFound+" states not found.");
     }
 
+    public void updateStates(LatLng centre)
+    {
+        new BayStateApi(centre,clusterManager).execute();
+    }
 
 }

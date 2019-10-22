@@ -60,18 +60,10 @@ public class Bay implements ClusterItem, Serializable {
 
     public TheGeom getTheGeom() {return this.theGeom;}
 
-    /*
-    public List<double[]> getPolygon() {
-        return polygon;
-    }
-
-     */
-
     @Override
     public LatLng getPosition() {
         return new LatLng(this.position[0],this.position[1]);
     }
-
 
     @Override
     public String getTitle() {

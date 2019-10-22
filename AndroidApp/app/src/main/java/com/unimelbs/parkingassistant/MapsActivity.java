@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -33,11 +34,12 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.model.ExtendedClusterManager;
-import com.unimelbs.parkingassistant.util.BayUpdateService;
+import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
@@ -68,6 +70,7 @@ public class MapsActivity extends AppCompatActivity
 
     BayUpdateService bayUpdateService;
     boolean bayUpdateServiceBound = false;
+
 
 
     //Bottom sheet and StartParking impl
@@ -116,7 +119,35 @@ public class MapsActivity extends AppCompatActivity
         activateAutoCompleteFragment();
 
         initBottomSheetUI();
+
+        // Bind to BayUpdateService
+        Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
+        bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
+        startService(bayMonitorServiceIntent);
+        bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
     }
+    private ServiceConnection connection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            // We've bound to BayUpdateServiceService, cast the IBinder and get service instance
+            BayUpdateService.bayUpdateServiceBinder binder = (BayUpdateService.bayUpdateServiceBinder) service;
+            bayUpdateService = binder.getService();
+            bayUpdateServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+
+            // Should not dispose the
+            // subscription here.
+            // Should only be disposed
+            // when asked or when the service stops.
+            bayUpdateServiceBound = false;
+
+
+        }
+    };
 
     private void showRevisitAlertDialog() {
         AlertDialog alertDialog;
@@ -129,12 +160,9 @@ public class MapsActivity extends AppCompatActivity
                         goToParkingActivity();
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        Context context = getApplicationContext();
-                        int duration = Toast.LENGTH_SHORT;
-                        Toast toast = Toast.makeText(context, "Cancel", duration);
-                        toast.show();
+                        PreferenceManager.clearPreference(prefs);
                     }
                 });
 
@@ -144,40 +172,25 @@ public class MapsActivity extends AppCompatActivity
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private ServiceConnection connection = new ServiceConnection() {
 
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            BayUpdateService.bayUpdateServiceBinder binder = (BayUpdateService.bayUpdateServiceBinder) service;
-            bayUpdateService = binder.getService();
-            bayUpdateServiceBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-
-            bayUpdateService.disposeSubscription();
-            bayUpdateServiceBound = false;
-        }
-    };
 
     @Override
     protected void onStart() {
         super.onStart();
-        // Bind to BayUpdateService
-        Intent intent = new Intent(this, BayUpdateService.class);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+
+
     }
 
     @Override
-    protected void onDestroy() { //should not unbind the service onStop
-                                 // otherwise it wont interact with server.
-
-        bayUpdateService.disposeSubscription();
+    protected void onDestroy() {
+        // Should not dispose the
+        // subscription here.
+        // Should only be disposed
+        // when asked or when the service stops.
         unbindService(connection);
         bayUpdateServiceBound = false;
         super.onDestroy();
+        Log.d("MapActivityDestroy", "Map Activity On Destroy Has Been Called");
     }
 
 
@@ -185,6 +198,7 @@ public class MapsActivity extends AppCompatActivity
     private void initBottomSheetUI() {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        
     }
 
     private void goToParkingActivity() {
@@ -259,6 +273,7 @@ public class MapsActivity extends AppCompatActivity
 
         if(this.selectedBay.isAvailable())
         {
+
             bayUpdateService.subscribeToServerForUpdates(this.selectedBay);
 
         } else {
@@ -267,7 +282,10 @@ public class MapsActivity extends AppCompatActivity
             // Add the buttons
             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
+                    // TODO MUST REMOVE SUBSCRIPTION BELOW
+                    //bayUpdateService.subscribeToServerForUpdates(selectedBay);
                     navigateToTheSelectedBay();
+
                 }
             });
             builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -394,6 +412,8 @@ public class MapsActivity extends AppCompatActivity
     }
 
 
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -408,14 +428,14 @@ public class MapsActivity extends AppCompatActivity
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
         DataFeed data = new DataFeed(this, getApplicationContext());
-        data.loadData();
-        List<Bay> bayList = data.getItems();
-        //data.execute();
-        //try {Thread.sleep(30000);}catch(Exception e){Log.d(TAG, "onMapReady: "+e.getMessage());}
         ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
+        data.setClusterManager(extendedClusterManager);
+        data.loadData();
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
+
         mMap.setOnMarkerClickListener(extendedClusterManager);
+
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng arg0) {
@@ -425,13 +445,15 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
-        extendedClusterManager.addItems(bayList);
+        extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
         LatLng zoomPoint;
-        if (bayList.size() > 0) {
-
-            Log.d(TAG, "onMapReady: Bay items loaded on map.");
+        if (data.getItems().size() > 0) {
             zoomPoint = data.getItems().get(0).getPosition();
+            Log.d(TAG, "onMapReady: first bay:"+
+                    data.getItems().get(0).getBayId()+" "+
+                    data.getItems().get(0).getPosition()+" "+
+                    data.getItems().get(0).isAvailable());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
         }
 
@@ -484,5 +506,46 @@ public class MapsActivity extends AppCompatActivity
 
         return result;
     }
+
+
+    boolean doubleBackToExitPressedOnce = false;
+    @Override
+    public void onBackPressed() {
+        // Codes added with support
+        // from StackOVerFlow :)
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+        // Bottom sheet has not been defined as fragment
+        // So count should be zero
+        if (count == 0) {
+            if (sheetBehavior!=null && sheetBehavior.getState() !=
+                    BottomSheetBehavior.STATE_HIDDEN) {
+                sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+            }
+            // Double back press to exit app
+            else {
+                if (doubleBackToExitPressedOnce) {
+                    super.onBackPressed();
+                    return;
+                }
+
+                this.doubleBackToExitPressedOnce = true;
+                Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+
+                new Handler().postDelayed(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        doubleBackToExitPressedOnce=false;
+                    }
+                }, 2000);
+            }
+            //sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        } else {
+            getSupportFragmentManager().popBackStack();
+        }
+
+    }
+
 
 }
