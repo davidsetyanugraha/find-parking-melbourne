@@ -46,16 +46,17 @@ public class BayUpdateService extends Service {
     // for all the Android versions below
     // 8.0. Notification channel should only
     // be created for devices running Android 26
-    public static final String NOTIFICATION_CHANNEL_ID_BAY_UPDATE = "channel_id_bay_update";
-    public static final String NOTIFICATION_CHANNEL_ID_BAY_FOLLOW = "channel_id_bay_follow";
-    public static final String NOTIFICATION_CHANNEL_ID_SERVICE_KILLED = "channel_id_service_killed";
+    static final String NOTIFICATION_CHANNEL_ID_BAY_UPDATE = "channel_id_bay_update";
+    static final String NOTIFICATION_CHANNEL_ID_BAY_FOLLOW = "channel_id_bay_follow";
+    static final String NOTIFICATION_CHANNEL_ID_SERVICE_KILLED = "channel_id_service_killed";
     //User visible Channel Name
-    public static final String CHANNEL_NAME = "Notification Channel";
+    static final String CHANNEL_NAME = "Notification Channel";
 
-    private Boolean hasSubscribed = false;
+    static Boolean hasSubscribed = false;
+    static Bay selectedBayId = null;
     private CompositeDisposable disposable;
     NotificationManager notificationManager;
-    public static boolean isServiceRunning = false;
+    static boolean isServiceRunning = false;
 
     // Below are notifications ID.
     // These IDs will be used to identify
@@ -73,13 +74,15 @@ public class BayUpdateService extends Service {
     Intent externalMapIntent;
 
 
+
+
     /**
      * Class used for the client Binder.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with IPC.
      */
     class bayUpdateServiceBinder extends Binder {
         BayUpdateService getService() {
-            // Return this instance of LocalService so clients can call public methods
+            // Return this instance of service so clients can call public methods
             return BayUpdateService.this;
         }
     }
@@ -102,56 +105,6 @@ public class BayUpdateService extends Service {
         if (isServiceRunning) return;
         isServiceRunning = true;
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        /*
-        try {
-            String title = "Parking Assistant";
-            String body = "Parking Assistant Is Running";
-
-
-            //notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            // Notification Channel ID passed
-            // as a parameter here will be
-            // ignored for all the
-            // Android versions below 8.0
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-            Intent notificationIntent = new Intent(getApplicationContext(), MapsActivity.class);
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                int importance = NotificationManager.IMPORTANCE_LOW;
-
-                NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, CHANNEL_NAME, importance);
-                //Boolean value to set if lights are enabled for Notifications from this Channel
-                notificationChannel.enableLights(true);
-                //Sets the color of Notification Light
-                notificationChannel.setLightColor(Color.GREEN);
-                //Sets whether notifications from these Channel should be visible on Lockscreen or not
-                notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-                notificationManager.createNotificationChannel(notificationChannel);
-            }
-
-            builder.setContentTitle(title);
-            builder.setContentText(body);
-            builder.setSmallIcon(R.mipmap.green_exclaimination);
-            builder.setPriority(NotificationCompat.PRIORITY_LOW);
-            builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
-            builder.setContentIntent(contentPendingIntent);
-
-            Notification notification = builder.build();
-
-            notificationManager.notify(START_SERVICE_NOTIFICATION_ID, notification);
-
-            startForeground(START_SERVICE_NOTIFICATION_ID, notification);
-
-            //Toast.makeText(this, "Selected Bay Status Has Been Changed", Toast.LENGTH_LONG).show();
-        }
-        catch(Exception e)
-        {
-            Log.e("Error", "Error occured in raising Start Service notification");
-        } */
 
     }
 
@@ -230,12 +183,6 @@ public class BayUpdateService extends Service {
             {
                 hasSubscribed = false;
                 Log.d("Service Dispose", "Disposing Registered Bay");
-                // For this version of app
-                // when we dispose a subscription
-                // we close the service as well
-                // and does not wait for the
-                // bay to become available.
-                stopMyService();
                 disposable.dispose();
 
             }
@@ -261,7 +208,18 @@ public class BayUpdateService extends Service {
         {   //In the last catch it is disposed
             // if no maps method is available
             subscribeToServerForUpdates(selectedBay);
+
         }
+        else
+        {
+            Toast.makeText(this, "No Bay Is Being Tracked", Toast.LENGTH_LONG).show();
+            notificationManager.cancelAll();
+        }
+        // Placed outside of Subscription
+        // so that even if a bay is selected
+        // without subscription, Maps Activity
+        // will focus to that location
+        BayUpdateService.selectedBayId = selectedBay;
         LatLng selectedBayLatLng = selectedBay.getPosition();
         String lat = String.valueOf(selectedBayLatLng.latitude);
         String lon = String.valueOf(selectedBayLatLng.longitude);
@@ -427,6 +385,7 @@ public class BayUpdateService extends Service {
                 Notification notification = builder.build();
 
                 try {
+                    stopForeground(true);
                     notificationManager.cancel(FOLLOWING_BAY_NOTIFICATION_ID);
                 }catch (Exception e){
                     Log.e("CancelNotifyService", "Failed to cancel notification FOLLOWING_BAY_NOTIFICATION_ID ");
@@ -451,6 +410,16 @@ public class BayUpdateService extends Service {
 
 
         try {
+
+            try {
+                //notificationManager.cancel(BAY_STATUS_UPDATE_NOTIFICATION_ID);
+                //stopForeground(true);
+                notificationManager.cancelAll();
+            }catch (Exception e){
+                Log.e("CancelNotifyService", "Failed to cancel notification BAY_STATUS_UPDATE_NOTIFICATION_ID ");
+            }
+
+
             String title = "Following Bay";
             String body = "Parking Assistant is tracking bay "+bayId+ " for updates.";
 
@@ -461,7 +430,7 @@ public class BayUpdateService extends Service {
 
             Intent intentHide = new Intent(this, ForegroundServiceStopper.class);
             PendingIntent exitNavigation = PendingIntent.getBroadcast(this,
-                    (int) System.currentTimeMillis(), intentHide, PendingIntent.FLAG_CANCEL_CURRENT);;
+                    (int) System.currentTimeMillis(), intentHide, PendingIntent.FLAG_UPDATE_CURRENT);;
 
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -492,15 +461,9 @@ public class BayUpdateService extends Service {
 
             Notification notification = builder.build();
 
-            try {
-                notificationManager.cancel(BAY_STATUS_UPDATE_NOTIFICATION_ID);
-                //notificationManager.cancelAll();
-            }catch (Exception e){
-                Log.e("CancelNotifyService", "Failed to cancel notification BAY_STATUS_UPDATE_NOTIFICATION_ID ");
-            }
+
 
             notificationManager.notify(FOLLOWING_BAY_NOTIFICATION_ID , notification);
-
             startForeground(FOLLOWING_BAY_NOTIFICATION_ID , notification);
 
 

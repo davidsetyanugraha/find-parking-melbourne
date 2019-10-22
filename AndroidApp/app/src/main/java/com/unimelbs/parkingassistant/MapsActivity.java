@@ -97,7 +97,12 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         Log.d(TAG, "onCreate: " + Thread.currentThread().getName());
+
+        // Bind to BayUpdateService
+        bindToBayUpdateService();
 
         setContentView(R.layout.activity_maps);
 
@@ -116,8 +121,7 @@ public class MapsActivity extends AppCompatActivity
 
         initBottomSheetUI();
 
-        // Bind to BayUpdateService
-        bindToBayUpdateService();
+
 
     }
 
@@ -401,14 +405,25 @@ public class MapsActivity extends AppCompatActivity
         });
         extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
-        LatLng zoomPoint;
+        Bay focusPoint;
+        int zoomLevel = 15 ;
         if (data.getItems().size() > 0) {
-            zoomPoint = data.getItems().get(0).getPosition();
-            Log.d(TAG, "onMapReady: first bay:"+
-                    data.getItems().get(0).getBayId()+" "+
-                    data.getItems().get(0).getPosition()+" "+
-                    data.getItems().get(0).isAvailable());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
+
+            focusPoint = data.getItems().get(0);
+
+            // When resuming from a previously
+            // selected bay, zoom to previously
+            // selected bay.
+            if(BayUpdateService.selectedBayId != null){
+                focusPoint = BayUpdateService.selectedBayId;
+                zoomLevel = 20;
+            }
+
+            Log.d(TAG, "onMapReady: Zoomed bay:"+
+                    focusPoint.getBayId()+" "+
+                    focusPoint.getPosition()+" "+
+                    focusPoint.isAvailable());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), zoomLevel));
         }
 
         checkIfThereIsParking();
