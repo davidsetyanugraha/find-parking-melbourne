@@ -42,9 +42,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="More Info"
+        android:text="Restrictions"
         android:textColor="#444"
         android:textStyle="bold" />
+
+    <include layout="@layout/horizontal_restrictions" />
 
     <TextView
         android:id="@+id/bay_snippet"
@@ -52,11 +54,13 @@
         android:layout_height="wrap_content"
        />
 
-    <TextView
-        android:id="@+id/bay_restriction"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
+<!--    <TextView-->
+<!--        android:id="@+id/bay_restriction"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        />-->
+
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -84,6 +88,8 @@
         android:foreground="?attr/selectableItemBackground"
         android:text="Direction"
         android:textColor="#fff" />
+
+
 
     </LinearLayout>
 

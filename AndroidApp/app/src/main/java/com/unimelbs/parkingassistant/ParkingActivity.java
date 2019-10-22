@@ -98,7 +98,7 @@ public class ParkingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_parking);
 
         Intent intent = getIntent();
-        String hourMsg = intent.getStringExtra(MapsActivity.HOUR);
+        String secondsMsg = intent.getStringExtra(MapsActivity.SECONDS);
 
         this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
         if (PreferenceManager.isAvailable(this.prefs)) {
@@ -108,7 +108,7 @@ public class ParkingActivity extends AppCompatActivity {
         } else {
             Log.d(TAG, "User doesn't have ongoing parking!");
             this.selectedBay = (Bay) intent.getSerializableExtra(MapsActivity.SELECTED_BAY);
-            this.endParkingDate = (Date) DateUtils.addHours(new Date(), Integer.parseInt(hourMsg));
+            this.endParkingDate = (Date) DateUtils.addSeconds(new Date(), Integer.parseInt(secondsMsg));
             PreferenceManager.saveBayToSharedPreferences(this.selectedBay, this.prefs);
             PreferenceManager.saveEndDateToSharedPreferences(this.endParkingDate, this.prefs);
         }

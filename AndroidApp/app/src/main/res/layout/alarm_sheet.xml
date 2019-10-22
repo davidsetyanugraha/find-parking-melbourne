@@ -16,7 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
-            android:text="Android Event Start"
+            android:text="Time is Up!"
             android:textColor="@android:color/white"
             android:textSize="20dp"
             android:textStyle="normal" />

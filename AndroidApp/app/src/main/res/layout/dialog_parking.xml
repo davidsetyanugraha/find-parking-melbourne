@@ -9,22 +9,39 @@
         android:orientation="vertical"
         android:padding="35dp">
 
-        <!-- Parking duration. -->
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" >
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Duration (hours):"/>
-            <EditText
-                android:id="@+id/parkingFormDuration"
-                android:lines="1"
-                android:inputType = "number"
-                android:maxLines="1"
-                android:maxLength="18"/>
-        </TableRow>
+
+        <!-- Parking duration. -->
+
+        <TimePicker
+            android:id="@+id/timePicker1"
+            android:timePickerMode="spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+<!--        <TableRow-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent" >-->
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Duration (hours):"/>-->
+<!--            <EditText-->
+<!--                android:id="@+id/parkingFormDuration"-->
+<!--                android:lines="1"-->
+<!--                android:inputType = "number"-->
+<!--                android:maxLines="1"-->
+<!--                android:maxLength="18"/>-->
+<!--        </TableRow>-->
+
+<!--        <TableRow-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent" >-->
+
+<!--        </TableRow>-->
+
+        <include layout="@layout/horizontal_restrictions" />
 
         <!-- Buttons row. -->
         <TableRow
