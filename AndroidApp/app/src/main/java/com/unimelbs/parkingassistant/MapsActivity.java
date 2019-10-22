@@ -117,10 +117,8 @@ public class MapsActivity extends AppCompatActivity
         initBottomSheetUI();
 
         // Bind to BayUpdateService
-        Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
-        bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
-        startService(bayMonitorServiceIntent);
-        bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
+        bindToBayUpdateService();
+
     }
 
     @Override
@@ -327,6 +325,8 @@ public class MapsActivity extends AppCompatActivity
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
+        autocompleteFragment.setCountry("AU");
+
 
         try {
             autocompleteFragment.setPlaceFields(placeFields);
@@ -498,6 +498,15 @@ public class MapsActivity extends AppCompatActivity
         } else {
             getSupportFragmentManager().popBackStack();
         }
+
+    }
+
+    private void bindToBayUpdateService(){
+
+        Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
+        bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
+        startService(bayMonitorServiceIntent);
+        bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
 
     }
 
