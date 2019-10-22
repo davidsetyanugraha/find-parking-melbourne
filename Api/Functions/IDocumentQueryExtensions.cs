@@ -6,6 +6,7 @@ using Microsoft.Azure.Documents.Linq;
 
 namespace Api.Functions
 {
+    //Utility classes for transforming between collections
     public static class IDocumentQueryExtensions
     {
         // Sample from https://stackoverflow.com/questions/39338131/documentclient-createdocumentquery-async

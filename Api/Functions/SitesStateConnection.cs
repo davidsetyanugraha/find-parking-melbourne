@@ -35,6 +35,7 @@ namespace Api.Functions
             }
         }
 
+        //Connects the client to the SignalR Service
         [FunctionName("SitesStateConnectionNegotiate")]
         public static IActionResult Negotiate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/connection/negotiate")] HttpRequest req,
@@ -48,6 +49,7 @@ namespace Api.Functions
                 : new NotFoundObjectResult("Failed to connect to the notification service.");
         }
 
+        // Allows the client to follow the updates of a parking bay
         [FunctionName("SitesStateConnectionFollow")]
         public static async Task<IActionResult> Follow(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/connection/follow")] Command command,
@@ -55,8 +57,8 @@ namespace Api.Functions
             [SignalR(HubName = "SitesState")] IAsyncCollector<SignalRGroupAction> signalRGroupActions,
             ILogger log)
         {
+            //Validate the input parameters
             var validationResult = new CommandValidator().Validate(command);
-
             if (!validationResult.IsValid)
             {
                 return new BadRequestObjectResult(validationResult.Errors.Select(e => new {
@@ -65,6 +67,7 @@ namespace Api.Functions
                 }));
             }
 
+            //Check if the bay is valid, otherwise return not found
             DocumentResponse<SiteState> documentResponse;
             try
             {
@@ -77,7 +80,6 @@ namespace Api.Functions
                 else throw;
             }
             
-
             var siteState = documentResponse.Document;
 
             if (siteState == null) {
@@ -86,7 +88,7 @@ namespace Api.Functions
 
             log.LogInformation($"Client {command.ConnectionId} registering to follow bay {command.ParkingBayId}.");
             
-            // var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+            // Add the connection to the group
             await signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
@@ -98,14 +100,15 @@ namespace Api.Functions
             return (ActionResult)new OkObjectResult(siteState);
         }
 
+        // Allows the client to stop following the updates of a parking bay
         [FunctionName("SitesStateConnectionUnfollow")]
         public static async Task<IActionResult> Unfollow(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sites/state/connection/unfollow")] Command command,
             [SignalR(HubName = "SitesState")] IAsyncCollector<SignalRGroupAction> signalRGroupActions,
             ILogger log)
         {
+            //Validate the input parameters
             var validationResult = new CommandValidator().Validate(command);
-
             if (!validationResult.IsValid)
             {
                 return new BadRequestObjectResult(validationResult.Errors.Select(e => new {
@@ -116,7 +119,7 @@ namespace Api.Functions
 
             log.LogInformation($"Client {command.ConnectionId} unregistering from following bay {command.ParkingBayId}.");
 
-            //var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+            // Remove the connection from the group
             await signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
