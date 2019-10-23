@@ -75,21 +75,8 @@ public class MapsActivity extends AppCompatActivity
     boolean bayUpdateServiceBound = false;
     int year, month, day, hour, minute;
 
-
     @BindView(R.id.restrictionLayout)
     LinearLayout layoutRestrictions;
-
-//    @BindView(R.id.btn_date)
-//    Button btnDatePicker;
-//
-//    @BindView(R.id.btn_time)
-//    Button btnTimePicker;
-//
-//    @BindView(R.id.in_date)
-//    EditText txtDate;
-//
-//    @BindView(R.id.in_time)
-//    EditText txtTime;
 
     //Bottom sheet and StartParking impl
     @BindView(R.id.bottom_sheet_maps)
@@ -112,6 +99,7 @@ public class MapsActivity extends AppCompatActivity
 
     BottomSheetBehavior sheetBehavior;
     SharedPreferences prefs;
+    RestrictionsHelper restrictionsHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,22 +164,14 @@ public class MapsActivity extends AppCompatActivity
         }
     };
 
-    private void showRevisitAlertDialog() {
+    private void showAlertDialog(String title, String question, DialogInterface.OnClickListener yesListener, DialogInterface.OnClickListener noListener) {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
 
-        builder.setTitle("Continue Parking");
-        builder.setMessage("Do you want to return into your Parking page?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        goToParkingActivity();
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        PreferenceManager.clearPreference(prefs);
-                    }
-                });
+        builder.setTitle(title);
+        builder.setMessage(question)
+                .setPositiveButton("Yes", yesListener)
+                .setNegativeButton("No", noListener);
 
         builder.setCancelable(true);
         alertDialog = builder.create();
@@ -220,7 +200,6 @@ public class MapsActivity extends AppCompatActivity
     private void initBottomSheetUI() {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-        
     }
 
     private void goToParkingActivity() {
@@ -229,6 +208,7 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private void goToParkingActivity(String minutes) {
+        Log.d(TAG, "GOTOPARKING");
         Intent intent = new Intent(this, ParkingActivity.class);
         intent.putExtra(SECONDS, minutes);
         intent.putExtra(SELECTED_BAY, selectedBay);
@@ -287,6 +267,12 @@ public class MapsActivity extends AppCompatActivity
     @OnClick(R.id.btn_parking)
     public void startParking() {
         //bayStatusChangeNotification();
+
+        renderParkingDialog();
+
+    }
+
+    private void renderParkingDialog() {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
@@ -312,41 +298,56 @@ public class MapsActivity extends AppCompatActivity
                     Log.d(TAG, currentTime.toString());
 
                     Long seconds = ChronoUnit.SECONDS.between(currentTime, toDate);
-
+                    this.processValidation(seconds);
                     Log.d(TAG, "diff (seconds) =" +seconds);
-                    if (seconds <= 0) {
-                        Toast.makeText(getApplicationContext(),
-                                "Invalid Duration",
-                                Toast.LENGTH_LONG).show();
-                    } else if (! RestrictionsHelper.isValid(selectedBay.getRestrictions(), seconds, currentTime)){
-                        Toast.makeText(getApplicationContext(),
-                                RestrictionsHelper.getInvalidReason(selectedBay.getRestrictions(), seconds, currentTime),
-                                Toast.LENGTH_LONG).show();
-                    } else {
-                        String strSeconds = seconds.toString();
-                        goToParkingActivity(strSeconds);
-                    }
-
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
+
+            private void processValidation(Long seconds) {
+                if (seconds <= 0) {
+                    Toast.makeText(getApplicationContext(),
+                            "Invalid Duration",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    restrictionsHelper.processRestrictionChecking(seconds, currentTime);
+                    if (! restrictionsHelper.isValid()){
+                        DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                String strSeconds = seconds.toString();
+                                goToParkingActivity(strSeconds);
+                            }
+                        };
+
+                        DialogInterface.OnClickListener noListener = new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        };
+                        String invalidReason = restrictionsHelper.getInvalidReason();
+                        showAlertDialog("Warning", "You have broken restriction: \n \t" + invalidReason +" \n  Are you sure to continue?", yesListener, noListener);
+                    } else {
+
+                        String strSeconds = seconds.toString();
+                        goToParkingActivity(strSeconds);
+
+                    }
+                }
+            }
         });
 
-        Button resetButton = startParkingFormView.findViewById(R.id.formCancelButton);
-        resetButton.setOnClickListener(new View.OnClickListener() {
+        Button cancelButton = startParkingFormView.findViewById(R.id.formCancelButton);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-//                    EditText duration = startParkingFormView.findViewById(R.id.parkingFormDuration);
-//                    duration.setText("");
                     alertDialog.cancel();
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         });
-
 
         Button selectDateButton = startParkingFormView.findViewById(R.id.btn_date);
         EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
@@ -362,7 +363,7 @@ public class MapsActivity extends AppCompatActivity
 
                                 txtDate.setText(dayOfMonth + "-" + (monthOfYear + 1) + "-" + year);
                                 day = dayOfMonth;
-                                month = monthOfYear + 1;
+                                month = monthOfYear;
                                 MapsActivity.this.year = year;
                             }
                         }, mYear, mMonth, mDay);
@@ -372,7 +373,6 @@ public class MapsActivity extends AppCompatActivity
 
         Button selectTimeButton = startParkingFormView.findViewById(R.id.btn_time);
         EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
-
         selectTimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -534,7 +534,20 @@ public class MapsActivity extends AppCompatActivity
         this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
         if (PreferenceManager.isAvailable(this.prefs)) {
             Log.d(TAG, "User is having ongoing parking!");
-            showRevisitAlertDialog();
+
+            DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    goToParkingActivity();
+                }
+            };
+
+            DialogInterface.OnClickListener noListener = new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    PreferenceManager.clearPreference(prefs);
+                }
+            };
+
+            showAlertDialog("Continue Parking", "Do you want to return into your Parking page?", yesListener, noListener);
         } else {
             Log.d(TAG, "User doesn't have ongoing parking!");
         }
@@ -545,18 +558,19 @@ public class MapsActivity extends AppCompatActivity
         Log.d(TAG, "onClusterItemClick: bay clicked:" + bay.getBayId());
         selectedBay = SerializationUtils.clone(bay);
 
-        //@todo: encapsulate bottomScreen in class to reduce redundancy
         reRenderBottomSheet(selectedBay);
         return false;
     }
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
+        //update bay
         String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
         String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
 
+        //update restriction
         layoutRestrictions.removeAllViews();
         for (int i = 0; i < bay.getRestrictions().size(); i++) {
             Button tv = new Button(getApplicationContext());
@@ -564,11 +578,11 @@ public class MapsActivity extends AppCompatActivity
             layoutRestrictions.addView(tv);
         }
 
-        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
-
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
+
+        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
     }
 
 

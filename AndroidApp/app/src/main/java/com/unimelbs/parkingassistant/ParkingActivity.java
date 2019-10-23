@@ -20,7 +20,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
-import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.jetbrains.annotations.NotNull;
@@ -130,7 +129,7 @@ public class ParkingActivity extends AppCompatActivity {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         stopParkingButton.setText("Stop Parking");
-        //@todo: encapsulate bottomScreen in class to reduce redundancy
+
         reRenderBottomSheet(selectedBay);
     }
 
@@ -148,7 +147,7 @@ public class ParkingActivity extends AppCompatActivity {
             layoutRestrictions.addView(tv);
         }
 
-        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
+//        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);

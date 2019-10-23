@@ -6,55 +6,53 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class RestrictionsHelper {
+    private List<Restriction> restrictions;
+    private Boolean isValid;
+    private String invalidReason;
+    public RestrictionsHelper(List<Restriction> restrictions) {
+        this.restrictions = restrictions;
+    }
 
-    public static String convertRestrictionsToString(List<Restriction> restrictions) {
+    public String convertRestrictionsToString() {
         String restrictionMsg = "";
-        for (int i = 0; i < restrictions.size(); i++) {
+        for (int i = 0; i < this.restrictions.size(); i++) {
             restrictionMsg = restrictionMsg +
                     "Restriction " + (i+1) +": \n"+
-                    "\t"+restrictions.get(i).getDescription()+"\n";
+                    "\t"+this.restrictions.get(i).getDescription()+"\n";
         }
-        return  restrictionMsg;
+        return restrictionMsg;
     }
 
-    public static String convertRestrictionsToOneLineString(List<Restriction> restrictions) {
-        String restrictionMsg = "Restriction: ";
-        for (int i = 0; i < restrictions.size(); i++) {
-            restrictionMsg = restrictionMsg +
-                    "\t"+restrictions.get(i).getDescription()+", ";
-        }
-        return  restrictionMsg;
-    }
-
-
-    public static String checkhour(List<Restriction> restrictions) {
-        String restrictionMsg = "";
-        for (int i = 0; i < restrictions.size(); i++) {
-            restrictionMsg = restrictionMsg +
-                    "Restriction " + (i+1) +": \n"+
-                    "\t"+restrictions.get(i).getDescription()+"\n";
-        }
-        return  restrictionMsg;
-    }
-
-    public static boolean isValid(List<Restriction> restrictions, long hour, LocalDateTime currentDate) {
-
-
-
-        for (int i = 0; i < restrictions.size(); i++) {
-//            int restrictionHour = (restrictions.get(i).getDuration()) / 60;
-//            if () {
-//
-//            }
-        }
+    public boolean isValid() {
         return true;
     }
 
-    public static String getInvalidReason(List<Restriction> restrictions, long hour, LocalDateTime currentDate) {
-        for (int i = 0; i < restrictions.size(); i++) {
-
-        }
-        return "Invalid Input";
+    public String getInvalidReason() {
+        return "";
     }
 
+    public String setInvalidReason(String invalidReason) {
+        this.invalidReason = invalidReason;
+        return this.invalidReason;
+    }
+
+    public List<Restriction> getRestrictions() {
+        return restrictions;
+    }
+
+    public void setRestrictions(List<Restriction> restrictions) {
+        this.restrictions = restrictions;
+    }
+
+    public void processRestrictionChecking(Long seconds, LocalDateTime currentTime) {
+//        Long mins = seconds / 60;
+//
+//        Date endParkingDate = DateUtils.addSeconds(new Date(), seconds.intValue());
+//
+//        for (int i = 0; i < this.restrictions.size(); i++) {
+//
+//            this.restrictions.get(i).getDuration()
+//
+//        }
+    }
 }
