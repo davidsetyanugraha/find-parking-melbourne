@@ -222,6 +222,25 @@ public class MapsActivity extends AppCompatActivity
         startActivity(intent);
     }
 
+    private void goToParkingService(AlertDialog alertDialog, String strTime){
+        long parkingStartTime = new Date().getTime();
+        bayUpdateService.startParkingNotification(selectedBay, parkingStartTime, strTime);
+
+        // must cancel and finish to unbind service
+        // so that STOP Parking from service can
+        // work fine.
+        // Comment below two lines if you want to
+        // use goToParkingActivity.
+        alertDialog.cancel();
+        MapsActivity.this.finish();
+        //unbindService(connection);
+        //bayUpdateServiceBound = false;
+        Toast.makeText(getApplicationContext(),
+                "Parking duration being monitored in Notifications.",
+                Toast.LENGTH_LONG).show();
+        //goToParkingActivity(strHour);
+    }
+
     /**
      * Bottom screen Button Direction OnClick
      */
@@ -371,7 +390,8 @@ public class MapsActivity extends AppCompatActivity
                         DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 String strSeconds = seconds.toString();
-                                goToParkingActivity(strSeconds);
+                                //goToParkingActivity(strSeconds);
+                                goToParkingService(alertDialog, strSeconds);
                             }
                         };
 
@@ -385,7 +405,8 @@ public class MapsActivity extends AppCompatActivity
                     } else {
 
                         String strSeconds = seconds.toString();
-                        goToParkingActivity(strSeconds);
+                        //goToParkingActivity(strSeconds);
+                        goToParkingService(alertDialog, strSeconds);
 
                     }
                 }
@@ -697,6 +718,7 @@ public class MapsActivity extends AppCompatActivity
             DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     goToParkingActivity();
+                    //goToParkingService(alertDialog, strSeconds);
                 }
             };
 
