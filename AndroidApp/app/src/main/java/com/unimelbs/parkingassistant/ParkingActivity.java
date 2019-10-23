@@ -20,7 +20,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
-import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.jetbrains.annotations.NotNull;
@@ -45,22 +44,20 @@ public class ParkingActivity extends AppCompatActivity {
     private Bay selectedBay;
 
     //bottom sheet view
+
+    @BindView(R.id.restrictionLayout)
+    LinearLayout layoutRestrictions;
+
     @BindView(R.id.bottom_sheet_parking)
     LinearLayout layoutBottomSheet;
 
     @BindView(R.id.bay_title)
     TextView bayTitle;
 
-    @BindView(R.id.bay_snippet)
-    TextView baySnippet;
-
     @BindView(R.id.bay_status)
     TextView bayStatus;
 
-    @BindView(R.id.bay_restriction)
-    TextView bayRestriction;
-
-    @BindView(R.id.btn_stop_parking)
+    @BindView(R.id.btn_parking)
     Button stopParkingButton;
 
     @BindView(R.id.btn_direction)
@@ -73,6 +70,9 @@ public class ParkingActivity extends AppCompatActivity {
 
     @BindView(R.id.linear_layout_2)
     LinearLayout linear_layout_2;
+
+    @BindView(R.id.tv_day)
+    TextView tv_day;
 
     @BindView(R.id.tv_hour)
     TextView tv_hour;
@@ -98,7 +98,7 @@ public class ParkingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_parking);
 
         Intent intent = getIntent();
-        String hourMsg = intent.getStringExtra(MapsActivity.HOUR);
+        String secondsMsg = intent.getStringExtra(MapsActivity.SECONDS);
 
         this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
         if (PreferenceManager.isAvailable(this.prefs)) {
@@ -108,7 +108,7 @@ public class ParkingActivity extends AppCompatActivity {
         } else {
             Log.d(TAG, "User doesn't have ongoing parking!");
             this.selectedBay = (Bay) intent.getSerializableExtra(MapsActivity.SELECTED_BAY);
-            this.endParkingDate = (Date) DateUtils.addHours(new Date(), Integer.parseInt(hourMsg));
+            this.endParkingDate = (Date) DateUtils.addSeconds(new Date(), Integer.parseInt(secondsMsg));
             PreferenceManager.saveBayToSharedPreferences(this.selectedBay, this.prefs);
             PreferenceManager.saveEndDateToSharedPreferences(this.endParkingDate, this.prefs);
         }
@@ -125,19 +125,26 @@ public class ParkingActivity extends AppCompatActivity {
         //change layout
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-        renderBottomSheet(selectedBay);
+        stopParkingButton.setText("Stop Parking");
+
+        reRenderBottomSheet(selectedBay);
     }
 
-    private void renderBottomSheet(@NotNull Bay bay) {
+    private void reRenderBottomSheet(@NotNull Bay bay) {
         String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
         String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
 
-        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
-        bayRestriction.setText(bayRestrictionString);
-        baySnippet.setText("BayId = " + Integer.toString(bay.getBayId()));
+        layoutRestrictions.removeAllViews();
+        for (int i = 0; i < bay.getRestrictions().size(); i++) {
+            Button tv = new Button(getApplicationContext());
+            tv.setText(bay.getRestrictions().get(i).getDescription());
+            layoutRestrictions.addView(tv);
+        }
+
+//        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
@@ -155,13 +162,15 @@ public class ParkingActivity extends AppCompatActivity {
 
                     if (!current_date.after(endParkingDate)) {
                         long diff = endParkingDate.getTime() - current_date.getTime();
-                        long Hours = diff / (60 * 60 * 1000) % 24;
-                        long Minutes = diff / (60 * 1000) % 60;
-                        long Seconds = diff / 1000 % 60;
+                        long days = diff / (24 * 60 * 60 * 1000);
+                        long hours = diff / (60 * 60 * 1000) % 24;
+                        long minutes = diff / (60 * 1000) % 60;
+                        long seconds = diff / 1000 % 60;
                         //
-                        tv_hour.setText(String.format("%02d", Hours));
-                        tv_minute.setText(String.format("%02d", Minutes));
-                        tv_second.setText(String.format("%02d", Seconds));
+                        tv_day.setText(String.format("%02d", days));
+                        tv_hour.setText(String.format("%02d", hours));
+                        tv_minute.setText(String.format("%02d", minutes));
+                        tv_second.setText(String.format("%02d", seconds));
                     } else {
                         linear_layout_1.setVisibility(View.VISIBLE);
                         linear_layout_2.setVisibility(View.GONE);
@@ -183,7 +192,7 @@ public class ParkingActivity extends AppCompatActivity {
     /**
      * Bottom screen Button Stop Parking OnClick
      */
-    @OnClick(R.id.btn_stop_parking)
+    @OnClick(R.id.btn_parking)
     public void stopParking() {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(ParkingActivity.this);

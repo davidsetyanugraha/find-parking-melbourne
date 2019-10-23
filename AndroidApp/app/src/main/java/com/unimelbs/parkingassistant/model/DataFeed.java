@@ -8,6 +8,7 @@ import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
 import com.unimelbs.parkingassistant.parkingapi.SiteState;
 import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
+import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Timer;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -43,6 +44,7 @@ public class DataFeed {
     private PublishSubject<List<Bay>> baysSubject = PublishSubject.create();
     //private BayStateApi bayStateApi;
     private ClusterManager<Bay> clusterManager;
+    private BayRenderer bayRenderer;
 
 
     /**
@@ -57,43 +59,7 @@ public class DataFeed {
 
     public Observable<List<Bay>> getBaysObservable() {
         return baysSubject;
-        //TODO: Call baysSubject.onNext(<<<the new array here>>); when needed
     }
-
-/*
-    class BayStateApi extends AsyncTask<Void,Void,List<SiteState>>
-    {
-        private static final String TAG = "BayStateApi";
-        private DataFeed dataFeed;
-        private List<SiteState> baysStates;
-        public BayStateApi(DataFeed dataFeed, LatLng centrePoint)
-        {
-            this.dataFeed = dataFeed;
-        }
-        private void fetchApiData()
-        {
-            SitesStateGetQuery query = new SitesStateGetQuery(-37.796201, 144.958266, null);
-            dataFeed.api.sitesStateGet(query)
-                .subscribeOn(Schedulers.io())
-                //.observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
-                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
-                .subscribe(value ->
-                        {
-                            baysStates = value;
-                            System.out.println("Value:" + value.get(0).getStatus()); // sample, other values are id, status, location, zone, recordState
-                        },
-                    throwable -> Log.d("debug", throwable.getMessage()) // do this on error
-                );
-        }
-
-
-        @Override
-        protected Void doInBackground(Void...params) {
-            fetchApiData();
-            return null; //new LatLng(50,60);//null;
-        }
-    }
- */
 
     /**
      * Calls a back-end API that caches Bay data from the city of
@@ -127,7 +93,6 @@ public class DataFeed {
                                         timer.getDurationInSeconds()+" seconds. # of Fetched sites:"+
                                         value.size());
                                 bayAdapter.convertSites(value);
-                                dataFeed.saveBaysToFile();
                             },
                             throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
         }
@@ -136,10 +101,7 @@ public class DataFeed {
         protected void onPostExecute(Void aVoid)
         {
             super.onPostExecute(aVoid);
-            Log.d(TAG, "onPostExecute: "+Thread.currentThread().getName());
-            //dataFeed.saveBaysToFile();
             Log.d(TAG, "onPostExecute: after saving.");
-
         }
 
         @Override
@@ -361,17 +323,15 @@ public class DataFeed {
     /**
      * Saves Bays list as serialised java object to a local file.
      */
-    private void saveBaysToFile()
+    public synchronized void  saveBaysToFile()
     {
         Log.d(TAG, "saveBaysToFile: datafeed:"+this);
-        Log.d(TAG, "saveBaysToFile: on thread: "+Thread.currentThread().getName());
         File file = new File(context.getFilesDir()+"/"+BAYS_FILE);
         if (file.exists())
         {
             Log.d(TAG, "saveBaysToFile: a file exists, deleting it.");
             file.delete();
         }
-
 
         try {
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
@@ -391,6 +351,7 @@ public class DataFeed {
      */
     public void addBay(Bay bay)
     {
+        //bay.addObserver(clusterManager);
         baysHashtable.put(bay.getBayId(),bay);
     }
 
@@ -402,10 +363,13 @@ public class DataFeed {
     {
         int found=0;
         int notFound=0;
+        int availableBays=0;
         Timer timer=new Timer();
         Log.d(TAG, "fetchBaysStates: Bay table includes:"+baysHashtable.size()+" "+
                 "State data includes: "+list.size());
         timer.start();
+        List<Bay> changedBays = new ArrayList<Bay>();
+
         for (SiteState siteState: list)
         {
             String strState = siteState.getStatus();
@@ -415,7 +379,10 @@ public class DataFeed {
             if (baysHashtable.get(id)!=null)
             {
                 found++;
-                baysHashtable.get(Integer.parseInt(siteState.getId())).setAvailable(state);
+                availableBays+=(state)?1:0;
+                Bay bay = baysHashtable.get(Integer.parseInt(siteState.getId()));
+                bay.setAvailable(state);
+                changedBays.add(bay);
             }
             else
             {
@@ -424,8 +391,12 @@ public class DataFeed {
             }
         }
         timer.stop();
+
+        baysSubject.onNext(changedBays);
+
         Log.d(TAG, "fetchBaysStates: completed in "+timer.getDurationInSeconds()+" "+
-                found+" states found. "+notFound+" states not found.");
+                found+" states found. "+notFound+" states not found."+
+                " Available bays: "+availableBays);
     }
 
     /**
