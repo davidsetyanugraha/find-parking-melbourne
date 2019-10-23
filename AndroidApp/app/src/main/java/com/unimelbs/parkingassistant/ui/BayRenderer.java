@@ -95,7 +95,8 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> implements GoogleMa
         LatLng cameraFocus = mMap.getCameraPosition().target;
         //Calculating the radius of the circle including the Visible rectangle of the map.
         double radius = DistanceUtil.getRadius(mMap);
-        Log.d(TAG, "onCameraIdle: current view radius:"+radius);
+        Log.d(TAG, "onCameraIdle: current view radius:"+radius+" zoom:"+
+                mMap.getCameraPosition().zoom);
 
         //Checks if radius (in meters) of the shown part of the map is < the defined street view
         //radius. This is the point when Bay status API is called to show it on the map.
