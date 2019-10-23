@@ -18,17 +18,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
+            <TextView
+                android:paddingLeft="10dp"
+                android:text="Date"/>
+
             <EditText
                 android:id="@+id/in_date"
                 android:lines="1"
-                android:inputType = "number"
                 android:maxLines="1"
-                android:maxLength="30"
-                android:enabled="false"/>
-            <Button
-                android:id="@+id/btn_date"
-                android:paddingLeft="10dp"
-                android:text="Change Date"/>
+                android:maxLength="30"/>
+
 
         </TableRow>
 
@@ -37,17 +36,15 @@
             android:layout_height="wrap_content"
             android:weightSum="1">
 
+            <TextView
+                android:paddingLeft="10dp"
+                android:text="Time"/>
+
             <EditText
                 android:id="@+id/in_time"
                 android:lines="1"
-                android:inputType = "number"
                 android:maxLines="1"
-                android:maxLength="30"
-                android:enabled="false"/>
-            <Button
-                android:id="@+id/btn_time"
-                android:paddingLeft="10dp"
-                android:text="Change Time"/>
+                android:maxLength="30"/>
 
         </TableRow>
 

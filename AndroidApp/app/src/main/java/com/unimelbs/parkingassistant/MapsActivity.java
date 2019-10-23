@@ -11,10 +11,12 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -102,11 +104,11 @@ public class MapsActivity extends AppCompatActivity
     @BindView(R.id.bottom_sheet_maps)
     LinearLayout layoutBottomSheet;
 
+    @BindView(R.id.bay_address_layout)
+    LinearLayout bayAddressLayout;
+
     @BindView(R.id.bay_title)
     TextView bayTitle;
-
-    @BindView(R.id.bay_snippet)
-    TextView baySnippet;
 
     @BindView(R.id.bay_status)
     TextView bayStatus;
@@ -201,13 +203,6 @@ public class MapsActivity extends AppCompatActivity
 
 
     /** Defines callbacks for service binding, passed to bindService() */
-
-
-
-
-
-
-
 
     private void initBottomSheetUI() {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
@@ -409,11 +404,12 @@ public class MapsActivity extends AppCompatActivity
             }
         });
 
-        Button selectDateButton = startParkingFormView.findViewById(R.id.btn_date);
         EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
-        selectDateButton.setOnClickListener(new View.OnClickListener() {
+        txtDate.setInputType(InputType.TYPE_NULL);
+        txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG,"DATE ONCLICK!");
                 DatePickerDialog datePickerDialog = new DatePickerDialog(MapsActivity.this,
                         new DatePickerDialog.OnDateSetListener() {
 
@@ -431,11 +427,12 @@ public class MapsActivity extends AppCompatActivity
             }
         });
 
-        Button selectTimeButton = startParkingFormView.findViewById(R.id.btn_time);
         EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
-        selectTimeButton.setOnClickListener(new View.OnClickListener() {
+        txtTime.setInputType(InputType.TYPE_NULL);
+        txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG,"TIME ONCLICK!");
                 // Launch Time Picker Dialog
                 TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
                         new TimePickerDialog.OnTimeSetListener() {
@@ -731,6 +728,13 @@ public class MapsActivity extends AppCompatActivity
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
+        if (bay.isAvailable()) {
+            bayStatus.setTextColor(Color.GREEN);
+        } else {
+            bayStatus.setTextColor(Color.RED);
+        }
+
+
 
         //update restriction
         layoutRestrictions.removeAllViews();

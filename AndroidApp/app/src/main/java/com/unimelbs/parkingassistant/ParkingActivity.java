@@ -54,9 +54,6 @@ public class ParkingActivity extends AppCompatActivity {
     @BindView(R.id.bay_title)
     TextView bayTitle;
 
-    @BindView(R.id.bay_snippet)
-    TextView baySnippet;
-
     @BindView(R.id.bay_status)
     TextView bayStatus;
 
