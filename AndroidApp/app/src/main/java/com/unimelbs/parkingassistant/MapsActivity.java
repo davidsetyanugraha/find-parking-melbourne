@@ -478,6 +478,9 @@ public class MapsActivity extends AppCompatActivity
         DataFeed data = new DataFeed(getApplicationContext());
         //ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
         ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap);
+
+        //Added this to improve performance.
+        extendedClusterManager.setAnimation(false);
         extendedClusterManager.setRenderer(new BayRenderer(this,
                 mMap,
                 extendedClusterManager,
