@@ -108,6 +108,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         if(data==null)
         {
             Log.d(TAG, "onCreate: data is null, creating new object.");
@@ -190,10 +191,10 @@ public class MapsActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    private void goToParkingActivity(String minutes) {
+    private void goToParkingActivity(String seconds) {
         Log.d(TAG, "GOTOPARKING");
         Intent intent = new Intent(this, ParkingActivity.class);
-        intent.putExtra(SECONDS, minutes);
+        intent.putExtra(SECONDS, seconds);
         intent.putExtra(SELECTED_BAY, selectedBay);
         startActivity(intent);
     }
@@ -328,20 +329,20 @@ public class MapsActivity extends AppCompatActivity
                     long diffInMillies = toDate.getTime() - currentTime.getTime();
                     Long seconds = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
 
-                    this.processValidation(seconds);
+                    this.processValidation(currentTime, toDate, seconds);
                     Log.d(TAG, "diff (seconds) =" +seconds);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
 
-            private void processValidation(Long seconds) {
+            private void processValidation(Date currentTime, Date toDate, Long seconds) {
                 if (seconds <= 0) {
                     Toast.makeText(getApplicationContext(),
                             "Invalid Duration",
                             Toast.LENGTH_LONG).show();
                 } else {
-                    restrictionsHelper.processRestrictionChecking(seconds, currentTime);
+                    restrictionsHelper.processRestrictionChecking(seconds, currentTime, toDate);
                     if (! restrictionsHelper.isValid()){
                         DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
@@ -356,7 +357,7 @@ public class MapsActivity extends AppCompatActivity
                             }
                         };
                         String invalidReason = restrictionsHelper.getInvalidReason();
-                        showAlertDialog("Warning", "You have broken restriction: \n " + invalidReason +" \n  Are you sure to continue?", yesListener, noListener);
+                        showAlertDialog("Violation Warning",  invalidReason +" \n \n  Are you sure to continue?", yesListener, noListener);
                     } else {
 
                         String strSeconds = seconds.toString();
