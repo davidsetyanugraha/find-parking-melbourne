@@ -8,6 +8,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.unimelbs.parkingassistant.model.Bay;
@@ -26,6 +27,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> implements GoogleMa
     private final double STATE_API_CIRCLE_RADIUS = 1000;
     private final double STREET_VIEW_RADIUS = 250;
     private final int STATUS_FRESHNESS_INTERVAL=120;
+    private float currentZoom;
 
     private Context context;
     private GoogleMap mMap;
@@ -95,8 +97,10 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> implements GoogleMa
         LatLng cameraFocus = mMap.getCameraPosition().target;
         //Calculating the radius of the circle including the Visible rectangle of the map.
         double radius = DistanceUtil.getRadius(mMap);
-        Log.d(TAG, "onCameraIdle: current view radius:"+radius);
 
+        currentZoom = mMap.getCameraPosition().zoom;
+        Log.d(TAG, "onCameraIdle: current view radius:"+radius+
+                "zoom:"+currentZoom);
         //Checks if radius (in meters) of the shown part of the map is < the defined street view
         //radius. This is the point when Bay status API is called to show it on the map.
         if (radius<STREET_VIEW_RADIUS)
@@ -157,6 +161,15 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> implements GoogleMa
                     }
                 }
             }
-          }
         }
     }
+
+    @Override
+    protected boolean shouldRenderAsCluster(Cluster<Bay> cluster) {
+//        return cluster.getSize() > this.mMinClusterSize;
+
+//        final float currentMaxZoom = mMap.getMaxZoomLevel();
+        return currentZoom < 18;
+//        return currentZoom < currentMaxZoom && cluster.getSize() >= 10;
+    }
+}
