@@ -70,6 +70,7 @@ public class MapsActivity extends AppCompatActivity
     private static final String TAG = "MapActivity";
     private static String apiKey;
     private Bay selectedBay;
+    private DataFeed data;
 
     BayUpdateService bayUpdateService;
     boolean bayUpdateServiceBound = false;
@@ -104,9 +105,12 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
-        Log.d(TAG, "onCreate: " + Thread.currentThread().getName());
+        if(data==null)
+        {
+            Log.d(TAG, "onCreate: data is null, creating new object.");
+            data = new DataFeed(getApplicationContext());
+            data.loadData();
+        }
 
         // Bind to BayUpdateService
         bindToBayUpdateService();
@@ -132,15 +136,7 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
 
-    @Override
-    protected void onResume(){
-        super.onResume();
-    }
     private ServiceConnection connection = new ServiceConnection() {
 
         @Override
@@ -178,22 +174,14 @@ public class MapsActivity extends AppCompatActivity
         alertDialog.show();
     }
 
+
+
     /** Defines callbacks for service binding, passed to bindService() */
 
 
 
 
-    @Override
-    protected void onDestroy() {
-        // Should not dispose the
-        // subscription here.
-        // Should only be disposed
-        // when asked or when the service stops.
-        unbindService(connection);
-        bayUpdateServiceBound = false;
-        super.onDestroy();
-        Log.d("MapActivityDestroy", "Map Activity On Destroy Has Been Called");
-    }
+
 
 
 
@@ -260,6 +248,45 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
+
+    @Override
+    protected void onDestroy() {
+        // Should not dispose the
+        // subscription here.
+        // Should only be disposed
+        // when asked or when the service stops.
+        unbindService(connection);
+        bayUpdateServiceBound = false;
+        //data.saveBaysToFile();
+
+        super.onDestroy();
+        Log.d("MapActivityDestroy", "Map Activity On Destroy Has Been Called");
+    }
+    @Override
+    protected void onPause()
+    {
+        Log.d(TAG, "onPause: ");
+        super.onPause();
+        data.saveBaysToFile();
+    }
+    @Override
+    protected void onStart() {
+        Log.d(TAG, "onStart: ");
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume(){
+        Log.d(TAG, "onResume: ");
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop()
+    {
+        //data.saveBaysToFile();
+        super.onStop();
+    }
 
     /**
      * Bottom screen Button Start Parking OnClick
@@ -475,7 +502,7 @@ public class MapsActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.d(TAG, "onMapReady: ");
-        DataFeed data = new DataFeed(getApplicationContext());
+        //DataFeed data = new DataFeed(getApplicationContext());
         //ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
         ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap);
 
@@ -486,7 +513,7 @@ public class MapsActivity extends AppCompatActivity
                 extendedClusterManager,
                 data));
         data.setClusterManager(extendedClusterManager);
-        data.loadData();
+
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
 

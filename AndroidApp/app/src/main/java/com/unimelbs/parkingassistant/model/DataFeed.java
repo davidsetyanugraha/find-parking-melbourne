@@ -127,7 +127,6 @@ public class DataFeed {
                                         timer.getDurationInSeconds()+" seconds. # of Fetched sites:"+
                                         value.size());
                                 bayAdapter.convertSites(value);
-                                dataFeed.saveBaysToFile();
                             },
                             throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
         }
@@ -136,10 +135,7 @@ public class DataFeed {
         protected void onPostExecute(Void aVoid)
         {
             super.onPostExecute(aVoid);
-            Log.d(TAG, "onPostExecute: "+Thread.currentThread().getName());
-            //dataFeed.saveBaysToFile();
             Log.d(TAG, "onPostExecute: after saving.");
-
         }
 
         @Override
@@ -361,17 +357,15 @@ public class DataFeed {
     /**
      * Saves Bays list as serialised java object to a local file.
      */
-    private void saveBaysToFile()
+    public synchronized void  saveBaysToFile()
     {
         Log.d(TAG, "saveBaysToFile: datafeed:"+this);
-        Log.d(TAG, "saveBaysToFile: on thread: "+Thread.currentThread().getName());
         File file = new File(context.getFilesDir()+"/"+BAYS_FILE);
         if (file.exists())
         {
             Log.d(TAG, "saveBaysToFile: a file exists, deleting it.");
             file.delete();
         }
-
 
         try {
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
