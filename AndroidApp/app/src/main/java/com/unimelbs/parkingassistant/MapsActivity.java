@@ -135,6 +135,8 @@ public class MapsActivity extends AppCompatActivity
     protected void onResume(){
         super.onResume();
     }
+
+    
     private ServiceConnection connection = new ServiceConnection() {
 
         @Override
