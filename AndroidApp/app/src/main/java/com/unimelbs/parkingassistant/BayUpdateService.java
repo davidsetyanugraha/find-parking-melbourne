@@ -8,24 +8,29 @@ import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
+
+import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+
 import android.widget.Toast;
-
-
 import androidx.core.app.NotificationCompat;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.unimelbs.parkingassistant.broadcastreceivers.ForegroundServiceStopper;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.parkingapi.ParkingSiteFollower;
 import com.unimelbs.parkingassistant.parkingapi.SiteState;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Calendar;
+import java.util.Date;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -49,6 +54,7 @@ public class BayUpdateService extends Service {
     static final String NOTIFICATION_CHANNEL_ID_BAY_UPDATE = "channel_id_bay_update";
     static final String NOTIFICATION_CHANNEL_ID_BAY_FOLLOW = "channel_id_bay_follow";
     static final String NOTIFICATION_CHANNEL_ID_SERVICE_KILLED = "channel_id_service_killed";
+    static final String NOTIFICATION_CHANNEL_ID_START_PARKING = "channel_id_start_parking";
     //User visible Channel Name
     static final String CHANNEL_NAME = "Notification Channel";
 
@@ -58,15 +64,25 @@ public class BayUpdateService extends Service {
     NotificationManager notificationManager;
     static boolean isServiceRunning = false;
 
+
     // Below are notifications ID.
     // These IDs will be used to identify
     // a notification and perform operation
     // on it depending upon requirement.
 
-    final Integer START_SERVICE_NOTIFICATION_ID = 1;
+    final Integer START_PARKING_NOTIFICATION_ID = 5;
     final Integer BAY_STATUS_UPDATE_NOTIFICATION_ID = 2;
     final Integer SERVICE_KILLED_WHILE_SUBSCRIBED_TO_BAY_ID = 3;
     final Integer FOLLOWING_BAY_NOTIFICATION_ID = 4;
+
+    private Handler handler = new Handler();
+    private Runnable runnable;
+    private Boolean parkingNotificationFirstRun ;
+    String countDownTimer = null;
+    long startParkingTime;
+    Date endParkingDate;
+    NotificationCompat.Builder firstParkingNotificationBuilder;
+    String requiredParkingDuration;
 
     // The external map intent on which
     // navigation to parking bay will
@@ -110,15 +126,26 @@ public class BayUpdateService extends Service {
 
 
     void stopMyService() {
-        stopForeground(true);
-        stopSelf();
-        isServiceRunning = false;
-        Log.d("StopMyService", "stopMyService called to stop the serviceS");
+        try{
+
+            stopForeground(true);
+            handler.removeCallbacks(runnable);
+            stopSelf();
+            isServiceRunning = false;
+            Log.d("StopMyService", "stopMyService called to stop the serviceS");
+
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
 
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        Log.d("service", "oNStartC0mmand called");
         if (intent != null && intent.getAction().equals("ACTION_START_SERVICE")) {
             startService();
         }
@@ -129,10 +156,12 @@ public class BayUpdateService extends Service {
     public void onDestroy() {
         stopForeground(true);
         isServiceRunning = false;
+        handler.removeCallbacks(runnable);
+        this.serviceKilledWhileStillSubscribedNotification();
         if(hasSubscribed) {
 
             disposeSubscription();
-            this.serviceKilledWhileStillSubscribedNotification();
+
             Log.d("ServiceOnDestroy", "Dispose Service Called From Service OnDEstroy");
         }
         super.onDestroy();
@@ -270,8 +299,8 @@ public class BayUpdateService extends Service {
     {
         try {
             String title = "Bay Status";
-            String subject = "Parking Bay Status Changed ";
-            String body = "Bay tracking has stopped";
+            //String subject = "Parking Bay Status Changed ";
+            String body = "Parking Assisstant has stopped";
 
 
 
@@ -296,6 +325,13 @@ public class BayUpdateService extends Service {
                         500,
                         500
                 });
+
+                AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build();
+                notificationChannel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+                        audioAttributes);
                 //Sets whether notifications from these Channel should be visible on Lockscreen or not
                 notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                 notificationManager.createNotificationChannel(notificationChannel);
@@ -366,6 +402,12 @@ public class BayUpdateService extends Service {
                             500,
                             500
                     });
+                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                            .build();
+                    notificationChannel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+                            audioAttributes);
 
                     //Sets whether notifications from these Channel should be visible on Lockscreen or not
                     notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
@@ -476,6 +518,200 @@ public class BayUpdateService extends Service {
         }
 
     }
+
+    void startParkingNotification(Bay bay, Long startParkingTime, String parkingDuration){
+        this.requiredParkingDuration = parkingDuration;
+        this.startParkingTime = startParkingTime;
+        BayUpdateService.selectedBayId = bay;
+        this.parkingNotificationFirstRun = true;
+        //int amount = (int) (Float.parseFloat(this.requiredParkingDuration) * 60);
+        //this.endParkingDate = (Date) DateUtils.addMinutes(new Date(), amount);
+        int amount = (int) (Float.parseFloat(this.requiredParkingDuration));
+        this.endParkingDate = (Date) DateUtils.addSeconds(new Date(), amount);
+
+
+        //Date currentTime = Calendar.getInstance().getTime();
+        //displayParkingNotification(currentTime.toString());
+        countDownStart();
+    }
+
+    private void countDownStart() {
+
+        runnable = new Runnable() {
+
+
+            @Override
+            public void run() {
+                try {
+
+                    handler.postDelayed(this, 1000);
+                    Date current_date = new Date();
+
+                    long diff = endParkingDate.getTime()-current_date.getTime() ;
+                    //long days = diff / (24 * 60 * 60 * 1000);
+                    long Hours = diff / (60 * 60 * 1000) % 24;
+                    long Minutes = diff / (60 * 1000) % 60;
+                    long Seconds = diff / 1000 % 60;
+
+                    //countDownTimer = days+":"+Hours + ":"+ Minutes+":"+Seconds;
+                    countDownTimer = Hours + ":"+ Minutes+":"+Seconds;
+                    Log.d("parkingNot", "Parking Notification first Run Status "
+                            + parkingNotificationFirstRun.toString() );
+
+                    if (parkingNotificationFirstRun){
+                        displayParkingNotification(countDownTimer, parkingNotificationFirstRun );
+                        parkingNotificationFirstRun = false;
+                    }
+                    else
+                    {
+
+                        displayParkingNotification(countDownTimer, parkingNotificationFirstRun );
+                    }
+
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        handler.postDelayed(runnable, 0);
+    }
+
+
+    private void displayParkingNotification(String countDownTime, Boolean parkingNotificationFirstRun) {
+
+        String bayId = Integer.toString(BayUpdateService.selectedBayId.getBayId());
+
+        try {
+
+                try {
+                    if(parkingNotificationFirstRun) {
+                        stopForeground(true);
+                        notificationManager.cancelAll();
+                    }
+                } catch (Exception e) {
+                    Log.e("CancelNotifyService", "Failed to cancel notification START_PARKING_NOTIFICATION_ID ");
+                }
+
+
+            if(parkingNotificationFirstRun) {
+
+                this.firstParkingNotificationBuilder = new NotificationCompat.Builder(this,
+                        NOTIFICATION_CHANNEL_ID_START_PARKING);
+                Date currentTime = Calendar.getInstance().getTime();
+                String title = "Parking Duration Left: " + countDownTime;
+                String body = "Car parked on " +currentTime+ ".";
+
+                Intent intentHide = new Intent(this, ForegroundServiceStopper.class);
+                PendingIntent exitNavigation = PendingIntent.getBroadcast(this,
+                        (int) System.currentTimeMillis(), intentHide, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                Intent walkUsingGmap = this.getWalkToBayIntent();
+                PendingIntent startWalk = PendingIntent.getActivity(this, 100, walkUsingGmap, 0);
+
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    int importance = NotificationManager.IMPORTANCE_HIGH;
+
+                    NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID_START_PARKING,
+                            CHANNEL_NAME, importance);
+                    //Boolean value to set if lights are enabled for Notifications from this Channel
+                    notificationChannel.enableLights(true);
+                    //Sets the color of Notification Light
+                    notificationChannel.setLightColor(Color.GREEN);
+                    //Sets whether notifications from these Channel should be visible on Lockscreen or not
+                    notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                            .build();
+                    notificationChannel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+                            audioAttributes);
+                    notificationChannel.setVibrationPattern(new long[]{
+                            500,
+                            500,
+                            500,
+                            500,
+                            500
+                    });
+                    notificationManager.createNotificationChannel(notificationChannel);
+                }
+
+                this.firstParkingNotificationBuilder.setContentTitle(title);
+                this.firstParkingNotificationBuilder.setContentText(body);
+                this.firstParkingNotificationBuilder.setSmallIcon(R.mipmap.green_exclaimination);
+                this.firstParkingNotificationBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
+                this.firstParkingNotificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+                this.firstParkingNotificationBuilder.setAutoCancel(false);
+                this.firstParkingNotificationBuilder.setOngoing(true);
+                this.firstParkingNotificationBuilder.setOnlyAlertOnce(true);
+                this.firstParkingNotificationBuilder.addAction(0, "Walk To Parking Bay", startWalk);
+                this.firstParkingNotificationBuilder.addAction(0, "Stop Parking", exitNavigation);
+                this.firstParkingNotificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
+
+                notificationManager.notify(START_PARKING_NOTIFICATION_ID, this.firstParkingNotificationBuilder.build());
+                startForeground(START_PARKING_NOTIFICATION_ID, this.firstParkingNotificationBuilder.build());
+
+            }
+            else
+            {   int day_index_add = 0;
+                String[] arrOfRemainingDuration = countDownTime.split(":");
+                Integer hours = Integer.parseInt(arrOfRemainingDuration[0+ day_index_add]);
+                Integer minutes = Integer.parseInt(arrOfRemainingDuration[1 + day_index_add]);
+                Integer seconds = Integer.parseInt(arrOfRemainingDuration[2 + day_index_add]);
+
+                Integer duration= hours * 60 + minutes; //duration in minutes
+
+                int TEN_MINUTES_LEFT = 9;
+                if (duration.equals(TEN_MINUTES_LEFT)) { // duration left == 10 mins specified by 9
+
+                    this.firstParkingNotificationBuilder.setSmallIcon(R.mipmap.exclaimination);
+                    this.firstParkingNotificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
+
+                 }
+
+                if (!((int) (hours+minutes+seconds) <= 0)) { // When duration left is zero, stop updates
+                    this.firstParkingNotificationBuilder.setContentTitle("Parking Duration Left: " + countDownTime);
+                    notificationManager.notify(START_PARKING_NOTIFICATION_ID, this.firstParkingNotificationBuilder.build());
+                }
+                else{
+                    this.firstParkingNotificationBuilder.setContentTitle("Parking Over Due By: " + countDownTime.replace('-',' '));
+                    notificationManager.notify(START_PARKING_NOTIFICATION_ID, this.firstParkingNotificationBuilder.build());
+
+                }
+            }
+
+
+        }
+        catch(Exception e)
+            {
+                Log.e("Error", "Error occured in raising Start PArkking Bay ID Notification: " + e.getMessage());
+            }
+
+
+    }
+
+    private Intent getWalkToBayIntent()
+    {
+        LatLng selectedBayLatLng = BayUpdateService.selectedBayId.getPosition();
+        String lat = String.valueOf(selectedBayLatLng.latitude);
+        String lon = String.valueOf(selectedBayLatLng.longitude);
+
+
+        // Part of the code below is taken from
+        // https://stackoverflow.com/questions/
+        // 2662531/launching-google-maps-directions
+        // -via-an-intent-on-android?rq=1
+
+        Uri walkIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon+"&mode=w");
+        Log.d("Walk Uri", "Walk URI is " + walkIntentUri);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, walkIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+        return mapIntent;
+    }
+
 
 
 }
