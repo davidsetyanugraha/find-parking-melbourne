@@ -21,7 +21,7 @@
             <EditText
                 android:id="@+id/parkingFormDuration"
                 android:lines="1"
-                android:inputType = "number"
+                android:inputType="numberDecimal"
                 android:maxLines="1"
                 android:maxLength="18"/>
         </TableRow>

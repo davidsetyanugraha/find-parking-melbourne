@@ -11,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -45,6 +46,7 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -136,7 +138,7 @@ public class MapsActivity extends AppCompatActivity
         super.onResume();
     }
 
-    
+
     private ServiceConnection connection = new ServiceConnection() {
 
         @Override
@@ -270,13 +272,13 @@ public class MapsActivity extends AppCompatActivity
      */
     @OnClick(R.id.btn_start_parking)
     public void startParking() {
-        //bayStatusChangeNotification();
+
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
         Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
-        builder.setTitle("Start Parking");
+        builder.setTitle("How Long Do You Want To Park?");
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
 
@@ -285,19 +287,38 @@ public class MapsActivity extends AppCompatActivity
             public void onClick(View view) {
                 try {
                     EditText hour = startParkingFormView.findViewById(R.id.parkingFormDuration);
+
+
                     String strHour = hour.getText().toString();
 
                     //@todo add validation from selectedBay
                     if (strHour.isEmpty()) {
                         Toast.makeText(getApplicationContext(),
-                                "Input cannot be blank",
+                                "Please add the duration.",
                                 Toast.LENGTH_LONG).show();
                     } else if (! RestrictionsHelper.isValid(selectedBay.getRestrictions(), strHour)){
                         Toast.makeText(getApplicationContext(),
                                 RestrictionsHelper.getInvalidReason(selectedBay.getRestrictions(), strHour),
                                 Toast.LENGTH_LONG).show();
                     } else {
-                        goToParkingActivity(strHour);
+                        long parkingStartTime = new Date().getTime();
+                        bayUpdateService.startParkingNotification(selectedBay, parkingStartTime, strHour);
+
+                        // TODO Team Approval Required for this.
+                        // must cancel and finish to unbind service
+                        // so that STOP Parking from service can
+                        // work fine.
+                        // Comment below two lines if you want to
+                        // use goToParkingActivity.
+                        alertDialog.cancel();
+                        MapsActivity.this.finish();
+                        //unbindService(connection);
+                        //bayUpdateServiceBound = false;
+                        Toast.makeText(getApplicationContext(),
+                                "Parking duration being monitored in Notifications.",
+                                Toast.LENGTH_LONG).show();
+                        //goToParkingActivity(strHour);
+
                     }
 
                 } catch (Exception ex) {
