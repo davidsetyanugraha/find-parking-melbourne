@@ -2,7 +2,7 @@ package com.unimelbs.parkingassistant.util;
 
 import com.unimelbs.parkingassistant.parkingapi.Restriction;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 public class RestrictionsHelper {
@@ -24,11 +24,11 @@ public class RestrictionsHelper {
     }
 
     public boolean isValid() {
-        return true;
+        return false;
     }
 
     public String getInvalidReason() {
-        return "";
+        return "---";
     }
 
     public String setInvalidReason(String invalidReason) {
@@ -44,9 +44,9 @@ public class RestrictionsHelper {
         this.restrictions = restrictions;
     }
 
-    public void processRestrictionChecking(Long seconds, LocalDateTime currentTime) {
+    public void processRestrictionChecking(Long seconds, Date currentTime) {
 //        Long mins = seconds / 60;
-//
+//        currentTime.getDayOfWeek().;
 //        Date endParkingDate = DateUtils.addSeconds(new Date(), seconds.intValue());
 //
 //        for (int i = 0; i < this.restrictions.size(); i++) {

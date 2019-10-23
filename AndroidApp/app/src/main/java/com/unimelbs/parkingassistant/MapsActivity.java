@@ -47,11 +47,12 @@ import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import androidx.appcompat.app.AppCompatActivity;
 import butterknife.BindView;
@@ -305,26 +306,35 @@ public class MapsActivity extends AppCompatActivity
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
         Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
-        LocalDateTime currentTime = LocalDateTime.now();
+        Date currentTime = new Date();
         builder.setTitle("Set return time");
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
 
-        int mYear = currentTime.getYear();
-        int mMonth = currentTime.getMonthValue();
-        int mDay = currentTime.getDayOfMonth();
-        int mHour = currentTime.getHour();
-        int mMinute = currentTime.getMinute();
+        int mYear = Integer.parseInt(new SimpleDateFormat("yyyy").format(currentTime));
+        int mMonth = Integer.parseInt(new SimpleDateFormat("MM").format(currentTime));
+        int mDay = Integer.parseInt(new SimpleDateFormat("dd").format(currentTime));
+        int mHour = Integer.parseInt(new SimpleDateFormat("HH").format(currentTime));
+        int mMinute = Integer.parseInt(new SimpleDateFormat("mm").format(currentTime));
 
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-                    LocalDateTime toDate = LocalDateTime.of(year, month, day, hour, minute);
-                    Log.d(TAG, toDate.toString());
-                    Log.d(TAG, currentTime.toString());
+                    Calendar cal = Calendar.getInstance();
+                    cal.set(Calendar.YEAR, year);
+                    cal.set(Calendar.MONTH, month);
+                    cal.set(Calendar.DAY_OF_MONTH, day);
+                    cal.set(Calendar.HOUR_OF_DAY, hour);
+                    cal.set(Calendar.MINUTE, minute);
 
-                    Long seconds = ChronoUnit.SECONDS.between(currentTime, toDate);
+                    Date toDate = cal.getTime();
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(toDate));
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(currentTime));
+
+                    long diffInMillies = toDate.getTime() - currentTime.getTime();
+                    Long seconds = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
+
                     this.processValidation(seconds);
                     Log.d(TAG, "diff (seconds) =" +seconds);
                 } catch (Exception ex) {
@@ -353,7 +363,7 @@ public class MapsActivity extends AppCompatActivity
                             }
                         };
                         String invalidReason = restrictionsHelper.getInvalidReason();
-                        showAlertDialog("Warning", "You have broken restriction: \n \t" + invalidReason +" \n  Are you sure to continue?", yesListener, noListener);
+                        showAlertDialog("Warning", "You have broken restriction: \n " + invalidReason +" \n  Are you sure to continue?", yesListener, noListener);
                     } else {
 
                         String strSeconds = seconds.toString();
