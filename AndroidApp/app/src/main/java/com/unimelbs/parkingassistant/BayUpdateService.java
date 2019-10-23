@@ -524,8 +524,10 @@ public class BayUpdateService extends Service {
         this.startParkingTime = startParkingTime;
         BayUpdateService.selectedBayId = bay;
         this.parkingNotificationFirstRun = true;
-        int amount = (int) (Float.parseFloat(this.requiredParkingDuration) * 60);
-        this.endParkingDate = (Date) DateUtils.addMinutes(new Date(), amount);
+        //int amount = (int) (Float.parseFloat(this.requiredParkingDuration) * 60);
+        //this.endParkingDate = (Date) DateUtils.addMinutes(new Date(), amount);
+        int amount = (int) (Float.parseFloat(this.requiredParkingDuration));
+        this.endParkingDate = (Date) DateUtils.addSeconds(new Date(), amount);
 
 
         //Date currentTime = Calendar.getInstance().getTime();
@@ -546,10 +548,12 @@ public class BayUpdateService extends Service {
                     Date current_date = new Date();
 
                     long diff = endParkingDate.getTime()-current_date.getTime() ;
+                    //long days = diff / (24 * 60 * 60 * 1000);
                     long Hours = diff / (60 * 60 * 1000) % 24;
                     long Minutes = diff / (60 * 1000) % 60;
                     long Seconds = diff / 1000 % 60;
 
+                    //countDownTimer = days+":"+Hours + ":"+ Minutes+":"+Seconds;
                     countDownTimer = Hours + ":"+ Minutes+":"+Seconds;
                     Log.d("parkingNot", "Parking Notification first Run Status "
                             + parkingNotificationFirstRun.toString() );
@@ -652,11 +656,11 @@ public class BayUpdateService extends Service {
 
             }
             else
-            {
+            {   int day_index_add = 0;
                 String[] arrOfRemainingDuration = countDownTime.split(":");
-                Integer hours = Integer.parseInt(arrOfRemainingDuration[0]);
-                Integer minutes = Integer.parseInt(arrOfRemainingDuration[1]);
-                Integer seconds = Integer.parseInt(arrOfRemainingDuration[2]);
+                Integer hours = Integer.parseInt(arrOfRemainingDuration[0+ day_index_add]);
+                Integer minutes = Integer.parseInt(arrOfRemainingDuration[1 + day_index_add]);
+                Integer seconds = Integer.parseInt(arrOfRemainingDuration[2 + day_index_add]);
 
                 Integer duration= hours * 60 + minutes; //duration in minutes
 
