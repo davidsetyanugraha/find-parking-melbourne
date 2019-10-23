@@ -367,6 +367,7 @@ public class DataFeed {
     {
         int found=0;
         int notFound=0;
+        int availableBays=0;
         Timer timer=new Timer();
         Log.d(TAG, "fetchBaysStates: Bay table includes:"+baysHashtable.size()+" "+
                 "State data includes: "+list.size());
@@ -380,6 +381,7 @@ public class DataFeed {
             if (baysHashtable.get(id)!=null)
             {
                 found++;
+                availableBays+=(state)?1:0;
                 baysHashtable.get(Integer.parseInt(siteState.getId())).setAvailable(state);
             }
             else
@@ -390,7 +392,8 @@ public class DataFeed {
         }
         timer.stop();
         Log.d(TAG, "fetchBaysStates: completed in "+timer.getDurationInSeconds()+" "+
-                found+" states found. "+notFound+" states not found.");
+                found+" states found. "+notFound+" states not found."+
+                " Available bays: "+availableBays);
     }
 
     /**

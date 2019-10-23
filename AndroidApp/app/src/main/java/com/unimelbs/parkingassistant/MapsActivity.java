@@ -1,7 +1,8 @@
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,16 +10,17 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -45,8 +47,12 @@ import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import androidx.appcompat.app.AppCompatActivity;
 import butterknife.BindView;
@@ -60,7 +66,7 @@ public class MapsActivity extends AppCompatActivity
         ClusterManager.OnClusterItemClickListener<Bay> {
 
     private GoogleMap mMap;
-    public static final String HOUR = "com.unimelbs.parkingassistant.HOUR";
+    public static final String SECONDS = "com.unimelbs.parkingassistant.SECONDS";
     public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
     private static final String TAG = "MapActivity";
     private static String apiKey;
@@ -68,8 +74,10 @@ public class MapsActivity extends AppCompatActivity
 
     BayUpdateService bayUpdateService;
     boolean bayUpdateServiceBound = false;
+    int year, month, day, hour, minute;
 
-
+    @BindView(R.id.restrictionLayout)
+    LinearLayout layoutRestrictions;
 
     //Bottom sheet and StartParking impl
     @BindView(R.id.bottom_sheet_maps)
@@ -84,22 +92,25 @@ public class MapsActivity extends AppCompatActivity
     @BindView(R.id.bay_status)
     TextView bayStatus;
 
-    @BindView(R.id.bay_restriction)
-    TextView bayRestriction;
-
     @BindView(R.id.btn_direction)
     Button direction;
 
-    @BindView(R.id.btn_start_parking)
+    @BindView(R.id.btn_parking)
     Button startParkingButton;
 
     BottomSheetBehavior sheetBehavior;
     SharedPreferences prefs;
+    RestrictionsHelper restrictionsHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         Log.d(TAG, "onCreate: " + Thread.currentThread().getName());
+
+        // Bind to BayUpdateService
+        bindToBayUpdateService();
 
         setContentView(R.layout.activity_maps);
 
@@ -118,11 +129,18 @@ public class MapsActivity extends AppCompatActivity
 
         initBottomSheetUI();
 
-        // Bind to BayUpdateService
-        Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
-        bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
-        startService(bayMonitorServiceIntent);
-        bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
+
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
     }
     private ServiceConnection connection = new ServiceConnection() {
 
@@ -147,22 +165,14 @@ public class MapsActivity extends AppCompatActivity
         }
     };
 
-    private void showRevisitAlertDialog() {
+    private void showAlertDialog(String title, String question, DialogInterface.OnClickListener yesListener, DialogInterface.OnClickListener noListener) {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
 
-        builder.setTitle("Continue Parking");
-        builder.setMessage("Do you want to return into your Parking page?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        goToParkingActivity();
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        PreferenceManager.clearPreference(prefs);
-                    }
-                });
+        builder.setTitle(title);
+        builder.setMessage(question)
+                .setPositiveButton("Yes", yesListener)
+                .setNegativeButton("No", noListener);
 
         builder.setCancelable(true);
         alertDialog = builder.create();
@@ -172,12 +182,7 @@ public class MapsActivity extends AppCompatActivity
     /** Defines callbacks for service binding, passed to bindService() */
 
 
-    @Override
-    protected void onStart() {
-        super.onStart();
 
-
-    }
 
     @Override
     protected void onDestroy() {
@@ -196,7 +201,6 @@ public class MapsActivity extends AppCompatActivity
     private void initBottomSheetUI() {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-        
     }
 
     private void goToParkingActivity() {
@@ -204,61 +208,12 @@ public class MapsActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    private void goToParkingActivity(String hour) {
+    private void goToParkingActivity(String minutes) {
+        Log.d(TAG, "GOTOPARKING");
         Intent intent = new Intent(this, ParkingActivity.class);
-        intent.putExtra(HOUR, hour);
+        intent.putExtra(SECONDS, minutes);
         intent.putExtra(SELECTED_BAY, selectedBay);
         startActivity(intent);
-    }
-
-    private void navigateToTheSelectedBay()
-    {
-        LatLng selectedBayLatLng = this.selectedBay.getPosition();
-        String lat = String.valueOf(selectedBayLatLng.latitude);
-        String lon = String.valueOf(selectedBayLatLng.longitude);
-
-
-        // Part of the code below is taken from
-        // https://stackoverflow.com/questions/
-        // 2662531/launching-google-maps-directions
-        // -via-an-intent-on-android?rq=1
-
-        Uri navigationIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lon);
-        Log.d("Navigation Uri", "Navigation URI is " + navigationIntentUri);
-        Intent mapIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-        mapIntent.setPackage("com.google.android.apps.maps");
-
-
-        try {
-
-            startActivity(mapIntent);
-
-        } catch (ActivityNotFoundException ex) {
-            try {
-                Intent unrestrictedIntent = new Intent(Intent.ACTION_VIEW, navigationIntentUri);
-                startActivity(unrestrictedIntent);
-            } catch (ActivityNotFoundException innerEx) {
-                Toast.makeText(this, "No Map Application Found, Opening In Browser", Toast.LENGTH_LONG).show();
-                try {
-                    Uri.Builder builder = new Uri.Builder();
-                    builder.scheme("https")
-                            .authority("www.google.com")
-                            .appendPath("maps")
-                            .appendPath("dir")
-                            .appendPath("")
-                            .appendQueryParameter("api", "1")
-                            .appendQueryParameter("destination", lat + "," + lon);
-                    String url = builder.build().toString();
-                    Log.d("Directions", url);
-                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    i.setData(Uri.parse(url));
-                    startActivity(i);
-                } catch (Exception e) {
-                    Log.d("Failure", "Failed To Open any navigation method " + e.getMessage());
-
-                }
-            }
-        }
     }
 
     /**
@@ -271,18 +226,20 @@ public class MapsActivity extends AppCompatActivity
 
         if(this.selectedBay.isAvailable())
         {
+            bayUpdateService.navigateToTheSelectedBayWithSubscription(this.selectedBay, true);
 
-            bayUpdateService.subscribeToServerForUpdates(this.selectedBay);
-
-        } else {
+        }
+        else
+            {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-            // Add the buttons
+
             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    // TODO MUST REMOVE SUBSCRIPTION BELOW
-                    //bayUpdateService.subscribeToServerForUpdates(selectedBay);
-                    navigateToTheSelectedBay();
+                    // In this version of app we do not support
+                    // occupied to present status switch over.
+                    // Hence if a bay is occupied, we wont monitor it.
+                    bayUpdateService.navigateToTheSelectedBayWithSubscription(selectedBay, false);
 
                 }
             });
@@ -291,7 +248,7 @@ public class MapsActivity extends AppCompatActivity
                     // User cancelled the dialog
                 }
             });
-            builder.setMessage("The Bay is occupied. Do you Still want to Navigate")
+            builder.setMessage("The Bay is occupied. Do you Still want to Navigate?")
                     .setTitle("Bay Status");
 
 
@@ -304,58 +261,159 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
+
     /**
      * Bottom screen Button Start Parking OnClick
      */
-    @OnClick(R.id.btn_start_parking)
+    @OnClick(R.id.btn_parking)
     public void startParking() {
         //bayStatusChangeNotification();
+
+        renderParkingDialog();
+
+    }
+
+    private void renderParkingDialog() {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
         Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
-        builder.setTitle("Start Parking");
+        Date currentTime = new Date();
+        builder.setTitle("Set return time");
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
+
+        int mYear = Integer.parseInt(new SimpleDateFormat("yyyy").format(currentTime));
+        int mMonth = Integer.parseInt(new SimpleDateFormat("MM").format(currentTime));
+        int mDay = Integer.parseInt(new SimpleDateFormat("dd").format(currentTime));
+        int mHour = Integer.parseInt(new SimpleDateFormat("HH").format(currentTime));
+        int mMinute = Integer.parseInt(new SimpleDateFormat("mm").format(currentTime));
 
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-                    EditText hour = startParkingFormView.findViewById(R.id.parkingFormDuration);
-                    String strHour = hour.getText().toString();
+                    Calendar cal = Calendar.getInstance();
+                    cal.set(Calendar.YEAR, year);
+                    cal.set(Calendar.MONTH, month);
+                    cal.set(Calendar.DAY_OF_MONTH, day);
+                    cal.set(Calendar.HOUR_OF_DAY, hour);
+                    cal.set(Calendar.MINUTE, minute);
 
-                    //@todo add validation from selectedBay
-                    if (strHour.isEmpty()) {
-                        Toast.makeText(getApplicationContext(),
-                                "Input cannot be blank",
-                                Toast.LENGTH_LONG).show();
-                    } else if (! RestrictionsHelper.isValid(selectedBay.getRestrictions(), strHour)){
-                        Toast.makeText(getApplicationContext(),
-                                RestrictionsHelper.getInvalidReason(selectedBay.getRestrictions(), strHour),
-                                Toast.LENGTH_LONG).show();
+                    Date toDate = cal.getTime();
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(toDate));
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(currentTime));
+
+                    long diffInMillies = toDate.getTime() - currentTime.getTime();
+                    Long seconds = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
+
+                    this.processValidation(seconds);
+                    Log.d(TAG, "diff (seconds) =" +seconds);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            private void processValidation(Long seconds) {
+                if (seconds <= 0) {
+                    Toast.makeText(getApplicationContext(),
+                            "Invalid Duration",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    restrictionsHelper.processRestrictionChecking(seconds, currentTime);
+                    if (! restrictionsHelper.isValid()){
+                        DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                String strSeconds = seconds.toString();
+                                goToParkingActivity(strSeconds);
+                            }
+                        };
+
+                        DialogInterface.OnClickListener noListener = new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        };
+                        String invalidReason = restrictionsHelper.getInvalidReason();
+                        showAlertDialog("Warning", "You have broken restriction: \n " + invalidReason +" \n  Are you sure to continue?", yesListener, noListener);
                     } else {
-                        goToParkingActivity(strHour);
-                    }
 
+                        String strSeconds = seconds.toString();
+                        goToParkingActivity(strSeconds);
+
+                    }
+                }
+            }
+        });
+
+        Button cancelButton = startParkingFormView.findViewById(R.id.formCancelButton);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    alertDialog.cancel();
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         });
 
-        Button resetButton = startParkingFormView.findViewById(R.id.formCancelButton);
-        resetButton.setOnClickListener(new View.OnClickListener() {
+        Button selectDateButton = startParkingFormView.findViewById(R.id.btn_date);
+        EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
+        selectDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    EditText duration = startParkingFormView.findViewById(R.id.parkingFormDuration);
-                    duration.setText("");
-                    alertDialog.cancel();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+                DatePickerDialog datePickerDialog = new DatePickerDialog(MapsActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
+
+                            @Override
+                            public void onDateSet(DatePicker view, int year,
+                                                  int monthOfYear, int dayOfMonth) {
+
+                                txtDate.setText(dayOfMonth + "-" + (monthOfYear + 1) + "-" + year);
+                                day = dayOfMonth;
+                                month = monthOfYear;
+                                MapsActivity.this.year = year;
+                            }
+                        }, mYear, mMonth, mDay);
+                datePickerDialog.show();
+            }
+        });
+
+        Button selectTimeButton = startParkingFormView.findViewById(R.id.btn_time);
+        EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
+        selectTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Launch Time Picker Dialog
+                TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
+                        new TimePickerDialog.OnTimeSetListener() {
+
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay,
+                                                  int minute) {
+
+                                String am_pm = "";
+
+                                Calendar datetime = Calendar.getInstance();
+                                datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                                datetime.set(Calendar.MINUTE, minute);
+
+                                if (datetime.get(Calendar.AM_PM) == Calendar.AM)
+                                    am_pm = "AM";
+                                else if (datetime.get(Calendar.AM_PM) == Calendar.PM)
+                                    am_pm = "PM";
+
+                                String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
+
+                                txtTime.setText(strHrsToShow + ":" + String.format("%02d", minute) + " " + am_pm);
+                                hour = hourOfDay;
+                                MapsActivity.this.minute = minute;
+                            }
+                        }, mHour, mMinute, false);
+                timePickerDialog.show();
+
             }
         });
 
@@ -370,6 +428,8 @@ public class MapsActivity extends AppCompatActivity
 
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        autocompleteFragment.setCountry("AU");
 
 
         try {
@@ -428,6 +488,9 @@ public class MapsActivity extends AppCompatActivity
         DataFeed data = new DataFeed(getApplicationContext());
         //ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
         ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap);
+
+        //Added this to improve performance.
+        extendedClusterManager.setAnimation(false);
         extendedClusterManager.setRenderer(new BayRenderer(this,
                 mMap,
                 extendedClusterManager,
@@ -450,14 +513,26 @@ public class MapsActivity extends AppCompatActivity
         });
         extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
-        LatLng zoomPoint;
+
+
+        Bay focusPoint;
+        int zoomLevel = 15 ;
         if (data.getItems().size() > 0) {
-            zoomPoint = data.getItems().get(0).getPosition();
-            Log.d(TAG, "onMapReady: first bay:"+
-                    data.getItems().get(0).getBayId()+" "+
-                    data.getItems().get(0).getPosition()+" "+
-                    data.getItems().get(0).isAvailable());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomPoint, 15));
+            focusPoint = data.getItems().get(0);
+
+            // When resuming from a previously
+            // selected bay, zoom to previously
+            // selected bay.
+            if(BayUpdateService.selectedBayId != null){
+                focusPoint = BayUpdateService.selectedBayId;
+                zoomLevel = 20;
+            }
+
+            Log.d(TAG, "onMapReady: Zoomed bay:"+
+                    focusPoint.getBayId()+" "+
+                    focusPoint.getPosition()+" "+
+                    focusPoint.isAvailable());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), zoomLevel));
         }
 
         checkIfThereIsParking();
@@ -469,7 +544,20 @@ public class MapsActivity extends AppCompatActivity
         this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
         if (PreferenceManager.isAvailable(this.prefs)) {
             Log.d(TAG, "User is having ongoing parking!");
-            showRevisitAlertDialog();
+
+            DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    goToParkingActivity();
+                }
+            };
+
+            DialogInterface.OnClickListener noListener = new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    PreferenceManager.clearPreference(prefs);
+                }
+            };
+
+            showAlertDialog("Continue Parking", "Do you want to return into your Parking page?", yesListener, noListener);
         } else {
             Log.d(TAG, "User doesn't have ongoing parking!");
         }
@@ -479,24 +567,32 @@ public class MapsActivity extends AppCompatActivity
     public boolean onClusterItemClick(Bay bay) {
         Log.d(TAG, "onClusterItemClick: bay clicked:" + bay.getBayId());
         selectedBay = SerializationUtils.clone(bay);
+
         reRenderBottomSheet(selectedBay);
         return false;
     }
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
+        //update bay
         String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
         String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
 
-        String bayRestrictionString = RestrictionsHelper.convertRestrictionsToString(bay.getRestrictions());
-        bayRestriction.setText(bayRestrictionString);
-        baySnippet.setText("BayId = " + Integer.toString(bay.getBayId()));
+        //update restriction
+        layoutRestrictions.removeAllViews();
+        for (int i = 0; i < bay.getRestrictions().size(); i++) {
+            Button tv = new Button(getApplicationContext());
+            tv.setText(bay.getRestrictions().get(i).getDescription());
+            layoutRestrictions.addView(tv);
+        }
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
+
+        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
     }
 
 
@@ -550,5 +646,13 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
+    private void bindToBayUpdateService(){
+
+        Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
+        bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
+        startService(bayMonitorServiceIntent);
+        bindService(bayMonitorServiceIntent, connection, Context.BIND_AUTO_CREATE);
+
+    }
 
 }

@@ -2,46 +2,57 @@ package com.unimelbs.parkingassistant.util;
 
 import com.unimelbs.parkingassistant.parkingapi.Restriction;
 
+import java.util.Date;
 import java.util.List;
 
 public class RestrictionsHelper {
+    private List<Restriction> restrictions;
+    private Boolean isValid;
+    private String invalidReason;
+    public RestrictionsHelper(List<Restriction> restrictions) {
+        this.restrictions = restrictions;
+    }
 
-    public static String convertRestrictionsToString(List<Restriction> restrictions) {
+    public String convertRestrictionsToString() {
         String restrictionMsg = "";
-        for (int i = 0; i < restrictions.size(); i++) {
+        for (int i = 0; i < this.restrictions.size(); i++) {
             restrictionMsg = restrictionMsg +
                     "Restriction " + (i+1) +": \n"+
-                    "\t"+restrictions.get(i).getDescription()+"\n"+
-                    "\t"+restrictions.get(i).getDuration()+"\n";
+                    "\t"+this.restrictions.get(i).getDescription()+"\n";
         }
-        return  restrictionMsg;
+        return restrictionMsg;
     }
 
-
-    public static String checkhour(List<Restriction> restrictions) {
-        String restrictionMsg = "";
-        for (int i = 0; i < restrictions.size(); i++) {
-            restrictionMsg = restrictionMsg +
-
-                    "restriction " + (i+1) +": \n"+
-                    "\t"+restrictions.get(i).getDescription()+"\n"+
-                    "\t"+restrictions.get(i).getDuration()+"\n";
-        }
-        return  restrictionMsg;
+    public boolean isValid() {
+        return false;
     }
 
-    public static boolean isValid(List<Restriction> restrictions, String strHour) {
-        for (int i = 0; i < restrictions.size(); i++) {
-
-        }
-        return true;
+    public String getInvalidReason() {
+        return "---";
     }
 
-    public static String getInvalidReason(List<Restriction> restrictions, String strHour) {
-        for (int i = 0; i < restrictions.size(); i++) {
-
-        }
-        return "Invalid Input";
+    public String setInvalidReason(String invalidReason) {
+        this.invalidReason = invalidReason;
+        return this.invalidReason;
     }
 
+    public List<Restriction> getRestrictions() {
+        return restrictions;
+    }
+
+    public void setRestrictions(List<Restriction> restrictions) {
+        this.restrictions = restrictions;
+    }
+
+    public void processRestrictionChecking(Long seconds, Date currentTime) {
+//        Long mins = seconds / 60;
+//        currentTime.getDayOfWeek().;
+//        Date endParkingDate = DateUtils.addSeconds(new Date(), seconds.intValue());
+//
+//        for (int i = 0; i < this.restrictions.size(); i++) {
+//
+//            this.restrictions.get(i).getDuration()
+//
+//        }
+    }
 }
