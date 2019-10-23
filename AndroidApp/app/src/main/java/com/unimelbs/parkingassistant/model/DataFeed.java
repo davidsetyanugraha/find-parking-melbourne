@@ -8,6 +8,7 @@ import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
 import com.unimelbs.parkingassistant.parkingapi.SiteState;
 import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
+import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Timer;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -43,6 +44,7 @@ public class DataFeed {
     private PublishSubject<List<Bay>> baysSubject = PublishSubject.create();
     //private BayStateApi bayStateApi;
     private ClusterManager<Bay> clusterManager;
+    private BayRenderer bayRenderer;
 
 
     /**
@@ -57,7 +59,6 @@ public class DataFeed {
 
     public Observable<List<Bay>> getBaysObservable() {
         return baysSubject;
-        //TODO: Call baysSubject.onNext(<<<the new array here>>); when needed
     }
 
 /*
@@ -385,6 +386,7 @@ public class DataFeed {
      */
     public void addBay(Bay bay)
     {
+        //bay.addObserver(clusterManager);
         baysHashtable.put(bay.getBayId(),bay);
     }
 

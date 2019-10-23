@@ -36,6 +36,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.maps.android.MarkerManager;
 import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
@@ -68,6 +69,7 @@ public class MapsActivity extends AppCompatActivity
     private GoogleMap mMap;
     public static final String SECONDS = "com.unimelbs.parkingassistant.SECONDS";
     public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
+    public static final String BAY_COLLECTION_ID="unimelbs";
     private static final String TAG = "MapActivity";
     private static String apiKey;
     private Bay selectedBay;
@@ -137,7 +139,6 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
-
     private ServiceConnection connection = new ServiceConnection() {
 
         @Override
@@ -178,13 +179,6 @@ public class MapsActivity extends AppCompatActivity
 
 
     /** Defines callbacks for service binding, passed to bindService() */
-
-
-
-
-
-
-
 
     private void initBottomSheetUI() {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
@@ -248,7 +242,6 @@ public class MapsActivity extends AppCompatActivity
         }
 
     }
-
 
     @Override
     protected void onDestroy() {
@@ -514,7 +507,10 @@ public class MapsActivity extends AppCompatActivity
         Log.d(TAG, "onMapReady: ");
         //DataFeed data = new DataFeed(getApplicationContext());
         //ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
-        ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap);
+        MarkerManager markerManager = new MarkerManager(mMap);
+        markerManager.newCollection(BAY_COLLECTION_ID);
+
+        ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap,markerManager);
 
         //Added this to improve performance.
         extendedClusterManager.setAnimation(false);
@@ -526,9 +522,7 @@ public class MapsActivity extends AppCompatActivity
 
 
         mMap.setOnCameraIdleListener(extendedClusterManager);
-
         mMap.setOnMarkerClickListener(extendedClusterManager);
-
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng arg0) {
@@ -538,6 +532,7 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
+
         extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
 

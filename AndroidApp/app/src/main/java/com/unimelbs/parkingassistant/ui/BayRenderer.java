@@ -15,11 +15,15 @@ import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
 import com.unimelbs.parkingassistant.util.Timer;
 
+import java.util.Observable;
+import java.util.Observer;
+
 /**
  * Custom cluster renderer, used to implement the logic of displaying markers
  * representing bays, and to control model update in an efficient way.
  */
-public class BayRenderer extends DefaultClusterRenderer<Bay> implements GoogleMap.OnCameraIdleListener
+public class BayRenderer extends DefaultClusterRenderer<Bay>
+        implements GoogleMap.OnCameraIdleListener, Observer
 {
     private final float AVAILABLE_BAY_COLOR = BitmapDescriptorFactory.HUE_GREEN;
     private final float OCCUPIED_BAY_COLOR = BitmapDescriptorFactory.HUE_RED;
@@ -160,4 +164,11 @@ public class BayRenderer extends DefaultClusterRenderer<Bay> implements GoogleMa
             }
           }
         }
+
+    @Override
+    public void update(Observable observable, Object o)
+    {
+        Bay bay = (Bay)observable;
+
     }
+}
