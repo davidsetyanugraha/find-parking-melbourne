@@ -9,6 +9,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.Cluster;
+
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.unimelbs.parkingassistant.model.Bay;
@@ -17,8 +19,6 @@ import com.unimelbs.parkingassistant.util.DistanceUtil;
 import com.unimelbs.parkingassistant.util.Timer;
 
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 
@@ -41,6 +41,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
     private static final BitmapDescriptor AVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
     private static final BitmapDescriptor UNAVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
     private static final BitmapDescriptor UNKNOWN_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW);
+    private float currentZoom;
 
     private Context context;
     private GoogleMap mMap;
@@ -120,9 +121,10 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         LatLng cameraFocus = mMap.getCameraPosition().target;
         //Calculating the radius of the circle including the Visible rectangle of the map.
         double radius = DistanceUtil.getRadius(mMap);
-        Log.d(TAG, "onCameraIdle: current view radius:"+radius+" zoom:"+
-                mMap.getCameraPosition().zoom);
 
+        currentZoom = mMap.getCameraPosition().zoom;
+        Log.d(TAG, "onCameraIdle: current view radius:"+radius+
+                "zoom:"+currentZoom);
         //Checks if radius (in meters) of the shown part of the map is < the defined street view
         //radius. This is the point when Bay status API is called to show it on the map.
         if (radius<STREET_VIEW_RADIUS)
@@ -201,5 +203,13 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
                 getMarker(bay).setIcon(newIcon);
             }
         }
+    @Override
+    protected boolean shouldRenderAsCluster(Cluster<Bay> cluster) {
+//        return cluster.getSize() > this.mMinClusterSize;
+
+//        final float currentMaxZoom = mMap.getMaxZoomLevel();
+        return currentZoom < 18;
+//        return currentZoom < currentMaxZoom && cluster.getSize() >= 10;
+    }
 
 }
