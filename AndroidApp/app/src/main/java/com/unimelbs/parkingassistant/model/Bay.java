@@ -7,14 +7,13 @@ import com.unimelbs.parkingassistant.parkingapi.TheGeom;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Observable;
+import com.unimelbs.parkingassistant.util.Constants;
 
 /**
  * Represents a parking bay.
  */
-enum Status
-{AVAILABLE,OCCUPIED,UNAVAILABLE};
-public class Bay extends Observable
+
+public class Bay
         implements ClusterItem, Serializable
 {
 
@@ -26,7 +25,7 @@ public class Bay extends Observable
     private List<Double[]> polygon;
     private boolean isAvailable;
     private List<Restriction> restrictions;
-    private Status status;
+    private Constants.Status status;
 
 
     /**
@@ -52,7 +51,7 @@ public class Bay extends Observable
         this.polygon = polygon;
         this.title = title;
         this.snippet = snippet;
-        this.status = Status.UNAVAILABLE;
+        this.status = Constants.Status.UNAVAILABLE;
     }
 
 
@@ -61,16 +60,15 @@ public class Bay extends Observable
      * Getters.
      * @return
      */
-    public Status getStatus()
+    public Constants.Status getStatus()
     {
         return status;
     }
 
-    public void setStatus(Status status)
+    public void setStatus(Constants.Status status)
     {
         this.status = status;
-        setChanged();
-        notifyObservers();
+
     }
 
     public double[] getRawPosition() {return this.position;}
