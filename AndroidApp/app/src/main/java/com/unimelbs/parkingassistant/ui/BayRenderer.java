@@ -15,6 +15,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
+import com.unimelbs.parkingassistant.util.Constants;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
 import com.unimelbs.parkingassistant.util.Timer;
 
@@ -208,7 +209,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
 //        return cluster.getSize() > this.mMinClusterSize;
 
 //        final float currentMaxZoom = mMap.getMaxZoomLevel();
-        return currentZoom < 18;
+        return currentZoom < Constants.MAP_DO_NOT_CLUSTER_ZOOM_LEVEL;
 //        return currentZoom < currentMaxZoom && cluster.getSize() >= 10;
     }
 

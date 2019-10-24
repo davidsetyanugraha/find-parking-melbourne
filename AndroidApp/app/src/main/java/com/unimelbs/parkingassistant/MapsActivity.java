@@ -49,6 +49,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.ui.BayRenderer;
+import com.unimelbs.parkingassistant.util.Constants;
 import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
@@ -93,13 +94,7 @@ public class MapsActivity extends AppCompatActivity
     private boolean mLocationPermissionGranted;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation;
-    private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-
-    private static final int ZOOM_DEFAULT = 15;
-    private static final int ZOOM_CURRENTLOCATION = 15;
-    private static final int ZOOM_PLACE = 18;
-    private static final int ZOOM_BAY = 20;
 
     @BindView(R.id.restrictionLayout)
     LinearLayout layoutRestrictions;
@@ -520,7 +515,7 @@ public class MapsActivity extends AppCompatActivity
                 LatLng placeLatLng = place.getLatLng();
                 mMap.addMarker(new MarkerOptions().position(placeLatLng).title(placeName));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(placeLatLng));
-                mMap.moveCamera(CameraUpdateFactory.zoomTo(18));
+                mMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_ZOOM_PLACE));
                 Log.i(TAG, "Place: " + placeName + ", " + place.getId() + ", " + placeLatLng);
             }
 
@@ -590,36 +585,34 @@ public class MapsActivity extends AppCompatActivity
         mMap.getUiSettings().setZoomControlsEnabled(true);
         // Turn on the My Location layer and the related control on the map.
         updateLocationUI();
+        moveToLocation();
 
+        checkIfThereIsParking();
+
+    }
+
+    private void moveToLocation() {
         // Go to the first position depending on if the user is starting the application or it is
         // returning from another session
+
         Bay focusPoint;
-        int zoomLevel = ZOOM_DEFAULT ;
-        if (data.getItems().size() > 0) {
-            focusPoint = data.getItems().get(0);
+        int zoomLevel = Constants.MAP_ZOOM_DEFAULT ;
 
-            // When resuming from a previously
-            // selected bay, zoom to previously
-            // selected bay.
-            if(BayUpdateService.selectedBayId != null){
-                focusPoint = BayUpdateService.selectedBayId;
-                zoomLevel = ZOOM_PLACE;
-            }
-
+        // When resuming from a previously
+        // selected bay, zoom to previously
+        // selected bay.
+        if(BayUpdateService.selectedBayId != null){
+            focusPoint = BayUpdateService.selectedBayId;
+            zoomLevel = Constants.MAP_ZOOM_BAY;
             Log.d(TAG, "onMapReady: Zoomed bay:"+
                     focusPoint.getBayId()+" "+
                     focusPoint.getPosition()+" "+
                     focusPoint.isAvailable());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), zoomLevel));
-        }
-        else
-        {
+        } else {
             // Get the current location of the device and set the position of the map.
             getDeviceLocation();
         }
-
-        checkIfThereIsParking();
-
     }
 
     private void updateLocationUI() {
@@ -678,14 +671,15 @@ public class MapsActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = task.getResult();
+                            Log.d(TAG, "Zooming to the current location:");
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), ZOOM_CURRENTLOCATION));
+                                            mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENTLOCATION));
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
                             mMap.moveCamera(CameraUpdateFactory
-                                    .newLatLngZoom(mDefaultLocation, ZOOM_DEFAULT));
+                                    .newLatLngZoom(Constants.MAP_DEFAULT_LOCATION, Constants.MAP_ZOOM_DEFAULT));
                             mMap.getUiSettings().setMyLocationButtonEnabled(false);
                         }
                     }
