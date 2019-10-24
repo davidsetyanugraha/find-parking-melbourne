@@ -11,6 +11,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
@@ -763,14 +764,33 @@ public class MapsActivity extends AppCompatActivity
             bayStatus.setTextColor(Color.RED);
         }
 
-
-
         //update restriction
         layoutRestrictions.removeAllViews();
         for (int i = 0; i < bay.getRestrictions().size(); i++) {
-            Button tv = new Button(getApplicationContext());
+            View v = new View(this);
+            v.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+            ));
+            v.setBackgroundColor(Color.GRAY);
+            layoutRestrictions.addView(v);
+
+            TextView tv = new TextView(getApplicationContext());
+            tv.setText("Restriction " + (i+1) + ": " + bay.getRestrictions().get(i).getTypedesc());
+            tv.setTypeface(null, Typeface.BOLD_ITALIC);
+            layoutRestrictions.addView(tv);
+
+            tv = new TextView(getApplicationContext());
             tv.setText(bay.getRestrictions().get(i).getDescription());
             layoutRestrictions.addView(tv);
+
+            v = new View(this);
+            v.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+            ));
+            v.setBackgroundColor(Color.GRAY);
+            layoutRestrictions.addView(v);
         }
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
