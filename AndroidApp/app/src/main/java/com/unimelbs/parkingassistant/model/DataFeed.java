@@ -4,11 +4,10 @@ import android.os.AsyncTask;
 import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterManager;
-import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
 import com.unimelbs.parkingassistant.parkingapi.SiteState;
 import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
-import com.unimelbs.parkingassistant.ui.BayRenderer;
+import com.unimelbs.parkingassistant.util.Constants;
 import com.unimelbs.parkingassistant.util.Timer;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -42,9 +41,9 @@ public class DataFeed {
     private Hashtable<Integer,Bay> baysHashtable;
     private ParkingApi api;
     private PublishSubject<List<Bay>> baysSubject = PublishSubject.create();
-    //private BayStateApi bayStateApi;
     private ClusterManager<Bay> clusterManager;
-    private BayRenderer bayRenderer;
+
+    //private BayRenderer bayRenderer;
 
 
     /**
@@ -61,119 +60,6 @@ public class DataFeed {
         return baysSubject;
     }
 
-    /**
-     * Calls a back-end API that caches Bay data from the city of
-     * Melbourne Open Data API. This task runs on a separate thread.
-     */
-    class BayDataApi extends AsyncTask<Void,Void,Void>
-    {
-        private static final String TAG = "BayDataApi";
-        private BayAdapter bayAdapter;
-        private DataFeed dataFeed;
-
-
-        public BayDataApi(DataFeed dataFeed)
-        {
-            this.dataFeed = dataFeed;
-        }
-        private void fetchApiData()
-        {
-            this.bayAdapter = new BayAdapter(this.dataFeed);
-            ParkingApi api = ParkingApi.getInstance();
-            Timer timer = new Timer();
-            timer.start();
-            api.sitesGet()
-                    .subscribeOn(Schedulers.io())
-                    //.observeOn(AndroidSchedulers.mainThread())
-                    //.as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
-                    .subscribe(value ->
-                            {
-                                timer.stop();
-                                Log.d(TAG, "fetchApiData: completed in "+
-                                        timer.getDurationInSeconds()+" seconds. # of Fetched sites:"+
-                                        value.size());
-                                bayAdapter.convertSites(value);
-                            },
-                            throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid)
-        {
-            //super.onPostExecute(aVoid);
-            Log.d(TAG, "onPostExecute: after data load, now saving results.");
-            dataFeed.saveBaysToFile();
-
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            Log.d(TAG, "doInBackground: started"+Thread.currentThread().getName());
-            fetchApiData();
-            return null;
-        }
-    }
-
-    /**
-     * Calls a back-end API that caches Bay sensor status data from the
-     * city of Melbourne Open Data API. The data is refreshed at the back-end
-     * every 2 minutes.
-     * This task runs on a separate thread.
-     */
-    class BayStateApi extends AsyncTask<Void,Void,Void>
-    {
-        private LatLng centre;
-        private ClusterManager<Bay> clusterManager;
-
-        /**
-         * Constructor that takes a circle centre point and a radius to query
-         * bays within the circle.
-         * @param centre
-         * @param clusterManager
-         */
-        public BayStateApi(LatLng centre, ClusterManager<Bay> clusterManager)
-        {
-            Log.d(TAG, "BayStateApi: centre is"+centre);
-            this.centre = centre;
-            this.clusterManager = clusterManager;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid)
-        {
-            super.onPostExecute(aVoid);
-            //refreshMap();
-            Log.d(TAG, "onPostExecute: clearing current cluster items + re-adding them.");
-
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids)
-        {
-            SitesStateGetQuery query = new SitesStateGetQuery(centre.latitude,centre.longitude,STATE_API_CIRCLE_RADIUS);
-            api.sitesStateGet(query)
-                .subscribeOn(Schedulers.io())
-                //.observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
-                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
-                .subscribe(value ->
-                        {
-                            updateBaysStates(value);
-                        },
-                        throwable -> Log.d(TAG, "BayStateApi: "+throwable.getMessage()) // do this on error
-                );
-            return null;
-        }
-
-        /**
-         * Removes all bays from the map, re add them to display current status
-         */
-        protected void refreshMap()
-        {
-            this.clusterManager.getMarkerCollection().clear();
-            this.clusterManager.clearItems();
-            this.clusterManager.addItems(getItems());
-        }
-    }
 
     /**
      * Loads Bay data from file(s) and fetch data from the API if necessary.
@@ -189,6 +75,7 @@ public class DataFeed {
             {
                 Log.d(TAG, "loadData: data is fresh, loading from local file.");
                 loadBaysFromFile();
+                resetBaysStatus();
             }
             //If data is not fresh, call back-end API to save a newer version of the data.
             else
@@ -196,8 +83,7 @@ public class DataFeed {
                 Log.d(TAG, "loadData: data is stale, showing current data " +
                         "and fetching fresh data from API.");
                 loadBaysFromFile();
-                new BayDataApi(this).execute();
-
+                fetchBayData();
             }
         }
         // If local bays data file doesn't exist, load from raw bays file that is packaged with the app
@@ -205,7 +91,8 @@ public class DataFeed {
         {
             Log.d(TAG, "loadData: data file does not exist. Attempting loading from raw/bays.");
             loadBaysFromRaw();
-            new BayDataApi(this).execute();
+            //new BayDataApi(this).execute();
+            fetchBayData();
         }
         this.bays = new ArrayList<>(this.baysHashtable.values());
     }
@@ -249,6 +136,11 @@ public class DataFeed {
         return bays;
     }
 
+    public Hashtable<Integer,Bay> getBaysHashtable()
+    {
+        return baysHashtable;
+    }
+
 
     /**
      * Loads bays data from local file.
@@ -279,7 +171,8 @@ public class DataFeed {
                 Log.d(TAG, "loadBaysFromFile: exception:"+e.getMessage());
                 file.delete();
                 Log.d(TAG, "loadBaysFromFile: file deleted");
-                new BayDataApi(this).execute();
+                //new BayDataApi(this).execute();
+                fetchBayData();
             }
         }
     }
@@ -368,23 +261,37 @@ public class DataFeed {
         int notFound=0;
         int availableBays=0;
         Timer timer=new Timer();
-        Log.d(TAG, "fetchBaysStates: Bay table includes:"+baysHashtable.size()+" "+
-                "State data includes: "+list.size());
+        Log.d(TAG, "updateBaysStates: changed state list includes:"+list.size());
         timer.start();
         List<Bay> changedBays = new ArrayList<Bay>();
-
         for (SiteState siteState: list)
         {
-            String strState = siteState.getStatus();
-
             int id = Integer.parseInt(siteState.getId());
-            boolean state = (strState.equals("Present"))?false:true;
+            Constants.Status newStatus=null;
+            boolean state=false;
+
+            switch(siteState.getStatus())
+            {
+                case "Present":
+                {
+                    newStatus = Constants.Status.OCCUPIED;
+                    state = false;
+                    break;
+                }
+                case "Unoccupied":
+                {
+                    newStatus = Constants.Status.AVAILABLE;
+                    state=true;
+                    break;
+                }
+            }
             if (baysHashtable.get(id)!=null)
             {
                 found++;
                 availableBays+=(state)?1:0;
                 Bay bay = baysHashtable.get(Integer.parseInt(siteState.getId()));
                 bay.setAvailable(state);
+                bay.setStatus(newStatus);
                 changedBays.add(bay);
             }
             else
@@ -397,9 +304,9 @@ public class DataFeed {
 
         baysSubject.onNext(changedBays);
 
-        Log.d(TAG, "fetchBaysStates: completed in "+timer.getDurationInSeconds()+" "+
+        Log.d(TAG, "updateBaysStates: completed in "+timer.getDurationInSeconds()+" "+
                 found+" states found. "+notFound+" states not found."+
-                " Available bays: "+availableBays);
+                        " Available bays: "+availableBays);
     }
 
     /**
@@ -410,7 +317,20 @@ public class DataFeed {
     public void fetchBaysStates(LatLng centre)
     {
         if (centre!=null)
-            new BayStateApi(centre,clusterManager).execute();
+        {
+            SitesStateGetQuery query = new SitesStateGetQuery(centre.latitude,centre.longitude,STATE_API_CIRCLE_RADIUS);
+            api.sitesStateGet(query)
+                    .subscribeOn(Schedulers.io())
+                    //.observeOn(AndroidSchedulers.mainThread()) // to return to the main thread
+                    //.as(autoDisposable(AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_STOP))) //to dispose when the activity finishes
+                    .subscribe(value ->
+                            {
+                                updateBaysStates(value);
+                            },
+                            throwable -> Log.d(TAG, "BayStateApi: "+throwable.getMessage()) // do this on error
+                    );
+        }
+            //new BayStateApi(centre,clusterManager).execute();
         else
             Log.d(TAG, "fetchBaysStates: centre is null");
     }
@@ -424,4 +344,42 @@ public class DataFeed {
         this.clusterManager = clusterManager;
     }
 
+    /**
+     * When use returns to app after the predefined period the app removes status
+     * information from loaded bays list.
+     */
+    public void resetBaysStatus()
+    {
+        for (Bay b: baysHashtable.values())
+        {
+            b.setStatus(Constants.Status.UNAVAILABLE);
+            b.setAvailable(false);
+        }
+    }
+
+    /**
+     * Calls a back-end API that caches Bay data from the city of
+     * Melbourne Open Data API. This task runs on a separate thread.
+     */
+    private void fetchBayData()
+    {
+        BayAdapter bayAdapter = new BayAdapter(this);
+        ParkingApi api = ParkingApi.getInstance();
+        Timer timer = new Timer();
+        timer.start();
+        api.sitesGet()
+                .subscribeOn(Schedulers.io())
+                //.observeOn(AndroidSchedulers.mainThread())
+                //.as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
+                .subscribe(value ->
+                        {
+                            timer.stop();
+                            Log.d(TAG, "fetchBayData: completed in "+
+                                    timer.getDurationInSeconds()+" seconds. # of Fetched sites:"+
+                                    value.size());
+                            bayAdapter.convertSites(value);
+                            saveBaysToFile();
+                        },
+                        throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
+    }
 }

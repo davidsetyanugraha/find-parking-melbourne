@@ -423,7 +423,8 @@ public class MapsActivity extends AppCompatActivity
         });
 
         EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
-        txtDate.setText(mDay + "-" + mMonth + "-" + mYear);
+        day = mDay; month = mMonth; year = mYear;
+        txtDate.setText(day + "-" + month + "-" + year);
         txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -446,8 +447,10 @@ public class MapsActivity extends AppCompatActivity
         });
 
         EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
-        int defaultHour = mHour + 1;
-        txtTime.setText(convertToStrTime(defaultHour,minute));
+        int defaultDuration = 1; // 1 hour
+        hour = mHour + defaultDuration; // default hour = + 1
+        minute = mMinute;
+        txtTime.setText(convertToStrTime(hour,minute));
         txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -463,7 +466,7 @@ public class MapsActivity extends AppCompatActivity
                                 hour = hourOfDay;
                                 MapsActivity.this.minute = minute;
                             }
-                        }, mHour, mMinute, false);
+                        }, (mHour + defaultDuration), mMinute, false);
                 timePickerDialog.show();
 
             }

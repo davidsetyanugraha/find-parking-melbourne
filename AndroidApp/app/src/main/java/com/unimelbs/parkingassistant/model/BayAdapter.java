@@ -46,12 +46,18 @@ public class BayAdapter {
         double lat = site.getLocation().getCoordinates().get(1);
         double lng = site.getLocation().getCoordinates().get(0);
         double[] position = {lat,lng};
+
         Bay bay = new Bay(Integer.parseInt(site.getId()),
                         position,
                         site.getRestrictions(),
                         site.getPolygon(),
                         site.getDescription(),
-                        site.getDescription());
+                        "Disability Extension: "+
+                                ((site.getRestrictions()!=null&&
+                                        site.getRestrictions().size()>1&&
+                                        site.getRestrictions().get(0).getDisabilityext()!=null)?
+                                site.getRestrictions().get(0).getDisabilityext()+" minutes.":"")
+                        );
         return bay;
     }
 }
