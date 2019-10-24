@@ -15,6 +15,10 @@ public class Constants
     public static final LatLng MAP_DEFAULT_LOCATION = new LatLng(-37.796201, 144.958266);
     public static final int MAP_DO_NOT_CLUSTER_ZOOM_LEVEL = 18;
     public static final String BAY_COLLECTION_ID="unimelbs";
+
+    public static final String API_URL = "https://parkingappapi.azurewebsites.net/api/";
+    public static final String HUB_CONNECTION_URL = "https://parkingappapi.azurewebsites.net/api/sites/state/connection/";
+
     public static final BitmapDescriptor AVAILABLE_ICON= BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
     public static final BitmapDescriptor UNAVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
     public static final BitmapDescriptor UNKNOWN_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW);

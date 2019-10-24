@@ -5,6 +5,7 @@ import android.util.Log;
 import com.microsoft.signalr.HubConnection;
 import com.microsoft.signalr.HubConnectionBuilder;
 import com.microsoft.signalr.HubConnectionState;
+import com.unimelbs.parkingassistant.util.Constants;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -114,7 +115,7 @@ public class ParkingSiteFollower {
     }
 
     private InnerHubConnection createHub() {
-        HubConnection hubConnection = HubConnectionBuilder.create(connectionUrl)
+        HubConnection hubConnection = HubConnectionBuilder.create(Constants.HUB_CONNECTION_URL)
                 .build();
 
         return new InnerHubConnection(hubConnection);

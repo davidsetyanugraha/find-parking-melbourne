@@ -50,14 +50,20 @@
             android:textStyle="italic" />
     </LinearLayout>
 
-    <include layout="@layout/horizontal_restrictions" />
+    <include layout="@layout/restrictions" />
 
-<!--    <TextView-->
-<!--        android:id="@+id/bay_snippet"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:padding="@dimen/activity_margin"-->
-<!--       />-->
+    <!--    <TextView-->
+    <!--        android:id="@+id/bay_snippet"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:padding="@dimen/activity_margin"-->
+    <!--       />-->
+
+    <!--    <View-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="0.2dp"-->
+    <!--        android:background="@android:color/darker_gray"/>-->
+
 
     <TableLayout
         android:id="@+id/alertDialogLoginForm"
@@ -70,13 +76,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
-    <!--    <LinearLayout-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_gravity="center_vertical"-->
-    <!--        android:orientation="horizontal"-->
-    <!--        android:padding="@dimen/activity_margin"-->
-    <!--        android:weightSum="3">-->
+            <!--    <LinearLayout-->
+            <!--        android:layout_width="match_parent"-->
+            <!--        android:layout_height="wrap_content"-->
+            <!--        android:layout_gravity="center_vertical"-->
+            <!--        android:orientation="horizontal"-->
+            <!--        android:padding="@dimen/activity_margin"-->
+            <!--        android:weightSum="3">-->
 
             <Button
                 android:id="@+id/btn_parking"
@@ -98,18 +104,13 @@
                 android:text="Direction"
                 android:textColor="#fff" />
 
-    <!--    </LinearLayout>-->
+            <!--    </LinearLayout>-->
         </TableRow>
     </TableLayout>
-<!--    <TextView-->
-<!--        android:id="@+id/bay_restriction"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        />-->
-
-
-
-
-
+    <!--    <TextView-->
+    <!--        android:id="@+id/bay_restriction"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        />-->
 
 </LinearLayout>
