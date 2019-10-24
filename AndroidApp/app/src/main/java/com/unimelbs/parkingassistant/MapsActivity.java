@@ -50,7 +50,6 @@ import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Constants;
-import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
@@ -342,7 +341,7 @@ public class MapsActivity extends AppCompatActivity
         Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
         Date currentTime = new Date();
-        builder.setTitle("Set return time");
+        builder.setTitle("Set your return time");
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
 
