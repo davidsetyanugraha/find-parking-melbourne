@@ -10,13 +10,12 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.graphics.Color;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -67,7 +66,6 @@ import java.util.concurrent.TimeUnit;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -381,7 +379,7 @@ public class MapsActivity extends AppCompatActivity
             private void processValidation(Date currentTime, Date toDate, Long seconds) {
                 if (seconds <= 0) {
                     Toast.makeText(getApplicationContext(),
-                            "Invalid Duration",
+                            "Invalid Date",
                             Toast.LENGTH_LONG).show();
                 } else {
                     restrictionsHelper.processRestrictionChecking(seconds, currentTime, toDate);
@@ -400,7 +398,7 @@ public class MapsActivity extends AppCompatActivity
                             }
                         };
                         String invalidReason = restrictionsHelper.getInvalidReason();
-                        showAlertDialog("Violation Warning",  invalidReason +" \n \n  Are you sure to continue?", yesListener, noListener);
+                        showAlertDialog("Warning",  invalidReason +" \n Are you sure to continue?", yesListener, noListener);
                     } else {
 
                         String strSeconds = seconds.toString();
@@ -425,7 +423,7 @@ public class MapsActivity extends AppCompatActivity
         });
 
         EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
-        txtDate.setInputType(InputType.TYPE_NULL);
+        txtDate.setText(mDay + "-" + mMonth + "-" + mYear);
         txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -442,13 +440,14 @@ public class MapsActivity extends AppCompatActivity
                                 month = monthOfYear;
                                 MapsActivity.this.year = year;
                             }
-                        }, mYear, mMonth, mDay);
+                        }, mYear, (mMonth-1), mDay);
                 datePickerDialog.show();
             }
         });
 
         EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
-        txtTime.setInputType(InputType.TYPE_NULL);
+        int defaultHour = mHour + 1;
+        txtTime.setText(convertToStrTime(defaultHour,minute));
         txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -460,21 +459,7 @@ public class MapsActivity extends AppCompatActivity
                             @Override
                             public void onTimeSet(TimePicker view, int hourOfDay,
                                                   int minute) {
-
-                                String am_pm = "";
-
-                                Calendar datetime = Calendar.getInstance();
-                                datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                                datetime.set(Calendar.MINUTE, minute);
-
-                                if (datetime.get(Calendar.AM_PM) == Calendar.AM)
-                                    am_pm = "AM";
-                                else if (datetime.get(Calendar.AM_PM) == Calendar.PM)
-                                    am_pm = "PM";
-
-                                String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
-
-                                txtTime.setText(strHrsToShow + ":" + String.format("%02d", minute) + " " + am_pm);
+                                txtTime.setText(convertToStrTime(hourOfDay,minute));
                                 hour = hourOfDay;
                                 MapsActivity.this.minute = minute;
                             }
@@ -486,6 +471,23 @@ public class MapsActivity extends AppCompatActivity
 
         builder.setCancelable(false);
         alertDialog.show();
+    }
+
+    private String convertToStrTime(int hourOfDay, int minute) {
+        String am_pm = "";
+
+        Calendar datetime = Calendar.getInstance();
+        datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        datetime.set(Calendar.MINUTE, minute);
+
+        if (datetime.get(Calendar.AM_PM) == Calendar.AM)
+            am_pm = "AM";
+        else if (datetime.get(Calendar.AM_PM) == Calendar.PM)
+            am_pm = "PM";
+
+        String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
+
+        return strHrsToShow + ":" + String.format("%02d", minute) + " " + am_pm;
     }
 
 
@@ -674,7 +676,7 @@ public class MapsActivity extends AppCompatActivity
                             Log.d(TAG, "Zooming to the current location:");
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENTLOCATION));
+                                            mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENT_LOCATION));
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
