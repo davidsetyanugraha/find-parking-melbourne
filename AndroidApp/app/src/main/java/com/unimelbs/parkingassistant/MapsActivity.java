@@ -233,8 +233,8 @@ public class MapsActivity extends AppCompatActivity
         // use goToParkingActivity.
         alertDialog.cancel();
         MapsActivity.this.finish();
-        //unbindService(connection);
-        //bayUpdateServiceBound = false;
+        unbindService(connection);
+        bayUpdateServiceBound = false;
         Toast.makeText(getApplicationContext(),
                 "Parking duration being monitored in Notifications.",
                 Toast.LENGTH_LONG).show();
@@ -309,6 +309,7 @@ public class MapsActivity extends AppCompatActivity
     }
     @Override
     protected void onStart() {
+        bindToBayUpdateService();
         Log.d(TAG, "onStart: ");
         super.onStart();
     }
