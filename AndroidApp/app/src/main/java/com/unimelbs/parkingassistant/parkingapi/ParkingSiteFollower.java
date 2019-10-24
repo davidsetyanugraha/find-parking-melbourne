@@ -16,8 +16,6 @@ import io.reactivex.disposables.Disposable;
  * Handles the interaction to follow a parking bay an listen to the server notifications
  */
 public class ParkingSiteFollower {
-    private static final String connectionUrl = "https://parkingappapi.azurewebsites.net/api/sites/state/connection/";
-//    private static final String connectionUrl = "http://10.8.8.8:7071/api/sites/state/connection/";
 
     private static ParkingSiteFollower instance;
     private ParkingApi api;
