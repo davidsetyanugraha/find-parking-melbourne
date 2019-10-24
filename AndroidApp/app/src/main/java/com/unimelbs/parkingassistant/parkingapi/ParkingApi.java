@@ -1,5 +1,7 @@
 package com.unimelbs.parkingassistant.parkingapi;
 
+import com.unimelbs.parkingassistant.util.Constants;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +21,6 @@ import retrofit2.http.QueryMap;
 
 
 public class ParkingApi {
-
-    private static final String url = "https://parkingappapi.azurewebsites.net/api/";
-//    private static final String url = "http://10.8.8.8:7071/api/";
 
     private static ParkingApi instance;
 
@@ -51,7 +50,7 @@ public class ParkingApi {
         RxJava2CallAdapterFactory rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io());
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url)
+                .baseUrl(Constants.API_URL)
                 .addConverterFactory(GsonConverterFactory.create()) // Converter library used to convert response into POJO, can be replaced by moshi with MoshiConverterFactory
                 .client(okHttpClient) // check if logging is needed later https://futurestud.io/tutorials/retrofit-2-log-requests-and-responses
                 .addCallAdapterFactory(rxAdapter) //https://github.com/square/retrofit/tree/master/retrofit-adapters/rxjava2
