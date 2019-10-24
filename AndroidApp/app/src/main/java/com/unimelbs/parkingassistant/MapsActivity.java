@@ -49,7 +49,6 @@ import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Constants;
-import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
@@ -132,7 +131,7 @@ public class MapsActivity extends AppCompatActivity
         }
 
         // Bind to BayUpdateService
-        bindToBayUpdateService();
+        startAndBindToBayUpdateService();
 
         setContentView(R.layout.activity_maps);
 
@@ -306,6 +305,7 @@ public class MapsActivity extends AppCompatActivity
     }
     @Override
     protected void onStart() {
+
         Log.d(TAG, "onStart: ");
         super.onStart();
     }
@@ -320,6 +320,8 @@ public class MapsActivity extends AppCompatActivity
     protected void onStop()
     {
         //data.saveBaysToFile();
+        //unbindService(connection);
+        //bayUpdateServiceBound = false;
         super.onStop();
     }
 
@@ -831,7 +833,7 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
-    private void bindToBayUpdateService(){
+    private void startAndBindToBayUpdateService(){
 
         Intent bayMonitorServiceIntent = new Intent(this, BayUpdateService.class);
         bayMonitorServiceIntent.setAction("ACTION_START_SERVICE");
