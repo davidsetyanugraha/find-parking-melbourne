@@ -101,7 +101,7 @@
                 android:layout_marginLeft="10dp"
                 android:background="@color/cardview_dark_background"
                 android:foreground="?attr/selectableItemBackground"
-                android:text="Direction"
+                android:text="Directions"
                 android:textColor="#fff" />
 
             <!--    </LinearLayout>-->
