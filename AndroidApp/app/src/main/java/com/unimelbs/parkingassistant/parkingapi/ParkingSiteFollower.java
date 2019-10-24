@@ -13,6 +13,8 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 public class ParkingSiteFollower {
+    private static final String connectionUrl = "https://parkingappapi.azurewebsites.net/api/sites/state/connection/";
+//    private static final String connectionUrl = "http://10.8.8.8:7071/api/sites/state/connection/";
 
     private static ParkingSiteFollower instance;
     private ParkingApi api;
