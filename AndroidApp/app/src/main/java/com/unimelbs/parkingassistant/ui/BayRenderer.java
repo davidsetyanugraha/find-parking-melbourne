@@ -15,6 +15,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
+import com.unimelbs.parkingassistant.util.Constants;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
 import com.unimelbs.parkingassistant.util.Timer;
 
@@ -38,8 +39,8 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
     private final double STATE_API_CIRCLE_RADIUS = 1000;
     private final double STREET_VIEW_RADIUS = 250;
     private final int STATUS_FRESHNESS_INTERVAL=120;
-    private static final BitmapDescriptor AVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
-    private static final BitmapDescriptor UNAVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+    private static final BitmapDescriptor AVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+    private static final BitmapDescriptor UNAVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
     private static final BitmapDescriptor UNKNOWN_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW);
     private float currentZoom;
 
@@ -77,7 +78,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
                 .subscribe(
                     value -> updateBays(value),
                     throwable -> {
-                        Log.d(TAG, "BayRenderer: throwable"+throwable.getMessage());
+                        Log.d(TAG, "BayRenderer: throwable: "+throwable.getMessage());
                     }
                 );
     }
@@ -96,12 +97,11 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         BitmapDescriptor newIcon = null;
         switch (item.getStatus())
         {
-            case AVAILABLE: {newIcon=AVAILABLE_ICON;break;}
-            case OCCUPIED: {newIcon=UNAVAILABLE_ICON;break;}
-            case UNAVAILABLE: {newIcon=UNKNOWN_ICON;break;}
+            case AVAILABLE: {newIcon= Constants.AVAILABLE_ICON;break;}
+            case OCCUPIED: {newIcon=Constants.UNAVAILABLE_ICON;break;}
+            case UNAVAILABLE: {newIcon=Constants.UNKNOWN_ICON;break;}
         }
         markerOptions.icon(newIcon);
-
 
     }
 
@@ -200,7 +200,19 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
                     case OCCUPIED: {newIcon=UNAVAILABLE_ICON;break;}
                     case UNAVAILABLE: {newIcon=UNKNOWN_ICON;break;}
                 }
-                getMarker(bay).setIcon(newIcon);
+                Marker m = getMarker(bay);
+                if (m==null)
+                {
+                    Bay b = dataFeed.getBaysHashtable().get(bay.getBayId());
+
+                    Log.d(TAG, "updateBays: Marker is null for bay id:"+bay.getBayId()+
+                            "-"+bay.getStatus().toString()+
+                            ". Bays table includes the bay:"+
+                            ((b==null)?"Yes":"No"));
+                }
+
+                else
+                    getMarker(bay).setIcon(newIcon);
             }
         }
     @Override
