@@ -321,6 +321,8 @@ public class MapsActivity extends AppCompatActivity
     protected void onStop()
     {
         //data.saveBaysToFile();
+        unbindService(connection);
+        bayUpdateServiceBound = false;
         super.onStop();
     }
 
