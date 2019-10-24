@@ -161,14 +161,13 @@ public class BayUpdateService extends Service {
         if(hasSubscribed) {
 
             disposeSubscription();
-
             Log.d("ServiceOnDestroy", "Dispose Service Called From Service OnDEstroy");
         }
         super.onDestroy();
         Log.d("ServiceOnDestroy", "Service onDestroy executed.");
     }
 
-    public void subscribeToServerForUpdates(@NotNull Bay selectedBay) {
+    public void subscribeToServerForUpdatesAndRaiseNotify(@NotNull Bay selectedBay) {
         try
         {
             // If after selecting a bay,
@@ -236,7 +235,7 @@ public class BayUpdateService extends Service {
         if (serverSubscriptionRequired)
         {   //In the last catch it is disposed
             // if no maps method is available
-            subscribeToServerForUpdates(selectedBay);
+            subscribeToServerForUpdatesAndRaiseNotify(selectedBay);
 
         }
         else
