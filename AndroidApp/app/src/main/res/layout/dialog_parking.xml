@@ -71,7 +71,7 @@
 
 <!--        </TableRow>-->
 
-        <include layout="@layout/horizontal_restrictions" />
+        <include layout="@layout/restrictions" />
 
         <!-- Buttons row. -->
         <TableRow

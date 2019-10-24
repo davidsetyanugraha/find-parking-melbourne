@@ -16,6 +16,7 @@ public class Constants
     public static final int MAP_ZOOM_BAY = 20;
     public static final LatLng MAP_DEFAULT_LOCATION = new LatLng(-37.796201, 144.958266);
     public static final int MAP_DO_NOT_CLUSTER_ZOOM_LEVEL = 18;
+    public static final String BAY_COLLECTION_ID="unimelbs";
 
     //The server URLs to call the API
     public static final String API_URL = "https://parkingappapi.azurewebsites.net/api/";
