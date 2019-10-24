@@ -19,13 +19,10 @@ import com.unimelbs.parkingassistant.util.Constants;
 import com.unimelbs.parkingassistant.util.DistanceUtil;
 import com.unimelbs.parkingassistant.util.Timer;
 
+import java.util.Collection;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
-
-import static com.unimelbs.parkingassistant.util.Constants.Status.AVAILABLE;
-import static com.unimelbs.parkingassistant.util.Constants.Status.OCCUPIED;
-import static com.unimelbs.parkingassistant.util.Constants.Status.UNAVAILABLE;
 
 /**
  * Custom cluster renderer, used to implement the logic of displaying markers
@@ -76,7 +73,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         this.dataFeed = dataFeed;
         this.dataFeed.getBaysObservable().observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    value -> updateBays(value),
+                    value -> updateBaysMarkers(value),
                     throwable -> {
                         Log.d(TAG, "BayRenderer: throwable: "+throwable.getMessage());
                     }
@@ -123,6 +120,16 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         double radius = DistanceUtil.getRadius(mMap);
 
         currentZoom = mMap.getCameraPosition().zoom;
+
+
+        if (currentZoom<Constants.MAP_DO_NOT_CLUSTER_ZOOM_LEVEL)
+        {
+            Log.d(TAG, "onCameraIdle: Removing marker collection.");
+            //clusterManager.getMarkerManager().getCollection(Constants.BAY_COLLECTION_ID).clear();
+            //clusterManager.getMarkerManager().getCollection(Constants.BAY_COLLECTION_ID).hideAll();
+            Log.d(TAG, "onCameraIdle: markers size:"+clusterManager.getMarkerCollection().getMarkers().size());
+        }
+
         Log.d(TAG, "onCameraIdle: current view radius:"+radius+
                 "zoom:"+currentZoom);
         //Checks if radius (in meters) of the shown part of the map is < the defined street view
@@ -187,34 +194,31 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
             }
         }
     }
-        private void updateBays(List<Bay> changedBays)
+
+    /**
+     * Updates all visible markers on the screen for markers that has been rendered already.
+     * This is called on a specified zoom level only.
+     * @param changedBays
+     */
+    private void updateBaysMarkers(List<Bay> changedBays)
+    {
+        if(currentZoom>=Constants.MAP_DO_NOT_CLUSTER_ZOOM_LEVEL)
         {
-            Log.d(TAG, "updateBays: started");
+            int updatedMarkers=0;
+
             for (Bay bay: changedBays)
             {
-                Log.d(TAG, "updateBays: bay id: "+bay.getBayId()+" "+bay.getStatus().toString());
-                BitmapDescriptor newIcon=null;
-                switch (bay.getStatus())
-                {
-                    case AVAILABLE: {newIcon=AVAILABLE_ICON;break;}
-                    case OCCUPIED: {newIcon=UNAVAILABLE_ICON;break;}
-                    case UNAVAILABLE: {newIcon=UNKNOWN_ICON;break;}
-                }
-                Marker m = getMarker(bay);
-                if (m==null)
-                {
-                    Bay b = dataFeed.getBaysHashtable().get(bay.getBayId());
-
-                    Log.d(TAG, "updateBays: Marker is null for bay id:"+bay.getBayId()+
-                            "-"+bay.getStatus().toString()+
-                            ". Bays table includes the bay:"+
-                            ((b==null)?"Yes":"No"));
-                }
-
-                else
-                    getMarker(bay).setIcon(newIcon);
+                updatedMarkers+=(updateBayMarker(bay))?1:0;
             }
+            Log.d(TAG, "updateMarkers: markers updated:"+updatedMarkers);
         }
+    }
+
+    /**
+     * Keep clustering items until appropriate zoom level occurs.
+     * @param cluster
+     * @return
+     */
     @Override
     protected boolean shouldRenderAsCluster(Cluster<Bay> cluster) {
 //        return cluster.getSize() > this.mMinClusterSize;
@@ -224,4 +228,26 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
 //        return currentZoom < currentMaxZoom && cluster.getSize() >= 10;
     }
 
+    /**
+     * Updates a Bay's marker on the map to the appropriate visual cue.
+     * @param bay
+     * @return
+     */
+    private boolean updateBayMarker(Bay bay)
+    {
+        BitmapDescriptor newIcon=null;
+        switch (bay.getStatus())
+        {
+            case AVAILABLE: {newIcon=AVAILABLE_ICON;break;}
+            case OCCUPIED: {newIcon=UNAVAILABLE_ICON;break;}
+            case UNAVAILABLE: {newIcon=UNKNOWN_ICON;break;}
+        }
+        Marker m = getMarker(bay);
+        if (m!=null)
+        {
+            m.setIcon(newIcon);
+            return true;
+        }
+        else return false;
+    }
 }
