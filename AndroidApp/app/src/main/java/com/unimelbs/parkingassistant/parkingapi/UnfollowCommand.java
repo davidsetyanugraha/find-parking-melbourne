@@ -3,6 +3,9 @@ package com.unimelbs.parkingassistant.parkingapi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Defines the parameters for calling the Unfollow command from the API.
+ */
 public class UnfollowCommand {
     @SerializedName("connectionid")
     @Expose

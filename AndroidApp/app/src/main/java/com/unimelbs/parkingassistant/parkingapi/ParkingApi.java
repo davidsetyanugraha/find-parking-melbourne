@@ -19,11 +19,16 @@ import retrofit2.http.POST;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.http.QueryMap;
 
-
+/**
+ * Handles the calls to the API.
+ */
 public class ParkingApi {
 
     private static ParkingApi instance;
 
+    /**
+     * Required interface for defining the retrofit calls.
+     */
     public interface Api {
         @GET("sites") //Check urls here https://inthecheesefactory.com/blog/retrofit-2.0/en?fb_comment_id=885081521586565_886605554767495
         Single<List<Site>> sitesGet();
@@ -41,6 +46,7 @@ public class ParkingApi {
     private Api api;
 
     private ParkingApi() {
+        //Defines the connection with the timeaout
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
@@ -49,6 +55,7 @@ public class ParkingApi {
 
         RxJava2CallAdapterFactory rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io());
 
+        //Builds a retrofit client
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(Constants.API_URL)
                 .addConverterFactory(GsonConverterFactory.create()) // Converter library used to convert response into POJO, can be replaced by moshi with MoshiConverterFactory
@@ -58,6 +65,9 @@ public class ParkingApi {
         api = retrofit.create(Api.class);
     }
 
+    /**
+     * Returns a singleton.
+     */
     public static ParkingApi getInstance() {
 
         //If condition to ensure we don't create multiple instances in a single application
@@ -69,10 +79,16 @@ public class ParkingApi {
         return instance;
     }
 
+    /**
+     * Returns all the parking bays.
+     */
     public Single<List<Site>> sitesGet() {
         return api.sitesGet();
     }
 
+    /**
+     * Returns the state of the bays according to the query.
+     */
     public Single<List<SiteState>> sitesStateGet(SitesStateGetQuery query) {
         Map<String,String> parameters = new HashMap<>();
         parameters.put("latitude", String.valueOf(query.getLatitude()));
@@ -84,10 +100,16 @@ public class ParkingApi {
         return api.sitesStateGet(parameters);
     }
 
+    /**
+     * Starts following a parking bay.
+     */
     Single<SiteState> follow(FollowCommand command) {
         return api.follow(command);
     }
 
+    /**
+     * Unfollows the parking bay.
+     */
     Completable unfollow(UnfollowCommand command) {
         return api.unfollow(command);
     }

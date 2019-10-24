@@ -5,6 +5,9 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
+/**
+ * Defines a restriction object that comes from the API.
+ */
 public class Restriction implements Serializable {
 
     @SerializedName("description")

@@ -3,6 +3,9 @@ package com.unimelbs.parkingassistant.parkingapi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Defines a SiteState object that is returned from the API.
+ */
 public class SiteState {
     @SerializedName("id")
     @Expose

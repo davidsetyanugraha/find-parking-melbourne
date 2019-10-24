@@ -6,6 +6,9 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Represents the coordinates of the object that comes from an API call.
+ */
 public class Location implements Serializable {
 
     @SerializedName("type")
