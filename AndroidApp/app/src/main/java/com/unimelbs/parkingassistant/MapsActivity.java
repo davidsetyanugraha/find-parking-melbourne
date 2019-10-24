@@ -778,7 +778,7 @@ public class MapsActivity extends AppCompatActivity
             layoutRestrictions.addView(v);
 
             TextView tv = new TextView(getApplicationContext());
-            tv.setText("Restriction " + (i+1) + ": " + bay.getRestrictions().get(i).getTypedesc());
+            tv.setText("#" + (i+1) + ": " + bay.getRestrictions().get(i).getTypedesc());
             tv.setTypeface(null, Typeface.BOLD_ITALIC);
             layoutRestrictions.addView(tv);
 
