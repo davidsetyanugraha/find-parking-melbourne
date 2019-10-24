@@ -50,7 +50,7 @@
             android:textStyle="italic" />
     </LinearLayout>
 
-    <include layout="@layout/horizontal_restrictions" />
+    <include layout="@layout/restrictions" />
 
 <!--    <TextView-->
 <!--        android:id="@+id/bay_snippet"-->
@@ -58,6 +58,12 @@
 <!--        android:layout_height="wrap_content"-->
 <!--        android:padding="@dimen/activity_margin"-->
 <!--       />-->
+
+<!--    <View-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="0.2dp"-->
+<!--        android:background="@android:color/darker_gray"/>-->
+
 
     <TableLayout
         android:id="@+id/alertDialogLoginForm"
