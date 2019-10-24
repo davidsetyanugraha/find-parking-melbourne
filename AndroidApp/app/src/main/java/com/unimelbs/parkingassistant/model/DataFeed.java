@@ -100,8 +100,10 @@ public class DataFeed {
         @Override
         protected void onPostExecute(Void aVoid)
         {
-            super.onPostExecute(aVoid);
-            Log.d(TAG, "onPostExecute: after saving.");
+            //super.onPostExecute(aVoid);
+            Log.d(TAG, "onPostExecute: after data load, now saving results.");
+            dataFeed.saveBaysToFile();
+
         }
 
         @Override
@@ -140,7 +142,7 @@ public class DataFeed {
         protected void onPostExecute(Void aVoid)
         {
             super.onPostExecute(aVoid);
-            refreshMap();
+            //refreshMap();
             Log.d(TAG, "onPostExecute: clearing current cluster items + re-adding them.");
 
         }
@@ -334,6 +336,7 @@ public class DataFeed {
         }
 
         try {
+            Log.d(TAG, "saveBaysToFile: file does not exist. Saving a new one");
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             Log.d(TAG, "saveBaysToFile: num of bays: "+baysHashtable.size());
