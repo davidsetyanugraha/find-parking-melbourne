@@ -220,7 +220,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
 //        return cluster.getSize() > this.mMinClusterSize;
 
 //        final float currentMaxZoom = mMap.getMaxZoomLevel();
-        return currentZoom < 18;
+        return currentZoom < Constants.MAP_DO_NOT_CLUSTER_ZOOM_LEVEL;
 //        return currentZoom < currentMaxZoom && cluster.getSize() >= 10;
     }
 
