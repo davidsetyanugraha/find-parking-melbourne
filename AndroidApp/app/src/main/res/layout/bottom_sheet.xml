@@ -85,17 +85,17 @@
                 android:layout_marginTop="10dp"
                 android:background="@color/design_default_color_primary"
                 android:foreground="?attr/selectableItemBackground"
-                android:text="Start Parking"
+                android:text="Park"
                 android:textColor="#fff" />
             <Button
                 android:id="@+id/btn_direction"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:layout_marginLeft="10dp"
-                android:background="@color/cardview_dark_background"
+                android:layout_marginLeft="5dp"
+                android:background="@color/design_default_color_primary"
                 android:foreground="?attr/selectableItemBackground"
-                android:text="Direction"
+                android:text="Navigate"
                 android:textColor="#fff" />
 
     <!--    </LinearLayout>-->
