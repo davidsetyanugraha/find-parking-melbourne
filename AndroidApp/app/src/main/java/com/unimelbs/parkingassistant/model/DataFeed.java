@@ -8,6 +8,7 @@ import com.unimelbs.parkingassistant.R;
 import com.unimelbs.parkingassistant.parkingapi.ParkingApi;
 import com.unimelbs.parkingassistant.parkingapi.SiteState;
 import com.unimelbs.parkingassistant.parkingapi.SitesStateGetQuery;
+import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Timer;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -43,6 +44,7 @@ public class DataFeed {
     private PublishSubject<List<Bay>> baysSubject = PublishSubject.create();
     //private BayStateApi bayStateApi;
     private ClusterManager<Bay> clusterManager;
+    private BayRenderer bayRenderer;
 
 
     /**
@@ -57,7 +59,6 @@ public class DataFeed {
 
     public Observable<List<Bay>> getBaysObservable() {
         return baysSubject;
-        //TODO: Call baysSubject.onNext(<<<the new array here>>); when needed
     }
 
     /**
@@ -99,8 +100,10 @@ public class DataFeed {
         @Override
         protected void onPostExecute(Void aVoid)
         {
-            super.onPostExecute(aVoid);
-            Log.d(TAG, "onPostExecute: after saving.");
+            //super.onPostExecute(aVoid);
+            Log.d(TAG, "onPostExecute: after data load, now saving results.");
+            dataFeed.saveBaysToFile();
+
         }
 
         @Override
@@ -139,7 +142,7 @@ public class DataFeed {
         protected void onPostExecute(Void aVoid)
         {
             super.onPostExecute(aVoid);
-            refreshMap();
+            //refreshMap();
             Log.d(TAG, "onPostExecute: clearing current cluster items + re-adding them.");
 
         }
@@ -333,6 +336,7 @@ public class DataFeed {
         }
 
         try {
+            Log.d(TAG, "saveBaysToFile: file does not exist. Saving a new one");
             FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             Log.d(TAG, "saveBaysToFile: num of bays: "+baysHashtable.size());
@@ -350,6 +354,7 @@ public class DataFeed {
      */
     public void addBay(Bay bay)
     {
+        //bay.addObserver(clusterManager);
         baysHashtable.put(bay.getBayId(),bay);
     }
 
@@ -366,6 +371,8 @@ public class DataFeed {
         Log.d(TAG, "fetchBaysStates: Bay table includes:"+baysHashtable.size()+" "+
                 "State data includes: "+list.size());
         timer.start();
+        List<Bay> changedBays = new ArrayList<Bay>();
+
         for (SiteState siteState: list)
         {
             String strState = siteState.getStatus();
@@ -376,7 +383,9 @@ public class DataFeed {
             {
                 found++;
                 availableBays+=(state)?1:0;
-                baysHashtable.get(Integer.parseInt(siteState.getId())).setAvailable(state);
+                Bay bay = baysHashtable.get(Integer.parseInt(siteState.getId()));
+                bay.setAvailable(state);
+                changedBays.add(bay);
             }
             else
             {
@@ -385,6 +394,9 @@ public class DataFeed {
             }
         }
         timer.stop();
+
+        baysSubject.onNext(changedBays);
+
         Log.d(TAG, "fetchBaysStates: completed in "+timer.getDurationInSeconds()+" "+
                 found+" states found. "+notFound+" states not found."+
                 " Available bays: "+availableBays);

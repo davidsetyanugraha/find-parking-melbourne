@@ -11,10 +11,12 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -42,6 +44,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.maps.android.MarkerManager;
 import com.google.maps.android.clustering.ClusterManager;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
@@ -77,6 +80,7 @@ public class MapsActivity extends AppCompatActivity
     private GoogleMap mMap;
     public static final String SECONDS = "com.unimelbs.parkingassistant.SECONDS";
     public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
+    public static final String BAY_COLLECTION_ID="unimelbs";
     private static final String TAG = "MapActivity";
     private static String apiKey;
     private Bay selectedBay;
@@ -104,11 +108,11 @@ public class MapsActivity extends AppCompatActivity
     @BindView(R.id.bottom_sheet_maps)
     LinearLayout layoutBottomSheet;
 
+    @BindView(R.id.bay_address_layout)
+    LinearLayout bayAddressLayout;
+
     @BindView(R.id.bay_title)
     TextView bayTitle;
-
-    @BindView(R.id.bay_snippet)
-    TextView baySnippet;
 
     @BindView(R.id.bay_status)
     TextView bayStatus;
@@ -204,13 +208,6 @@ public class MapsActivity extends AppCompatActivity
 
     /** Defines callbacks for service binding, passed to bindService() */
 
-
-
-
-
-
-
-
     private void initBottomSheetUI() {
         sheetBehavior = BottomSheetBehavior.from(layoutBottomSheet);
         sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -227,6 +224,25 @@ public class MapsActivity extends AppCompatActivity
         intent.putExtra(SECONDS, seconds);
         intent.putExtra(SELECTED_BAY, selectedBay);
         startActivity(intent);
+    }
+
+    private void goToParkingService(AlertDialog alertDialog, String strTime){
+        long parkingStartTime = new Date().getTime();
+        bayUpdateService.startParkingNotification(selectedBay, parkingStartTime, strTime);
+
+        // must cancel and finish to unbind service
+        // so that STOP Parking from service can
+        // work fine.
+        // Comment below two lines if you want to
+        // use goToParkingActivity.
+        alertDialog.cancel();
+        MapsActivity.this.finish();
+        //unbindService(connection);
+        //bayUpdateServiceBound = false;
+        Toast.makeText(getApplicationContext(),
+                "Parking duration being monitored in Notifications.",
+                Toast.LENGTH_LONG).show();
+        //goToParkingActivity(strHour);
     }
 
     /**
@@ -378,7 +394,8 @@ public class MapsActivity extends AppCompatActivity
                         DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 String strSeconds = seconds.toString();
-                                goToParkingActivity(strSeconds);
+                                //goToParkingActivity(strSeconds);
+                                goToParkingService(alertDialog, strSeconds);
                             }
                         };
 
@@ -392,7 +409,8 @@ public class MapsActivity extends AppCompatActivity
                     } else {
 
                         String strSeconds = seconds.toString();
-                        goToParkingActivity(strSeconds);
+                        //goToParkingActivity(strSeconds);
+                        goToParkingService(alertDialog, strSeconds);
 
                     }
                 }
@@ -411,11 +429,12 @@ public class MapsActivity extends AppCompatActivity
             }
         });
 
-        Button selectDateButton = startParkingFormView.findViewById(R.id.btn_date);
         EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
-        selectDateButton.setOnClickListener(new View.OnClickListener() {
+        txtDate.setInputType(InputType.TYPE_NULL);
+        txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG,"DATE ONCLICK!");
                 DatePickerDialog datePickerDialog = new DatePickerDialog(MapsActivity.this,
                         new DatePickerDialog.OnDateSetListener() {
 
@@ -433,11 +452,12 @@ public class MapsActivity extends AppCompatActivity
             }
         });
 
-        Button selectTimeButton = startParkingFormView.findViewById(R.id.btn_time);
         EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
-        selectTimeButton.setOnClickListener(new View.OnClickListener() {
+        txtTime.setInputType(InputType.TYPE_NULL);
+        txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG,"TIME ONCLICK!");
                 // Launch Time Picker Dialog
                 TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
                         new TimePickerDialog.OnTimeSetListener() {
@@ -539,7 +559,10 @@ public class MapsActivity extends AppCompatActivity
         Log.d(TAG, "onMapReady: ");
         //DataFeed data = new DataFeed(getApplicationContext());
         //ExtendedClusterManager<Bay> extendedClusterManager = new ExtendedClusterManager<>(this, mMap, data);
-        ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap);
+        MarkerManager markerManager = new MarkerManager(mMap);
+        markerManager.newCollection(BAY_COLLECTION_ID);
+
+        ClusterManager<Bay> extendedClusterManager = new ClusterManager<>(this,mMap,markerManager);
 
         //Added this to improve performance.
         extendedClusterManager.setAnimation(false);
@@ -550,11 +573,8 @@ public class MapsActivity extends AppCompatActivity
         data.setClusterManager(extendedClusterManager);
 
 
-
         mMap.setOnCameraIdleListener(extendedClusterManager);
-
         mMap.setOnMarkerClickListener(extendedClusterManager);
-
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng arg0) {
@@ -564,8 +584,6 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
-
-
         extendedClusterManager.addItems(data.getItems());
         extendedClusterManager.setOnClusterItemClickListener(this);
 
@@ -708,6 +726,7 @@ public class MapsActivity extends AppCompatActivity
             DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     goToParkingActivity();
+                    //goToParkingService(alertDialog, strSeconds);
                 }
             };
 
@@ -739,6 +758,13 @@ public class MapsActivity extends AppCompatActivity
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
+        if (bay.isAvailable()) {
+            bayStatus.setTextColor(Color.GREEN);
+        } else {
+            bayStatus.setTextColor(Color.RED);
+        }
+
+
 
         //update restriction
         layoutRestrictions.removeAllViews();
