@@ -570,8 +570,8 @@ public class BayUpdateService extends Service {
 
                     //countDownTimer = days+":"+Hours + ":"+ Minutes+":"+Seconds;
                     countDownTimer = Hours + ":"+ Minutes+":"+Seconds;
-                    Log.d("parkingNot", "Parking Notification first Run Status "
-                            + parkingNotificationFirstRun.toString() );
+                    //Log.d("parkingNot", "Parking Notification first Run Status "
+                            //+ parkingNotificationFirstRun.toString() );
 
                     if (parkingNotificationFirstRun){
                         displayParkingNotification(countDownTimer, parkingNotificationFirstRun );

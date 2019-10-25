@@ -1,3 +1,13 @@
+/*
+This activity has been deprecated
+and all its functionality has been moved
+to display as a user notification.
+It will be deleted later on
+if the development team find no
+use of it.
+ */
+
+
 package com.unimelbs.parkingassistant;
 
 import android.app.AlertDialog;
@@ -34,7 +44,7 @@ import butterknife.OnClick;
 import static com.unimelbs.parkingassistant.util.PreferenceManager.PREFERENCE_NAME;
 import static com.unimelbs.parkingassistant.util.PreferenceManager.clearPreference;
 
-// This activity has been deprecated and moved into bayUpdateService.java
+
 public class ParkingActivity extends AppCompatActivity {
 
     //alarm stuff (deprecated)
