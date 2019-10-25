@@ -472,7 +472,6 @@ public class MapsActivity extends AppCompatActivity
         cal.setTime(d);
         cal.add(Calendar.MINUTE, defaultDurationMins);
         String newTime = df.format(cal.getTime());
-        Log.d(TAG, ">>>"+newTime+"");
 
         minute = cal.get(Calendar.MINUTE);
         hour = cal.get(Calendar.HOUR_OF_DAY); // default hour = + 1
@@ -481,7 +480,6 @@ public class MapsActivity extends AppCompatActivity
         txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG,"TIME ONCLICK!");
                 // Launch Time Picker Dialog
                 TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
                         new TimePickerDialog.OnTimeSetListener() {
@@ -782,6 +780,7 @@ public class MapsActivity extends AppCompatActivity
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
         //update bay
+        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
         String bayStatusMsg;
         if (bay.getStatus() == Constants.Status.AVAILABLE) {
             bayStatusMsg = "Available";
@@ -816,7 +815,7 @@ public class MapsActivity extends AppCompatActivity
             layoutRestrictions.addView(tv);
 
             tv = new TextView(getApplicationContext());
-            tv.setText(bay.getRestrictions().get(i).getDescription());
+            tv.setText(restrictionsHelper.convertRestrictionsToString(bay.getRestrictions().get(i)));
             layoutRestrictions.addView(tv);
 
             v = new View(this);
@@ -832,7 +831,7 @@ public class MapsActivity extends AppCompatActivity
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
 
-        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
+
     }
 
 
