@@ -30,8 +30,11 @@ public class BayAdapter {
         Log.d(TAG, "convertSites: started.");
         Timer timer = new Timer();
         timer.start();
-        this.dataFeed.getBaysHashtable().clear();
-        this.dataFeed.getItems().clear();
+        if (sites!=null&&sites.size()>0)
+        {
+            this.dataFeed.getBaysHashtable().clear();
+            this.dataFeed.getItems().clear();
+        }
         for (Site site: sites){
             this.dataFeed.addBay(convertSite(site));}
         timer.stop();

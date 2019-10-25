@@ -52,6 +52,7 @@ import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Constants;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
+import com.unimelbs.parkingassistant.util.StateValues;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
@@ -73,6 +74,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 import static com.unimelbs.parkingassistant.util.PreferenceManager.PREFERENCE_NAME;
+import static com.unimelbs.parkingassistant.util.PreferenceManager.getLastPositionFromSharedPrefs;
+import static com.unimelbs.parkingassistant.util.PreferenceManager.getLastZoomFromSharedPrefs;
+import static com.unimelbs.parkingassistant.util.PreferenceManager.saveLastPositionToSharedPrefs;
+import static com.unimelbs.parkingassistant.util.PreferenceManager.saveLastZoomToSharedPrefs;
 
 public class MapsActivity extends AppCompatActivity
         implements OnMapReadyCallback,
@@ -127,30 +132,44 @@ public class MapsActivity extends AppCompatActivity
     SharedPreferences prefs;
     RestrictionsHelper restrictionsHelper;
 
+
     @Override
-    protected void onSaveInstanceState(Bundle outState)
+    protected void onSaveInstanceState(Bundle savedInstanceState)
     {
-        super.onSaveInstanceState(outState);
-        outState.putDouble("Lat",mMap.getCameraPosition().target.latitude);
-        outState.putDouble("Lng",mMap.getCameraPosition().target.longitude);
-        outState.putFloat("Zoom",mMap.getCameraPosition().zoom);
+        Log.d(TAG, "onSaveInstanceState: started!");
+
+        savedInstanceState.putDouble("Lat",mMap.getCameraPosition().target.latitude);
+        savedInstanceState.putDouble("Lng",mMap.getCameraPosition().target.longitude);
+        savedInstanceState.putFloat("Zoom",mMap.getCameraPosition().zoom);
+        Log.d(TAG, "onSaveInstanceState: saved values!.");
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState)
     {
+        Log.d(TAG, "onRestoreInstanceState: started!");
         super.onRestoreInstanceState(savedInstanceState);
         this.lastLat = savedInstanceState.getDouble("Lat");
         this.lastLng = savedInstanceState.getDouble("Lng");
         this.lastZoom = savedInstanceState.getFloat("Zoom");
+        Log.d(TAG, "onRestoreInstanceState: restored values!");
+
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.lastLat = savedInstanceState.getDouble("Lat");
-        this.lastLng = savedInstanceState.getDouble("Lng");
-        this.lastZoom = savedInstanceState.getFloat("Zoom");
+        /*
+        if (savedInstanceState!=null)
+        {
+            this.lastLat = savedInstanceState.getDouble("Lat");
+            this.lastLng = savedInstanceState.getDouble("Lng");
+            this.lastZoom = savedInstanceState.getFloat("Zoom");
+
+        }
+
+         */
 
         if(data==null)
         {
@@ -339,8 +358,11 @@ public class MapsActivity extends AppCompatActivity
     protected void onPause()
     {
         Log.d(TAG, "onPause: ");
-        super.onPause();
+        StateValues.setLastPosition(mMap.getCameraPosition().target);
+        StateValues.setLastZoom(mMap.getCameraPosition().zoom);
         data.saveBaysToFile();
+        super.onPause();
+
     }
     @Override
     protected void onStart() {
@@ -351,6 +373,9 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onResume(){
         Log.d(TAG, "onResume: ");
+        lastLng = StateValues.getLastPosition().latitude;
+        lastLat = StateValues.getLastPosition().longitude;
+        lastZoom = StateValues.getLastZoom();
         super.onResume();
         
     }
