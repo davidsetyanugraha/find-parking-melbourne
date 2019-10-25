@@ -1,7 +1,5 @@
 package com.unimelbs.parkingassistant.util;
 
-import android.util.Log;
-
 import com.unimelbs.parkingassistant.parkingapi.Restriction;
 
 import java.util.Calendar;
@@ -23,14 +21,12 @@ public class RestrictionsHelper {
 
     public String convertRestrictionsToString(Restriction restriction) {
         String restrictionMsg = "";
-        Log.d(TAG, restriction.getDescription());
+
         if (restriction.getFromday() != null) {
             restrictionMsg = restrictionMsg + "" + convertToDay(Integer.parseInt(restriction.getFromday()));
         }
 
         if ((restriction.getToday() != null) && (Integer.parseInt(restriction.getToday()) != 0)) {
-            Log.d(TAG, "Today "+restriction.getToday());
-            Log.d(TAG, "from "+restriction.getFromday());
             if (Integer.parseInt(restriction.getToday()) != Integer.parseInt(restriction.getFromday())) {
                 restrictionMsg = restrictionMsg + " - " + convertToDay(Integer.parseInt(restriction.getToday()));
             }
@@ -49,7 +45,7 @@ public class RestrictionsHelper {
 
     private String convertToDay(int day) {
         String str_day;
-        Log.d(TAG,"ConvertDay"+day);
+
         switch (day) {
             case 1:
                 str_day = "Monday";
@@ -78,17 +74,6 @@ public class RestrictionsHelper {
 
         return str_day;
     }
-
-
-//    public String convertRestrictionsToString(Restriction restriction) {
-//    // @todo: add null checking
-////        String restrictionMsg = restriction.getFromday() + " - " + restriction.getToday() + " "
-////                + restriction.getStarttime() + "-" + restriction.getEndtime();
-////
-////        return restrictionMsg;
-//
-//        return restriction.getDescription();
-//    }
 
     public boolean isValid() {
         return this.isValid;
@@ -123,7 +108,6 @@ public class RestrictionsHelper {
             }
         }
 
-        Log.d(TAG, "Default Duration: " +finalDurationRestriction);
         return finalDurationRestriction-1;
     }
 
@@ -155,26 +139,7 @@ public class RestrictionsHelper {
             final String[] restrictionEndTime = this.restrictions.get(i).getEndtime().split(Pattern.quote(":"));
             Integer restEndHour = Integer.parseInt(restrictionEndTime[0]);
             Integer restEndMins = Integer.parseInt(restrictionEndTime[1]);
-
-            final String restTypeDesc = this.restrictions.get(i).getTypedesc();
-            final String restDisExt = this.restrictions.get(i).getDisabilityext();
-            final String restEffOnPh = this.restrictions.get(i).getEffectiveonph();
-            final String restDesc = this.restrictions.get(i).getDescription();
             Boolean violation = false;
-
-            Log.d(TAG, "=========== "+restDesc +"=============");
-            Log.d(TAG, "minutes: " + durationMinutes);
-            Log.d(TAG, "restrictionDuration: " + durationRestriction);
-            Log.d(TAG, "from: " + restFrDay);
-            Log.d(TAG, "today: " + restToDay);
-            Log.d(TAG, "restrictionStartTimeHour: " + restStHour);
-            Log.d(TAG, "restrictionStartTimeMins: " + restStMins);
-            Log.d(TAG, "restrictionEndTimeHour: " + restEndHour);
-            Log.d(TAG, "restrictionEndTimeMins: " + restEndMins);
-            Log.d(TAG, "restrictionTypeDesc: " + restTypeDesc);
-            Log.d(TAG, "restrictionDisExt: " + restDisExt);
-            Log.d(TAG, "restEffOnPh: " + restEffOnPh);
-            Log.d(TAG, "=======================================");
 
             if ((durationRestriction != null)) {
                 violation = (durationMinutes > durationRestriction) ? true : false;
@@ -186,9 +151,6 @@ public class RestrictionsHelper {
                         violation = false;
                     }
                 }
-                Log.d(TAG, "----------");
-                Log.d(TAG, "Violation? = " + violation);
-                Log.d(TAG, "----------");
             }
 
             if (violation) {
