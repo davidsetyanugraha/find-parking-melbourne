@@ -257,7 +257,7 @@ public class MapsActivity extends AppCompatActivity
                 try {
                     message = selectedBay.getStatus().toString().toLowerCase().equals("occupied") ?
                             "The Bay is occupied. Do you Still want to Navigate?" :
-                            "Selected Bay has no parking sensors. Do you want to Navigate?";
+                            "Parking sensors are not present at this bay. Do you want to Navigate?";
                 }
                 catch(Exception e)
                 {
@@ -787,7 +787,7 @@ public class MapsActivity extends AppCompatActivity
             bayStatusMsg = "Occupied";
             bayStatus.setTextColor(Color.RED);
         } else {
-            bayStatusMsg = "Unknown";
+            bayStatusMsg = "No Parking Sensor";
             bayStatus.setTextColor(Color.YELLOW);
         }
 
