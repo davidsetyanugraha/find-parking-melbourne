@@ -337,7 +337,7 @@ public class BayUpdateService extends Service {
             }
             builder.setContentTitle(title);
             builder.setContentText(body);
-            builder.setSmallIcon(R.mipmap.green_exclaimination);
+            builder.setSmallIcon(R.drawable.ic_green_exclamation_mark);
             builder.setPriority(NotificationCompat.PRIORITY_HIGH);
             builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
             builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
@@ -415,7 +415,7 @@ public class BayUpdateService extends Service {
 
                 builder.setContentTitle(title);
                 builder.setContentText(body);
-                builder.setSmallIcon(R.mipmap.exclaimination);
+                builder.setSmallIcon(R.drawable.ic_red_exclamation_mark);
                 builder.setPriority(NotificationCompat.PRIORITY_HIGH);
                 builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                 builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
@@ -490,7 +490,7 @@ public class BayUpdateService extends Service {
 
             builder.setContentTitle(title);
             builder.setContentText(body);
-            builder.setSmallIcon(R.mipmap.green_exclaimination);
+            builder.setSmallIcon(R.drawable.ic_green_exclamation_mark);
             builder.setPriority(NotificationCompat.PRIORITY_MAX);
             builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
             builder.setWhen(0);
@@ -633,6 +633,7 @@ public class BayUpdateService extends Service {
                             .build();
                     notificationChannel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
                             audioAttributes);
+
                     notificationChannel.setVibrationPattern(new long[]{
                             500,
                             500,
@@ -645,7 +646,7 @@ public class BayUpdateService extends Service {
 
                 this.firstParkingNotificationBuilder.setContentTitle(title);
                 this.firstParkingNotificationBuilder.setContentText(body);
-                this.firstParkingNotificationBuilder.setSmallIcon(R.mipmap.green_exclaimination);
+                this.firstParkingNotificationBuilder.setSmallIcon(R.drawable.ic_green_exclamation_mark);
                 this.firstParkingNotificationBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
                 this.firstParkingNotificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                 this.firstParkingNotificationBuilder.setWhen(0);
@@ -673,7 +674,7 @@ public class BayUpdateService extends Service {
                 int TEN_MINUTES_LEFT = 9;
                 if (duration.equals(TEN_MINUTES_LEFT)) { // duration left == 10 mins specified by 9
 
-                    this.firstParkingNotificationBuilder.setSmallIcon(R.mipmap.exclaimination);
+                    this.firstParkingNotificationBuilder.setSmallIcon(R.drawable.ic_red_exclamation_mark);
                     this.firstParkingNotificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
 
                  }
