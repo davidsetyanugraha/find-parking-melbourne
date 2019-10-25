@@ -222,23 +222,30 @@ public class DataFeed {
     public synchronized void  saveBaysToFile()
     {
         Log.d(TAG, "saveBaysToFile: datafeed:"+this);
-        File file = new File(context.getFilesDir()+"/"+BAYS_FILE);
-        if (file.exists())
+        if (baysHashtable!=null||baysHashtable.size()>0)
         {
-            Log.d(TAG, "saveBaysToFile: a file exists, deleting it.");
-            file.delete();
-        }
+            File file = new File(context.getFilesDir()+"/"+BAYS_FILE);
 
-        try {
-            Log.d(TAG, "saveBaysToFile: file does not exist. Saving a new one");
-            FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            Log.d(TAG, "saveBaysToFile: num of bays: "+baysHashtable.size());
-            objectOutputStream.writeObject(baysHashtable);
-            objectOutputStream.close();
-            fileOutputStream.close();
-        } catch (Exception e) {
-            Log.d(TAG, "saveBaysToFile: exception:"+e.getMessage());
+            if (file.exists())
+            {
+                Log.d(TAG, "saveBaysToFile: a file exists, deleting it.");
+                file.delete();
+
+            }
+            try
+            {
+                Log.d(TAG, "saveBaysToFile: file does not exist. Saving a new one");
+                FileOutputStream fileOutputStream =  context.openFileOutput(BAYS_FILE, Context.MODE_PRIVATE);
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                Log.d(TAG, "saveBaysToFile: num of bays: "+baysHashtable.size());
+                objectOutputStream.writeObject(baysHashtable);
+                objectOutputStream.close();
+                fileOutputStream.close();
+            }
+            catch (Exception e)
+            {
+                Log.d(TAG, "saveBaysToFile: exception:"+e.getMessage());
+            }
         }
     }
 

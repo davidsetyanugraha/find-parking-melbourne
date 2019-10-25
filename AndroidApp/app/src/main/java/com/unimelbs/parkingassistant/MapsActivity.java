@@ -325,9 +325,12 @@ public class MapsActivity extends AppCompatActivity
     protected void onPause()
     {
         Log.d(TAG, "onPause: ");
-        StateValues.setLastPosition(mMap.getCameraPosition().target);
-        StateValues.setLastZoom(mMap.getCameraPosition().zoom);
-        data.saveBaysToFile();
+        if (mMap!=null&&mMap.getCameraPosition()!=null)
+        {
+            StateValues.setLastPosition(mMap.getCameraPosition().target);
+            StateValues.setLastZoom(mMap.getCameraPosition().zoom);
+            data.saveBaysToFile();
+        }
         super.onPause();
 
     }
@@ -346,7 +349,6 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onStop()
     {
-        //data.saveBaysToFile();
         super.onStop();
     }
 
