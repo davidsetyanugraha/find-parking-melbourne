@@ -90,7 +90,7 @@
                 android:layout_margin="1dp"
                 android:textColor="#fff"
                 android:drawableStart="@drawable/ic_navigate"
-                android:paddingStart="30dp"/>
+                android:paddingStart="10dp"/>
 
 
             <Button
@@ -105,7 +105,7 @@
                 android:textAlignment="textStart"
                 android:textColor="#fff"
                 android:drawableStart="@drawable/ic_parking"
-                android:paddingStart="45dp"
+                android:paddingStart="10dp"
                 />
 
 
