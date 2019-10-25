@@ -3,6 +3,8 @@ package com.unimelbs.parkingassistant.util;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.maps.android.ui.IconGenerator;
+import com.unimelbs.parkingassistant.R;
 
 public class Constants
 {
@@ -18,12 +20,14 @@ public class Constants
     public static final int MAP_DO_NOT_CLUSTER_ZOOM_LEVEL = 18;
     public static final String BAY_COLLECTION_ID="unimelbs";
 
+
     //The server URLs to call the API
     public static final String API_URL = "https://parkingappapi.azurewebsites.net/api/";
     public static final String HUB_CONNECTION_URL = "https://parkingappapi.azurewebsites.net/api/sites/state/connection/";
 
     //The markers configuration
-    public static final BitmapDescriptor AVAILABLE_ICON= BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+    //public static final BitmapDescriptor test = BitmapDescriptorFactory.fromResource(R.drawable.occupied_bay);
+    public static final BitmapDescriptor AVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
     public static final BitmapDescriptor UNAVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
     public static final BitmapDescriptor UNKNOWN_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW);
 }

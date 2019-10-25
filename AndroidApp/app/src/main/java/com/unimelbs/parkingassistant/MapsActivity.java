@@ -63,6 +63,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -77,6 +78,8 @@ public class MapsActivity extends AppCompatActivity
         ClusterManager.OnClusterItemClickListener<Bay> {
 
     private GoogleMap mMap;
+
+
     public static final String SECONDS = "com.unimelbs.parkingassistant.SECONDS";
     public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
     public static final String BAY_COLLECTION_ID="unimelbs";
@@ -93,6 +96,9 @@ public class MapsActivity extends AppCompatActivity
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private double lastLat = 0;
+    private double lastLng = 0;
+    private float lastZoom = 0;
 
     @BindView(R.id.restrictionLayout)
     LinearLayout layoutRestrictions;
@@ -119,6 +125,24 @@ public class MapsActivity extends AppCompatActivity
     BottomSheetBehavior sheetBehavior;
     SharedPreferences prefs;
     RestrictionsHelper restrictionsHelper;
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putDouble("Lat",mMap.getCameraPosition().target.latitude);
+        outState.putDouble("Lng",mMap.getCameraPosition().target.longitude);
+        outState.putFloat("Zoom",mMap.getCameraPosition().zoom);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState)
+    {
+        super.onRestoreInstanceState(savedInstanceState);
+        this.lastLat = savedInstanceState.getDouble("Lat");
+        this.lastLng = savedInstanceState.getDouble("Lng");
+        this.lastZoom = savedInstanceState.getFloat("Zoom");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -322,6 +346,8 @@ public class MapsActivity extends AppCompatActivity
         //data.saveBaysToFile();
         super.onStop();
     }
+
+
 
     /**
      * Bottom screen Button Start Parking OnClick
