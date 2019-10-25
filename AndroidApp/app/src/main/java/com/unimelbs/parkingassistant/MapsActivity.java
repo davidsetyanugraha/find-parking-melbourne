@@ -65,7 +65,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -74,10 +73,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 import static com.unimelbs.parkingassistant.util.PreferenceManager.PREFERENCE_NAME;
-import static com.unimelbs.parkingassistant.util.PreferenceManager.getLastPositionFromSharedPrefs;
-import static com.unimelbs.parkingassistant.util.PreferenceManager.getLastZoomFromSharedPrefs;
-import static com.unimelbs.parkingassistant.util.PreferenceManager.saveLastPositionToSharedPrefs;
-import static com.unimelbs.parkingassistant.util.PreferenceManager.saveLastZoomToSharedPrefs;
 
 public class MapsActivity extends AppCompatActivity
         implements OnMapReadyCallback,
@@ -102,9 +97,6 @@ public class MapsActivity extends AppCompatActivity
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    private double lastLat = 0;
-    private double lastLng = 0;
-    private float lastZoom = 0;
 
     @BindView(R.id.restrictionLayout)
     LinearLayout layoutRestrictions;
@@ -134,42 +126,8 @@ public class MapsActivity extends AppCompatActivity
 
 
     @Override
-    protected void onSaveInstanceState(Bundle savedInstanceState)
-    {
-        Log.d(TAG, "onSaveInstanceState: started!");
-
-        savedInstanceState.putDouble("Lat",mMap.getCameraPosition().target.latitude);
-        savedInstanceState.putDouble("Lng",mMap.getCameraPosition().target.longitude);
-        savedInstanceState.putFloat("Zoom",mMap.getCameraPosition().zoom);
-        Log.d(TAG, "onSaveInstanceState: saved values!.");
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState)
-    {
-        Log.d(TAG, "onRestoreInstanceState: started!");
-        super.onRestoreInstanceState(savedInstanceState);
-        this.lastLat = savedInstanceState.getDouble("Lat");
-        this.lastLng = savedInstanceState.getDouble("Lng");
-        this.lastZoom = savedInstanceState.getFloat("Zoom");
-        Log.d(TAG, "onRestoreInstanceState: restored values!");
-
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        /*
-        if (savedInstanceState!=null)
-        {
-            this.lastLat = savedInstanceState.getDouble("Lat");
-            this.lastLng = savedInstanceState.getDouble("Lng");
-            this.lastZoom = savedInstanceState.getFloat("Zoom");
-
-        }
-
-         */
 
         if(data==null)
         {
@@ -373,11 +331,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onResume(){
         Log.d(TAG, "onResume: ");
-        lastLng = StateValues.getLastPosition().latitude;
-        lastLat = StateValues.getLastPosition().longitude;
-        lastZoom = StateValues.getLastZoom();
         super.onResume();
-        
     }
 
     @Override
@@ -686,10 +640,10 @@ public class MapsActivity extends AppCompatActivity
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), Constants.MAP_ZOOM_BAY));
         } else {
             // If the user already navigated in the application
-            if (lastLat != 0) {
-                //Show the current position
+            if (StateValues.isPositionChanged()) {
+                //Show the last position
                 Log.d(TAG, "Zooming to the las position:");
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLat,lastLng), lastZoom));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(StateValues.getLastPosition(), StateValues.getLastZoom()));
             } else {
                 /*
                  * Get the best and most recent location of the device, which may be null in rare

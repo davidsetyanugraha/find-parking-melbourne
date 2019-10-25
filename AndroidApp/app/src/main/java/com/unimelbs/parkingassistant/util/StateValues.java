@@ -9,6 +9,7 @@ public class StateValues
     private static final String TAG = "StateValues";
     private static LatLng lastPositionS;
     private static float lastZoomS;
+    private static boolean positionChanged = false;
 
     public static LatLng getLastPosition()
     {
@@ -20,6 +21,7 @@ public class StateValues
     {
         Log.d(TAG, "setLastPosition: "+lastPosition.toString());
         lastPositionS = lastPosition;
+        positionChanged = true;
     }
 
     public static float getLastZoom()
@@ -32,5 +34,10 @@ public class StateValues
     {
         Log.d(TAG, "setLastZoom: "+lastZoom);
         lastZoomS = lastZoom;
+        positionChanged = true;
+    }
+
+    public static boolean isPositionChanged() {
+        return positionChanged;
     }
 }
