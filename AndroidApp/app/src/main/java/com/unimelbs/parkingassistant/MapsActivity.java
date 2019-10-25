@@ -217,7 +217,6 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private void goToParkingActivity(String seconds) {
-        Log.d(TAG, "GOTOPARKING");
         Intent intent = new Intent(this, ParkingActivity.class);
         intent.putExtra(SECONDS, seconds);
         intent.putExtra(SELECTED_BAY, selectedBay);
@@ -248,9 +247,6 @@ public class MapsActivity extends AppCompatActivity
      */
     @OnClick(R.id.btn_direction)
     public void direction() {
-        //todo: Add Direction Impl from other Service
-        Log.d("Direction", "direction button clicked");
-
         if(this.selectedBay.isAvailable())
         {
             bayUpdateService.navigateToTheSelectedBayWithSubscription(this.selectedBay, true);
@@ -394,14 +390,11 @@ public class MapsActivity extends AppCompatActivity
                     cal.set(Calendar.MINUTE, minute);
 
                     Date toDate = cal.getTime();
-                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy HH:mm:ss").format(toDate));
-                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy HH:mm:ss").format(currentTime));
 
                     long diffInMillies = toDate.getTime() - currentTime.getTime();
                     Long seconds = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
 
                     this.processValidation(currentTime, toDate, seconds);
-                    Log.d(TAG, "diff (mins) =" +(seconds/60));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -418,8 +411,9 @@ public class MapsActivity extends AppCompatActivity
                         DialogInterface.OnClickListener yesListener = new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 String strSeconds = seconds.toString();
-                                //goToParkingActivity(strSeconds);
                                 goToParkingService(alertDialog, strSeconds);
+                                /**This functionality is deprecated*/
+                                //goToParkingActivity(strSeconds);
                             }
                         };
 
@@ -433,9 +427,9 @@ public class MapsActivity extends AppCompatActivity
                     } else {
 
                         String strSeconds = seconds.toString();
-                        //goToParkingActivity(strSeconds);
                         goToParkingService(alertDialog, strSeconds);
-
+                        /**This functionality is deprecated*/
+                        //goToParkingActivity(strSeconds);
                     }
                 }
             }
@@ -459,7 +453,6 @@ public class MapsActivity extends AppCompatActivity
         txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG,"DATE ONCLICK!");
                 DatePickerDialog datePickerDialog = new DatePickerDialog(MapsActivity.this,
                         new DatePickerDialog.OnDateSetListener() {
 
@@ -768,7 +761,6 @@ public class MapsActivity extends AppCompatActivity
 
     private void checkIfThereIsParking() {
         Log.d(TAG, "OnStart");
-        //todo: Add check if data2 exists
         this.prefs = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
         if (PreferenceManager.isAvailable(this.prefs)) {
             Log.d(TAG, "User is having ongoing parking!");
