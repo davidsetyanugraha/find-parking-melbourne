@@ -9,22 +9,29 @@ public class SplashScreen extends Activity {
 
     // Splash screen timer
     private static int SPLASH_TIME_OUT = 3000;
+    private static boolean splashLoaded = false;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash);
 
-        new Handler().postDelayed(new Runnable() {
+        if (!splashLoaded) {
+            setContentView(R.layout.activity_splash);
+            int secondsDelayed = 1;
+            new Handler().postDelayed(new Runnable() {
+                public void run() {
+                    startActivity(new Intent(SplashScreen.this, MapsActivity.class));
+                    finish();
+                }
+            }, secondsDelayed * 500);
 
-            @Override
-            public void run() {
-                Intent i = new Intent(SplashScreen.this, MapsActivity.class);
-                startActivity(i);
-
-                finish();
-            }
-        }, SPLASH_TIME_OUT);
+            splashLoaded = true;
+        }
+        else {
+            Intent goToMainActivity = new Intent(SplashScreen.this, MapsActivity.class);
+            goToMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(goToMainActivity);
+            finish();
+        }
     }
-
 }
