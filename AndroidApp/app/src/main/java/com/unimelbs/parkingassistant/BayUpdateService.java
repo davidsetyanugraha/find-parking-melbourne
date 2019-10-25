@@ -20,6 +20,8 @@ import android.util.Log;
 
 import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.unimelbs.parkingassistant.broadcastreceivers.ForegroundServiceStopper;
 import com.unimelbs.parkingassistant.model.Bay;
@@ -157,7 +159,7 @@ public class BayUpdateService extends Service {
         stopForeground(true);
         isServiceRunning = false;
         handler.removeCallbacks(runnable);
-        this.serviceKilledWhileStillSubscribedNotification();
+        //this.serviceKilledWhileStillSubscribedNotification();
         if(hasSubscribed) {
 
             disposeSubscription();

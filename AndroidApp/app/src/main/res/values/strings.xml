@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ParkingAssistant</string>
+    <string name="app_name">Intelli-Park-Melbourne</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_parking">ParkingActivity</string>
     <string name="google_maps_key">AIzaSyBRbC-vfnY8dUcAc_JWyaKxnILpE55bTxQ</string>
