@@ -85,23 +85,28 @@
             <!--        android:weightSum="3">-->
 
             <Button
-                android:id="@+id/btn_parking"
-                android:layout_width="100dp"
+                android:id="@+id/btn_direction"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:textAlignment="center"
                 android:background="@color/design_default_color_primary"
                 android:foreground="?attr/selectableItemBackground"
-                android:text="Start Parking"
+                android:layout_gravity="right"
+                android:text="Navigate"
                 android:textColor="#fff" />
             <Button
-                android:id="@+id/btn_direction"
-                android:layout_width="100dp"
+                android:id="@+id/btn_parking"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:layout_marginLeft="10dp"
-                android:background="@color/cardview_dark_background"
+                android:layout_marginLeft="2dp"
+                android:textAlignment="center"
+                android:layout_gravity="left"
+                android:background="@color/design_default_color_primary"
                 android:foreground="?attr/selectableItemBackground"
-                android:text="Directions"
+
+                android:text="Park"
                 android:textColor="#fff" />
 
             <!--    </LinearLayout>-->

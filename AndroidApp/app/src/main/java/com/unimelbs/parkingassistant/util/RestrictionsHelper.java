@@ -20,14 +20,14 @@ public class RestrictionsHelper {
         this.restrictions = restrictions;
     }
 
-    public String convertRestrictionsToString() {
-        String restrictionMsg = "";
-        for (int i = 0; i < this.restrictions.size(); i++) {
-            restrictionMsg = restrictionMsg +
-                    "Restriction " + (i + 1) + ": \n" +
-                    "\t" + this.restrictions.get(i).getDescription() + "\n";
-        }
-        return restrictionMsg;
+    public String convertRestrictionsToString(Restriction restriction) {
+    // @todo: add null checking
+//        String restrictionMsg = restriction.getFromday() + " - " + restriction.getToday() + " "
+//                + restriction.getStarttime() + "-" + restriction.getEndtime();
+//
+//        return restrictionMsg;
+
+        return restriction.getDescription();
     }
 
     public boolean isValid() {
@@ -49,6 +49,22 @@ public class RestrictionsHelper {
 
     public void setRestrictions(List<Restriction> restrictions) {
         this.restrictions = restrictions;
+    }
+
+    public int getDefaultDuration(Date currentDate) {
+        int finalDurationRestriction = 0;
+        for (int i = 0; i < this.restrictions.size(); i++) {
+            int durationRestriction = Integer.parseInt(this.restrictions.get(i).getDuration());
+
+            if (i == 0) {
+                finalDurationRestriction = durationRestriction;
+            } else if (durationRestriction < finalDurationRestriction) {
+                finalDurationRestriction =  durationRestriction;
+            }
+        }
+
+        Log.d(TAG, "Default Duration: " +finalDurationRestriction);
+        return finalDurationRestriction-1;
     }
 
     public void processRestrictionChecking(Long seconds, Date currentTime, Date toDate) {
