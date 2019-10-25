@@ -148,6 +148,9 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.lastLat = savedInstanceState.getDouble("Lat");
+        this.lastLng = savedInstanceState.getDouble("Lng");
+        this.lastZoom = savedInstanceState.getFloat("Zoom");
 
         if(data==null)
         {
@@ -349,6 +352,7 @@ public class MapsActivity extends AppCompatActivity
     protected void onResume(){
         Log.d(TAG, "onResume: ");
         super.onResume();
+        
     }
 
     @Override
