@@ -52,6 +52,7 @@ import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Constants;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
+import com.unimelbs.parkingassistant.util.StateValues;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +65,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -97,9 +97,6 @@ public class MapsActivity extends AppCompatActivity
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    private double lastLat = 0;
-    private double lastLng = 0;
-    private float lastZoom = 0;
 
     @BindView(R.id.restrictionLayout)
     LinearLayout layoutRestrictions;
@@ -127,28 +124,10 @@ public class MapsActivity extends AppCompatActivity
     SharedPreferences prefs;
     RestrictionsHelper restrictionsHelper;
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState)
-    {
-        super.onSaveInstanceState(outState);
-        outState.putDouble("Lat",mMap.getCameraPosition().target.latitude);
-        outState.putDouble("Lng",mMap.getCameraPosition().target.longitude);
-        outState.putFloat("Zoom",mMap.getCameraPosition().zoom);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState)
-    {
-        super.onRestoreInstanceState(savedInstanceState);
-        this.lastLat = savedInstanceState.getDouble("Lat");
-        this.lastLng = savedInstanceState.getDouble("Lng");
-        this.lastZoom = savedInstanceState.getFloat("Zoom");
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
         if(data==null)
         {
@@ -337,8 +316,11 @@ public class MapsActivity extends AppCompatActivity
     protected void onPause()
     {
         Log.d(TAG, "onPause: ");
-        super.onPause();
+        StateValues.setLastPosition(mMap.getCameraPosition().target);
+        StateValues.setLastZoom(mMap.getCameraPosition().zoom);
         data.saveBaysToFile();
+        super.onPause();
+
     }
     @Override
     protected void onStart() {
@@ -350,7 +332,6 @@ public class MapsActivity extends AppCompatActivity
     protected void onResume(){
         Log.d(TAG, "onResume: ");
         super.onResume();
-        
     }
 
     @Override
@@ -363,7 +344,7 @@ public class MapsActivity extends AppCompatActivity
 
 
     /**
-     * btn_direction screen Button Start Parking OnClick
+     * Bottom screen Button Start Parking OnClick
      */
     @OnClick(R.id.btn_parking)
     public void startParking() {
@@ -659,10 +640,10 @@ public class MapsActivity extends AppCompatActivity
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), Constants.MAP_ZOOM_BAY));
         } else {
             // If the user already navigated in the application
-            if (lastLat != 0) {
-                //Show the current position
+            if (StateValues.isPositionChanged()) {
+                //Show the last position
                 Log.d(TAG, "Zooming to the las position:");
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLat,lastLng), lastZoom));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(StateValues.getLastPosition(), StateValues.getLastZoom()));
             } else {
                 /*
                  * Get the best and most recent location of the device, which may be null in rare

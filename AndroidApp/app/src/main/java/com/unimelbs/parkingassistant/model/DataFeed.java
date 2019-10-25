@@ -379,8 +379,12 @@ public class DataFeed {
                                     timer.getDurationInSeconds()+" seconds. # of Fetched sites:"+
                                     value.size());
                             bayAdapter.convertSites(value);
-                            saveBaysToFile();
-                            reloadMapMarkers();
+                            if (value.size()>0)
+                            {
+                                saveBaysToFile();
+                                reloadMapMarkers();
+                            }
+
                         },
                         throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
     }
