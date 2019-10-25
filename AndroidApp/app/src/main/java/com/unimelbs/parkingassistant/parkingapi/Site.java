@@ -6,6 +6,9 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Defines a site that comes from the API.
+ */
 public class Site {
 
     @SerializedName("id")

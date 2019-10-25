@@ -11,6 +11,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
@@ -49,7 +50,6 @@ import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Constants;
-import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 
@@ -253,6 +253,17 @@ public class MapsActivity extends AppCompatActivity
         }
         else
             {
+                String message;
+                try {
+                    message = selectedBay.getStatus().toString().toLowerCase().equals("occupied") ?
+                            "The Bay is occupied. Do you Still want to Navigate?" :
+                            "Selected Bay has no parking sensors. Do you want to Navigate?";
+                }
+                catch(Exception e)
+                {
+                    message = "Bay Status Unknown, Do you want to navigate?";
+                    e.printStackTrace();
+                }
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
 
@@ -270,7 +281,7 @@ public class MapsActivity extends AppCompatActivity
                     // User cancelled the dialog
                 }
             });
-            builder.setMessage("The Bay is occupied. Do you Still want to Navigate?")
+            builder.setMessage(message)
                     .setTitle("Bay Status");
 
 
@@ -341,7 +352,7 @@ public class MapsActivity extends AppCompatActivity
         Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
         Date currentTime = new Date();
-        builder.setTitle("Set return time");
+        builder.setTitle("Set your return time");
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
 
@@ -763,14 +774,33 @@ public class MapsActivity extends AppCompatActivity
             bayStatus.setTextColor(Color.RED);
         }
 
-
-
         //update restriction
         layoutRestrictions.removeAllViews();
         for (int i = 0; i < bay.getRestrictions().size(); i++) {
-            Button tv = new Button(getApplicationContext());
+            View v = new View(this);
+            v.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+            ));
+            v.setBackgroundColor(Color.GRAY);
+            layoutRestrictions.addView(v);
+
+            TextView tv = new TextView(getApplicationContext());
+            tv.setText("#" + (i+1) + ": " + bay.getRestrictions().get(i).getTypedesc());
+            tv.setTypeface(null, Typeface.BOLD_ITALIC);
+            layoutRestrictions.addView(tv);
+
+            tv = new TextView(getApplicationContext());
             tv.setText(bay.getRestrictions().get(i).getDescription());
             layoutRestrictions.addView(tv);
+
+            v = new View(this);
+            v.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+            ));
+            v.setBackgroundColor(Color.GRAY);
+            layoutRestrictions.addView(v);
         }
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {

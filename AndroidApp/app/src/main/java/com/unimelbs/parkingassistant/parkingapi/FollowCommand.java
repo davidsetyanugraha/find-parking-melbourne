@@ -3,6 +3,9 @@ package com.unimelbs.parkingassistant.parkingapi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Defines the paramaters to execute the Follow method on the API.
+ */
 public class FollowCommand {
     @SerializedName("connectionid")
     @Expose

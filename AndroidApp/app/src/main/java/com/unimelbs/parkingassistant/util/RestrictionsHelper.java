@@ -121,7 +121,7 @@ public class RestrictionsHelper {
         }
 
         if (!this.invalidReason.isEmpty()) {
-            this.invalidReason = "You probably violate : " + this.invalidReason;
+            this.invalidReason = "You are probably violating the parking restriction " + this.invalidReason;
             this.isValid = false;
         } else {
             this.isValid = true;
