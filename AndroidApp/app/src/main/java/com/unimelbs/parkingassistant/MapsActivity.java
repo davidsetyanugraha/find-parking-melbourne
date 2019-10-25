@@ -504,7 +504,7 @@ public class MapsActivity extends AppCompatActivity
                                 hour = hourOfDay;
                                 MapsActivity.this.minute = minute;
                             }
-                        }, mHour, mMinute+ defaultDurationMins, true);
+                        }, hour, minute, true);
                 timePickerDialog.show();
 
             }
@@ -799,13 +799,13 @@ public class MapsActivity extends AppCompatActivity
         String bayStatusMsg;
         if (bay.getStatus() == Constants.Status.AVAILABLE) {
             bayStatusMsg = "Available";
-            bayStatus.setTextColor(Color.GREEN);
+            bayStatus.setTextColor(Color.parseColor("#00cc00"));
         } else if (bay.getStatus() == Constants.Status.OCCUPIED) {
             bayStatusMsg = "Occupied";
             bayStatus.setTextColor(Color.RED);
         } else {
             bayStatusMsg = "No Parking Sensor";
-            bayStatus.setTextColor(Color.YELLOW);
+            bayStatus.setTextColor(Color.parseColor("#E8AC41"));
         }
 
         String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
