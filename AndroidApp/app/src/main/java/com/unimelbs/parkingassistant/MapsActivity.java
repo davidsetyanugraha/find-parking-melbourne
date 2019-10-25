@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -78,6 +79,8 @@ public class MapsActivity extends AppCompatActivity
         ClusterManager.OnClusterItemClickListener<Bay> {
 
     private GoogleMap mMap;
+
+
     public static final String SECONDS = "com.unimelbs.parkingassistant.SECONDS";
     public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
     public static final String BAY_COLLECTION_ID="unimelbs";
@@ -94,6 +97,9 @@ public class MapsActivity extends AppCompatActivity
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private double lastLat = 0;
+    private double lastLng = 0;
+    private float lastZoom = 0;
 
     @BindView(R.id.restrictionLayout)
     LinearLayout layoutRestrictions;
@@ -122,8 +128,29 @@ public class MapsActivity extends AppCompatActivity
     RestrictionsHelper restrictionsHelper;
 
     @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putDouble("Lat",mMap.getCameraPosition().target.latitude);
+        outState.putDouble("Lng",mMap.getCameraPosition().target.longitude);
+        outState.putFloat("Zoom",mMap.getCameraPosition().zoom);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState)
+    {
+        super.onRestoreInstanceState(savedInstanceState);
+        this.lastLat = savedInstanceState.getDouble("Lat");
+        this.lastLng = savedInstanceState.getDouble("Lng");
+        this.lastZoom = savedInstanceState.getFloat("Zoom");
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.lastLat = savedInstanceState.getDouble("Lat");
+        this.lastLng = savedInstanceState.getDouble("Lng");
+        this.lastZoom = savedInstanceState.getFloat("Zoom");
 
         if(data==null)
         {
@@ -325,6 +352,7 @@ public class MapsActivity extends AppCompatActivity
     protected void onResume(){
         Log.d(TAG, "onResume: ");
         super.onResume();
+        
     }
 
     @Override
@@ -333,6 +361,8 @@ public class MapsActivity extends AppCompatActivity
         //data.saveBaysToFile();
         super.onStop();
     }
+
+
 
     /**
      * btn_direction screen Button Start Parking OnClick
@@ -472,7 +502,6 @@ public class MapsActivity extends AppCompatActivity
         cal.setTime(d);
         cal.add(Calendar.MINUTE, defaultDurationMins);
         String newTime = df.format(cal.getTime());
-        Log.d(TAG, ">>>"+newTime+"");
 
         minute = cal.get(Calendar.MINUTE);
         hour = cal.get(Calendar.HOUR_OF_DAY); // default hour = + 1
@@ -481,7 +510,6 @@ public class MapsActivity extends AppCompatActivity
         txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG,"TIME ONCLICK!");
                 // Launch Time Picker Dialog
                 TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
                         new TimePickerDialog.OnTimeSetListener() {
@@ -632,37 +660,43 @@ public class MapsActivity extends AppCompatActivity
                     focusPoint.isAvailable());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), Constants.MAP_ZOOM_BAY));
         } else {
-            /*
-             * Get the best and most recent location of the device, which may be null in rare
-             * cases when a location is not available.
-             */
-            if (mLocationPermissionGranted) {
-                try {
-                    Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
-                    locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
-                        @Override
-                        public void onComplete(Task<Location> task) {
-                            if (task.isSuccessful()) {
-                                // Set the map's camera position to the current location of the device.
-                                mLastKnownLocation = task.getResult();
-                                Log.d(TAG, "Zooming to the current location:");
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                        new LatLng(mLastKnownLocation.getLatitude(),
-                                                mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENT_LOCATION));
-                            } else {
-                                Log.d(TAG, "Current location is null. Using defaults.");
-                                Log.e(TAG, "Exception: %s", task.getException());
-                                moveToDefaultLocation();
+            // If the user already navigated in the application
+            if (lastLat != 0) {
+                //Show the current position
+                Log.d(TAG, "Zooming to the las position:");
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLat,lastLng), lastZoom));
+            } else {
+                /*
+                 * Get the best and most recent location of the device, which may be null in rare
+                 * cases when a location is not available.
+                 */
+                if (mLocationPermissionGranted) {
+                    try {
+                        Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
+                        locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                            @Override
+                            public void onComplete(Task<Location> task) {
+                                if (task.isSuccessful()) {
+                                    // Set the map's camera position to the current location of the device.
+                                    mLastKnownLocation = task.getResult();
+                                    Log.d(TAG, "Zooming to the current location:");
+                                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                            new LatLng(mLastKnownLocation.getLatitude(),
+                                                    mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENT_LOCATION));
+                                } else {
+                                    Log.d(TAG, "Current location is null. Using defaults.");
+                                    Log.e(TAG, "Exception: %s", task.getException());
+                                    moveToDefaultLocation();
+                                }
                             }
-                        }
-                    });
-                } catch (SecurityException e)  {
-                    Log.e("Exception: %s", e.getMessage());
+                        });
+                    } catch (SecurityException e) {
+                        Log.e("Exception: %s", e.getMessage());
+                        moveToDefaultLocation();
+                    }
+                } else {
                     moveToDefaultLocation();
                 }
-            }
-            else {
-                moveToDefaultLocation();
             }
         }
     }
@@ -779,6 +813,7 @@ public class MapsActivity extends AppCompatActivity
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
         //update bay
+        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
         String bayStatusMsg;
         if (bay.getStatus() == Constants.Status.AVAILABLE) {
             bayStatusMsg = "Available";
@@ -813,7 +848,7 @@ public class MapsActivity extends AppCompatActivity
             layoutRestrictions.addView(tv);
 
             tv = new TextView(getApplicationContext());
-            tv.setText(bay.getRestrictions().get(i).getDescription());
+            tv.setText(restrictionsHelper.convertRestrictionsToString(bay.getRestrictions().get(i)));
             layoutRestrictions.addView(tv);
 
             v = new View(this);
@@ -829,7 +864,7 @@ public class MapsActivity extends AppCompatActivity
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
 
-        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
+
     }
 
 
