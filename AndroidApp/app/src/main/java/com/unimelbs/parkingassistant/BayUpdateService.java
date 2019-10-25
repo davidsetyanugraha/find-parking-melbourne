@@ -681,11 +681,22 @@ public class BayUpdateService extends Service {
 
                  }
 
-                if (!((int) (hours+minutes+seconds) <= 0)) { // When duration left is zero, stop updates
+                if (!((int) (hours+minutes+seconds) <= 0)) {
+                    //If duration left is not less than zero show duration left
                     this.firstParkingNotificationBuilder.setContentTitle("Parking Duration Left: " + countDownTime);
                     notificationManager.notify(START_PARKING_NOTIFICATION_ID, this.firstParkingNotificationBuilder.build());
                 }
-                else{
+                else{// If duration left is less than zero, show overdue.
+
+                    if ((hours + minutes + seconds) == 0)
+                    {
+                        this.firstParkingNotificationBuilder.setColor(Color.RED);
+                        this.firstParkingNotificationBuilder.setSmallIcon(R.drawable.ic_red_exclamation_mark);
+                        this.firstParkingNotificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
+
+                    }
+
+
                     this.firstParkingNotificationBuilder.setContentTitle("Parking Over Due By: " + countDownTime.replace('-',' '));
                     notificationManager.notify(START_PARKING_NOTIFICATION_ID, this.firstParkingNotificationBuilder.build());
 
