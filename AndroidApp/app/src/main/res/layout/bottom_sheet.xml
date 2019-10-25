@@ -89,8 +89,8 @@
                 android:textAlignment="textStart"
                 android:layout_margin="1dp"
                 android:textColor="#fff"
-                android:drawableLeft="@drawable/ic_navigate"
-                android:paddingLeft="30dp"/>
+                android:drawableStart="@drawable/ic_navigate"
+                android:paddingStart="30dp"/>
 
 
             <Button
@@ -104,8 +104,8 @@
                 android:layout_margin="1dp"
                 android:textAlignment="textStart"
                 android:textColor="#fff"
-                android:drawableLeft="@drawable/ic_parking"
-                android:paddingLeft="45dp"
+                android:drawableStart="@drawable/ic_parking"
+                android:paddingStart="45dp"
                 />
 
 
