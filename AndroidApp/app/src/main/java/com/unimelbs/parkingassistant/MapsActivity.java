@@ -656,8 +656,11 @@ public class MapsActivity extends AppCompatActivity
                     focusPoint.isAvailable());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), Constants.MAP_ZOOM_BAY));
         } else {
-            // TODO: Put the code here to get last location and start on it
-            if (true) {
+            // If the user already navigated in the application
+            if (lastLat != 0) {
+                //Show the current position
+                Log.d(TAG, "Zooming to the las position:");
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLat,lastLng), lastZoom));
             } else {
                 /*
                  * Get the best and most recent location of the device, which may be null in rare
