@@ -632,37 +632,40 @@ public class MapsActivity extends AppCompatActivity
                     focusPoint.isAvailable());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), Constants.MAP_ZOOM_BAY));
         } else {
-            /*
-             * Get the best and most recent location of the device, which may be null in rare
-             * cases when a location is not available.
-             */
-            if (mLocationPermissionGranted) {
-                try {
-                    Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
-                    locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
-                        @Override
-                        public void onComplete(Task<Location> task) {
-                            if (task.isSuccessful()) {
-                                // Set the map's camera position to the current location of the device.
-                                mLastKnownLocation = task.getResult();
-                                Log.d(TAG, "Zooming to the current location:");
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                        new LatLng(mLastKnownLocation.getLatitude(),
-                                                mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENT_LOCATION));
-                            } else {
-                                Log.d(TAG, "Current location is null. Using defaults.");
-                                Log.e(TAG, "Exception: %s", task.getException());
-                                moveToDefaultLocation();
+            // TODO: Put the code here to get last location and start on it
+            if (true) {
+            } else {
+                /*
+                 * Get the best and most recent location of the device, which may be null in rare
+                 * cases when a location is not available.
+                 */
+                if (mLocationPermissionGranted) {
+                    try {
+                        Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
+                        locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                            @Override
+                            public void onComplete(Task<Location> task) {
+                                if (task.isSuccessful()) {
+                                    // Set the map's camera position to the current location of the device.
+                                    mLastKnownLocation = task.getResult();
+                                    Log.d(TAG, "Zooming to the current location:");
+                                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                            new LatLng(mLastKnownLocation.getLatitude(),
+                                                    mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENT_LOCATION));
+                                } else {
+                                    Log.d(TAG, "Current location is null. Using defaults.");
+                                    Log.e(TAG, "Exception: %s", task.getException());
+                                    moveToDefaultLocation();
+                                }
                             }
-                        }
-                    });
-                } catch (SecurityException e)  {
-                    Log.e("Exception: %s", e.getMessage());
+                        });
+                    } catch (SecurityException e) {
+                        Log.e("Exception: %s", e.getMessage());
+                        moveToDefaultLocation();
+                    }
+                } else {
                     moveToDefaultLocation();
                 }
-            }
-            else {
-                moveToDefaultLocation();
             }
         }
     }
