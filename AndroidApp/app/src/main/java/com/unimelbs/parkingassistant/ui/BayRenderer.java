@@ -88,9 +88,6 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
      */
     @Override
     protected void onBeforeClusterItemRendered(Bay item, MarkerOptions markerOptions) {
-        //super.onBeforeClusterItemRendered(item, markerOptions);
-
-
         BitmapDescriptor newIcon = null;
         switch (item.getStatus())
         {
@@ -122,6 +119,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         currentZoom = mMap.getCameraPosition().zoom;
 
 
+/*
         if (currentZoom<Constants.MAP_DO_NOT_CLUSTER_ZOOM_LEVEL)
         {
             Log.d(TAG, "onCameraIdle: Removing marker collection.");
@@ -129,6 +127,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
             //clusterManager.getMarkerManager().getCollection(Constants.BAY_COLLECTION_ID).hideAll();
             Log.d(TAG, "onCameraIdle: markers size:"+clusterManager.getMarkerCollection().getMarkers().size());
         }
+*/
 
         Log.d(TAG, "onCameraIdle: current view radius:"+radius+
                 "zoom:"+currentZoom);
