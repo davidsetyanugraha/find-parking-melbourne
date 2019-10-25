@@ -56,6 +56,7 @@ import com.unimelbs.parkingassistant.util.RestrictionsHelper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -249,7 +250,6 @@ public class MapsActivity extends AppCompatActivity
         if(this.selectedBay.isAvailable())
         {
             bayUpdateService.navigateToTheSelectedBayWithSubscription(this.selectedBay, true);
-
         }
         else
             {
@@ -334,7 +334,7 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
-    private void renderParkingDialog() {
+    private void renderParkingDialog()  {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
@@ -363,14 +363,14 @@ public class MapsActivity extends AppCompatActivity
                     cal.set(Calendar.MINUTE, minute);
 
                     Date toDate = cal.getTime();
-                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(toDate));
-                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(currentTime));
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy HH:mm:ss").format(toDate));
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy HH:mm:ss").format(currentTime));
 
                     long diffInMillies = toDate.getTime() - currentTime.getTime();
                     Long seconds = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
 
                     this.processValidation(currentTime, toDate, seconds);
-                    Log.d(TAG, "diff (seconds) =" +seconds);
+                    Log.d(TAG, "diff (mins) =" +(seconds/60));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -423,8 +423,8 @@ public class MapsActivity extends AppCompatActivity
         });
 
         EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
-        day = mDay; month = mMonth; year = mYear;
-        txtDate.setText(day + "-" + month + "-" + year);
+        day = mDay; month = mMonth - 1; year = mYear;
+        txtDate.setText(day + "-" + (month + 1) + "-" + year);
         txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -447,9 +447,25 @@ public class MapsActivity extends AppCompatActivity
         });
 
         EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
-        int defaultDuration = 1; // 1 hour
-        hour = mHour + defaultDuration; // default hour = + 1
-        minute = mMinute;
+        int defaultDurationMins = restrictionsHelper.getDefaultDuration(currentTime);
+
+        String myTime = mHour + ":"+ mMinute ;
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+        Date d = null;
+        try {
+            d = df.parse(myTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(d);
+        cal.add(Calendar.MINUTE, defaultDurationMins);
+        String newTime = df.format(cal.getTime());
+        Log.d(TAG, ">>>"+newTime+"");
+
+        minute = cal.get(Calendar.MINUTE);
+        hour = cal.get(Calendar.HOUR_OF_DAY); // default hour = + 1
+
         txtTime.setText(convertToStrTime(hour,minute));
         txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -466,7 +482,7 @@ public class MapsActivity extends AppCompatActivity
                                 hour = hourOfDay;
                                 MapsActivity.this.minute = minute;
                             }
-                        }, (mHour + defaultDuration), mMinute, false);
+                        }, (mHour + defaultDurationMins), mMinute, true);
                 timePickerDialog.show();
 
             }
@@ -477,20 +493,13 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private String convertToStrTime(int hourOfDay, int minute) {
-        String am_pm = "";
-
         Calendar datetime = Calendar.getInstance();
         datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
         datetime.set(Calendar.MINUTE, minute);
 
-        if (datetime.get(Calendar.AM_PM) == Calendar.AM)
-            am_pm = "AM";
-        else if (datetime.get(Calendar.AM_PM) == Calendar.PM)
-            am_pm = "PM";
+        String strHrsToShow = datetime.get(Calendar.HOUR_OF_DAY)+"";
 
-        String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
-
-        return strHrsToShow + ":" + String.format("%02d", minute) + " " + am_pm;
+        return strHrsToShow + ":" + String.format("%02d", minute);
     }
 
 
@@ -759,16 +768,22 @@ public class MapsActivity extends AppCompatActivity
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
         //update bay
-        String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
+        String bayStatusMsg;
+        if (bay.getStatus() == Constants.Status.AVAILABLE) {
+            bayStatusMsg = "Available";
+            bayStatus.setTextColor(Color.GREEN);
+        } else if (bay.getStatus() == Constants.Status.OCCUPIED) {
+            bayStatusMsg = "Occupied";
+            bayStatus.setTextColor(Color.RED);
+        } else {
+            bayStatusMsg = "Unknown";
+            bayStatus.setTextColor(Color.YELLOW);
+        }
+
         String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
-        if (bay.isAvailable()) {
-            bayStatus.setTextColor(Color.GREEN);
-        } else {
-            bayStatus.setTextColor(Color.RED);
-        }
 
         //update restriction
         layoutRestrictions.removeAllViews();

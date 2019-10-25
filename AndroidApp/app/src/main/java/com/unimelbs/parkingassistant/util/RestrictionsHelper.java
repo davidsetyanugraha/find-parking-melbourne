@@ -51,6 +51,22 @@ public class RestrictionsHelper {
         this.restrictions = restrictions;
     }
 
+    public int getDefaultDuration(Date currentDate) {
+        int finalDurationRestriction = 0;
+        for (int i = 0; i < this.restrictions.size(); i++) {
+            int durationRestriction = Integer.parseInt(this.restrictions.get(i).getDuration());
+
+            if (i == 0) {
+                finalDurationRestriction = durationRestriction;
+            } else if (durationRestriction < finalDurationRestriction) {
+                finalDurationRestriction =  durationRestriction;
+            }
+        }
+
+        Log.d(TAG, "Default Duration: " +finalDurationRestriction);
+        return finalDurationRestriction-1;
+    }
+
     public void processRestrictionChecking(Long seconds, Date currentTime, Date toDate) {
         Long durationMinutes = TimeUnit.MINUTES.convert(seconds, TimeUnit.SECONDS);
         this.invalidReason = "";
