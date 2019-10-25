@@ -697,7 +697,7 @@ public class BayUpdateService extends Service {
                     }
 
 
-                    this.firstParkingNotificationBuilder.setContentTitle("Parking Over Due By: " + countDownTime.replace('-',' '));
+                    this.firstParkingNotificationBuilder.setContentTitle("PARKING OVER DUE BY: " + countDownTime.replace('-',' '));
                     notificationManager.notify(START_PARKING_NOTIFICATION_ID, this.firstParkingNotificationBuilder.build());
 
                 }
