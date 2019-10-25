@@ -21,6 +21,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
@@ -128,7 +129,7 @@ public class DataFeed {
      * @return
      */
     public List<Bay> getItems() {
-        if (bays==null)
+        if (bays==null||bays.size()==0)
         {
             bays = new ArrayList<>(baysHashtable.values());
             Log.d(TAG, "getItems: bays list is empty, creating it. "+bays.size()+ " bays added.");
@@ -369,7 +370,7 @@ public class DataFeed {
         timer.start();
         api.sitesGet()
                 .subscribeOn(Schedulers.io())
-                //.observeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
                 //.as(autoDisposable(AndroidLifecycleScopeProvider.from(getLifecycle(), Lifecycle.Event.ON_STOP)))
                 .subscribe(value ->
                         {
@@ -379,7 +380,24 @@ public class DataFeed {
                                     value.size());
                             bayAdapter.convertSites(value);
                             saveBaysToFile();
+                            reloadMapMarkers();
                         },
                         throwable -> Log.d(TAG+"-throwable", throwable.getMessage()));
+    }
+
+    /**
+     * Reloads markers on the map in the case fresher data is available.
+     */
+    public void reloadMapMarkers()
+    {
+        Timer timer = new Timer();
+        timer.start();
+        clusterManager.clearItems();
+        clusterManager.getClusterMarkerCollection().clear();
+        clusterManager.getMarkerManager().getCollection(Constants.BAY_COLLECTION_ID).clear();
+        clusterManager.addItems(getItems());
+        clusterManager.cluster();
+        timer.stop();
+        Log.d(TAG, "reloadMapMarkers: completed in "+timer.getDurationInSeconds()+" seconds.");
     }
 }
