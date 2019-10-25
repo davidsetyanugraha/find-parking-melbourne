@@ -410,7 +410,7 @@ public class MapsActivity extends AppCompatActivity
             private void processValidation(Date currentTime, Date toDate, Long seconds) {
                 if (seconds <= 0) {
                     Toast.makeText(getApplicationContext(),
-                            "Invalid Date",
+                            "Invalid Date or Time",
                             Toast.LENGTH_LONG).show();
                 } else {
                     restrictionsHelper.processRestrictionChecking(seconds, currentTime, toDate);
@@ -511,7 +511,7 @@ public class MapsActivity extends AppCompatActivity
                                 hour = hourOfDay;
                                 MapsActivity.this.minute = minute;
                             }
-                        }, (mHour + defaultDurationMins), mMinute, true);
+                        }, mHour, mMinute+ defaultDurationMins, true);
                 timePickerDialog.show();
 
             }
