@@ -33,11 +33,15 @@ public class RestrictionsHelper {
         }
 
         if (restriction.getStarttime() != null) {
-            restrictionMsg = restrictionMsg + " " + restriction.getStarttime();
+            String time = restriction.getStarttime();
+            String timeWithoutSeconds = time.substring(0, time.length() - 3);
+            restrictionMsg = restrictionMsg + " " + timeWithoutSeconds;
         }
 
         if (restriction.getEndtime() != null) {
-            restrictionMsg = restrictionMsg + " - " + restriction.getEndtime();
+            String time = restriction.getEndtime();
+            String timeWithoutSeconds = time.substring(0, time.length() - 3);
+            restrictionMsg = restrictionMsg + " - " + timeWithoutSeconds;
         }
 
         return restrictionMsg;
