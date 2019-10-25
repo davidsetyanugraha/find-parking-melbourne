@@ -254,6 +254,8 @@ public class MapsActivity extends AppCompatActivity
         if(this.selectedBay.isAvailable())
         {
             bayUpdateService.navigateToTheSelectedBayWithSubscription(this.selectedBay, true);
+
+            MapsActivity.this.finish();
         }
         else
             {
@@ -277,6 +279,13 @@ public class MapsActivity extends AppCompatActivity
                     // occupied to present status switch over.
                     // Hence if a bay is occupied, we wont monitor it.
                     bayUpdateService.navigateToTheSelectedBayWithSubscription(selectedBay, false);
+                    try {
+                        MapsActivity.this.finish();
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
+
 
                 }
             });
