@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
+
 import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -16,7 +17,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+
 import android.widget.Toast;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.unimelbs.parkingassistant.broadcastreceivers.ForegroundServiceStopper;
@@ -30,11 +34,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Calendar;
 import java.util.Date;
 
-import androidx.core.app.NotificationCompat;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+
+
+import static com.uber.autodispose.AutoDispose.autoDisposable;
 
 public class BayUpdateService extends Service {
 

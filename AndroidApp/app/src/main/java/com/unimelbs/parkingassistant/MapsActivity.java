@@ -403,7 +403,7 @@ public class MapsActivity extends AppCompatActivity
             private void processValidation(Date currentTime, Date toDate, Long seconds) {
                 if (seconds <= 0) {
                     Toast.makeText(getApplicationContext(),
-                            "Invalid Date or Time",
+                            "Time can not less than present time.",
                             Toast.LENGTH_LONG).show();
                 } else {
                     restrictionsHelper.processRestrictionChecking(seconds, currentTime, toDate);
