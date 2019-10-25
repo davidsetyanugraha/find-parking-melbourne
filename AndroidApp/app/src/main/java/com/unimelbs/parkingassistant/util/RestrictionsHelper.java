@@ -20,14 +20,14 @@ public class RestrictionsHelper {
         this.restrictions = restrictions;
     }
 
-    public String convertRestrictionsToString() {
-        String restrictionMsg = "";
-        for (int i = 0; i < this.restrictions.size(); i++) {
-            restrictionMsg = restrictionMsg +
-                    "Restriction " + (i + 1) + ": \n" +
-                    "\t" + this.restrictions.get(i).getDescription() + "\n";
-        }
-        return restrictionMsg;
+    public String convertRestrictionsToString(Restriction restriction) {
+    // @todo: add null checking
+//        String restrictionMsg = restriction.getFromday() + " - " + restriction.getToday() + " "
+//                + restriction.getStarttime() + "-" + restriction.getEndtime();
+//
+//        return restrictionMsg;
+
+        return restriction.getDescription();
     }
 
     public boolean isValid() {
