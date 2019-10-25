@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/quantum_white_100">
+
+    <ImageView
+        android:id="@+id/imgLogo"
+        android:layout_width="351dp"
+        android:layout_height="449dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="-131dp"
+        android:src="@drawable/parking" />
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="197dp"
+        android:gravity="center_horizontal"
+        android:text="Bayspotter"
+        android:textColor="#454545"
+        android:textSize="60dp" />
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:gravity="center_horizontal"
+        android:text="Powered by: The University of Melbourne"
+        android:textColor="#454545"
+        android:textSize="18dp" />
+
+</RelativeLayout>
