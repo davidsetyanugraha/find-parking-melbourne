@@ -236,9 +236,9 @@ public class MapsActivity extends AppCompatActivity
         MapsActivity.this.finish();
         //unbindService(connection);
         //bayUpdateServiceBound = false;
-        Toast.makeText(getApplicationContext(),
-                "Parking duration being monitored in Notifications.",
-                Toast.LENGTH_LONG).show();
+        //Toast.makeText(getApplicationContext(),
+                //"Parking duration being monitored in Notifications.",
+                //Toast.LENGTH_LONG).show();
         //goToParkingActivity(strHour);
     }
 

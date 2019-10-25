@@ -39,7 +39,7 @@
 
             <TextView
                 android:paddingLeft="10dp"
-                android:text="Time"/>
+                android:text="Time (24hrs format)"/>
 
             <EditText
                 android:id="@+id/in_time"
