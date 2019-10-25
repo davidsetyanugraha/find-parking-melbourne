@@ -13,6 +13,7 @@ import com.google.maps.android.clustering.Cluster;
 
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
+import com.google.maps.android.ui.IconGenerator;
 import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.util.Constants;
@@ -36,9 +37,6 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
     private final double STATE_API_CIRCLE_RADIUS = 1000;
     private final double STREET_VIEW_RADIUS = 250;
     private final int STATUS_FRESHNESS_INTERVAL=120;
-    private static final BitmapDescriptor AVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
-    private static final BitmapDescriptor UNAVAILABLE_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
-    private static final BitmapDescriptor UNKNOWN_ICON=BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW);
     private float currentZoom;
 
     private Context context;
@@ -48,6 +46,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
     private DataFeed dataFeed;
     private LatLng circleCentre;
     private long lastBayStatusUpdateTime;
+
 
 
 
@@ -88,9 +87,6 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
      */
     @Override
     protected void onBeforeClusterItemRendered(Bay item, MarkerOptions markerOptions) {
-        //super.onBeforeClusterItemRendered(item, markerOptions);
-
-
         BitmapDescriptor newIcon = null;
         switch (item.getStatus())
         {
@@ -115,6 +111,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
     @Override
     public void onCameraIdle()
     {
+
         LatLng cameraFocus = mMap.getCameraPosition().target;
         //Calculating the radius of the circle including the Visible rectangle of the map.
         double radius = DistanceUtil.getRadius(mMap);
@@ -122,6 +119,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         currentZoom = mMap.getCameraPosition().zoom;
 
 
+/*
         if (currentZoom<Constants.MAP_DO_NOT_CLUSTER_ZOOM_LEVEL)
         {
             Log.d(TAG, "onCameraIdle: Removing marker collection.");
@@ -129,6 +127,7 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
             //clusterManager.getMarkerManager().getCollection(Constants.BAY_COLLECTION_ID).hideAll();
             Log.d(TAG, "onCameraIdle: markers size:"+clusterManager.getMarkerCollection().getMarkers().size());
         }
+*/
 
         Log.d(TAG, "onCameraIdle: current view radius:"+radius+
                 "zoom:"+currentZoom);
@@ -238,9 +237,9 @@ public class BayRenderer extends DefaultClusterRenderer<Bay>
         BitmapDescriptor newIcon=null;
         switch (bay.getStatus())
         {
-            case AVAILABLE: {newIcon=AVAILABLE_ICON;break;}
-            case OCCUPIED: {newIcon=UNAVAILABLE_ICON;break;}
-            case UNAVAILABLE: {newIcon=UNKNOWN_ICON;break;}
+            case AVAILABLE: {newIcon=Constants.AVAILABLE_ICON;break;}
+            case OCCUPIED: {newIcon=Constants.UNAVAILABLE_ICON;break;}
+            case UNAVAILABLE: {newIcon=Constants.UNKNOWN_ICON;break;}
         }
         Marker m = getMarker(bay);
         if (m!=null)

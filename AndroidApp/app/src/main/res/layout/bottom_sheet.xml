@@ -59,10 +59,10 @@
     <!--        android:padding="@dimen/activity_margin"-->
     <!--       />-->
 
-    <!--    <View-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="0.2dp"-->
-    <!--        android:background="@android:color/darker_gray"/>-->
+<!--    <View-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="0.2dp"-->
+<!--        android:background="@android:color/darker_gray"/>-->
 
 
     <TableLayout
@@ -73,36 +73,41 @@
         android:stretchColumns="*">
         <TableRow
             android:layout_margin="10dp"
+            android:weightSum="1"
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
-            <!--    <LinearLayout-->
-            <!--        android:layout_width="match_parent"-->
-            <!--        android:layout_height="wrap_content"-->
-            <!--        android:layout_gravity="center_vertical"-->
-            <!--        android:orientation="horizontal"-->
-            <!--        android:padding="@dimen/activity_margin"-->
-            <!--        android:weightSum="3">-->
+
+            <Button
+                android:id="@+id/btn_direction"
+                android:layout_width="wrap_content"
+                android:layout_weight="0.5"
+                android:layout_height="wrap_content"
+                android:background="@color/design_default_color_primary"
+                android:foreground="?attr/selectableItemBackground"
+                android:text="  Navigate"
+                android:textAlignment="textStart"
+                android:layout_margin="1dp"
+                android:textColor="#fff"
+                android:drawableStart="@drawable/ic_navigate"
+                android:paddingStart="10dp"/>
+
 
             <Button
                 android:id="@+id/btn_parking"
-                android:layout_width="100dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_weight="0.5"
                 android:background="@color/design_default_color_primary"
                 android:foreground="?attr/selectableItemBackground"
-                android:text="Start Parking"
-                android:textColor="#fff" />
-            <Button
-                android:id="@+id/btn_direction"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_marginLeft="10dp"
-                android:background="@color/cardview_dark_background"
-                android:foreground="?attr/selectableItemBackground"
-                android:text="Direction"
-                android:textColor="#fff" />
+                android:text="  Park"
+                android:layout_margin="1dp"
+                android:textAlignment="textStart"
+                android:textColor="#fff"
+                android:drawableStart="@drawable/ic_parking"
+                android:paddingStart="10dp"
+                />
+
 
             <!--    </LinearLayout>-->
         </TableRow>

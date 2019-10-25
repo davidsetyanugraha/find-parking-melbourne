@@ -30,6 +30,11 @@ public class BayAdapter {
         Log.d(TAG, "convertSites: started.");
         Timer timer = new Timer();
         timer.start();
+        if (sites!=null&&sites.size()>0)
+        {
+            this.dataFeed.getBaysHashtable().clear();
+            this.dataFeed.getItems().clear();
+        }
         for (Site site: sites){
             this.dataFeed.addBay(convertSite(site));}
         timer.stop();
@@ -46,6 +51,8 @@ public class BayAdapter {
         double lat = site.getLocation().getCoordinates().get(1);
         double lng = site.getLocation().getCoordinates().get(0);
         double[] position = {lat,lng};
+
+
 
         Bay bay = new Bay(Integer.parseInt(site.getId()),
                         position,

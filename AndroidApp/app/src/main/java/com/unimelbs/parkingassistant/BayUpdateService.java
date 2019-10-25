@@ -161,14 +161,13 @@ public class BayUpdateService extends Service {
         if(hasSubscribed) {
 
             disposeSubscription();
-
             Log.d("ServiceOnDestroy", "Dispose Service Called From Service OnDEstroy");
         }
         super.onDestroy();
         Log.d("ServiceOnDestroy", "Service onDestroy executed.");
     }
 
-    public void subscribeToServerForUpdates(@NotNull Bay selectedBay) {
+    public void subscribeToServerForUpdatesAndRaiseNotify(@NotNull Bay selectedBay) {
         try
         {
             // If after selecting a bay,
@@ -236,7 +235,7 @@ public class BayUpdateService extends Service {
         if (serverSubscriptionRequired)
         {   //In the last catch it is disposed
             // if no maps method is available
-            subscribeToServerForUpdates(selectedBay);
+            subscribeToServerForUpdatesAndRaiseNotify(selectedBay);
 
         }
         else
@@ -300,7 +299,7 @@ public class BayUpdateService extends Service {
         try {
             String title = "Bay Status";
             //String subject = "Parking Bay Status Changed ";
-            String body = "Parking Assisstant has stopped";
+            String body = "Bay Tracking has stopped";
 
 
 
@@ -338,7 +337,7 @@ public class BayUpdateService extends Service {
             }
             builder.setContentTitle(title);
             builder.setContentText(body);
-            builder.setSmallIcon(R.mipmap.exclaimination);
+            builder.setSmallIcon(R.drawable.ic_green_exclamation_mark);
             builder.setPriority(NotificationCompat.PRIORITY_HIGH);
             builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
             builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
@@ -416,7 +415,7 @@ public class BayUpdateService extends Service {
 
                 builder.setContentTitle(title);
                 builder.setContentText(body);
-                builder.setSmallIcon(R.mipmap.exclaimination);
+                builder.setSmallIcon(R.drawable.ic_red_exclamation_mark);
                 builder.setPriority(NotificationCompat.PRIORITY_HIGH);
                 builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                 builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
@@ -476,7 +475,7 @@ public class BayUpdateService extends Service {
 
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                int importance = NotificationManager.IMPORTANCE_LOW;
+                int importance = NotificationManager.IMPORTANCE_HIGH;
 
                 NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID_BAY_FOLLOW,
                         CHANNEL_NAME, importance);
@@ -491,9 +490,10 @@ public class BayUpdateService extends Service {
 
             builder.setContentTitle(title);
             builder.setContentText(body);
-            builder.setSmallIcon(R.mipmap.green_exclaimination);
-            builder.setPriority(NotificationCompat.PRIORITY_LOW);
+            builder.setSmallIcon(R.drawable.ic_green_exclamation_mark);
+            builder.setPriority(NotificationCompat.PRIORITY_MAX);
             builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+            builder.setWhen(0);
             builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
 
             builder.addAction(0, "Stop Following Bay", exitNavigation);
@@ -528,6 +528,19 @@ public class BayUpdateService extends Service {
         //this.endParkingDate = (Date) DateUtils.addMinutes(new Date(), amount);
         int amount = (int) (Float.parseFloat(this.requiredParkingDuration));
         this.endParkingDate = (Date) DateUtils.addSeconds(new Date(), amount);
+
+        //Cancel previously active notification
+        // close handler of previous notification
+        try {
+            if(parkingNotificationFirstRun) {
+                stopForeground(true);
+                handler.removeCallbacks(runnable);
+                notificationManager.cancelAll();
+                Log.d("notcancel", "All previous notifications have been cancelled before adding new");
+            }
+        } catch (Exception e) {
+            Log.e("CancelNotifyService", "Failed to cancel notification START_PARKING_NOTIFICATION_ID ");
+        }
 
 
         //Date currentTime = Calendar.getInstance().getTime();
@@ -585,16 +598,8 @@ public class BayUpdateService extends Service {
 
         try {
 
-                try {
-                    if(parkingNotificationFirstRun) {
-                        stopForeground(true);
-                        notificationManager.cancelAll();
-                    }
-                } catch (Exception e) {
-                    Log.e("CancelNotifyService", "Failed to cancel notification START_PARKING_NOTIFICATION_ID ");
-                }
-
-
+             //Cancelling of previous notification is handled in
+            // startParkingNotificationMethod
             if(parkingNotificationFirstRun) {
 
                 this.firstParkingNotificationBuilder = new NotificationCompat.Builder(this,
@@ -628,6 +633,7 @@ public class BayUpdateService extends Service {
                             .build();
                     notificationChannel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
                             audioAttributes);
+
                     notificationChannel.setVibrationPattern(new long[]{
                             500,
                             500,
@@ -640,9 +646,10 @@ public class BayUpdateService extends Service {
 
                 this.firstParkingNotificationBuilder.setContentTitle(title);
                 this.firstParkingNotificationBuilder.setContentText(body);
-                this.firstParkingNotificationBuilder.setSmallIcon(R.mipmap.green_exclaimination);
-                this.firstParkingNotificationBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
+                this.firstParkingNotificationBuilder.setSmallIcon(R.drawable.ic_green_exclamation_mark);
+                this.firstParkingNotificationBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
                 this.firstParkingNotificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                this.firstParkingNotificationBuilder.setWhen(0);
 
                 this.firstParkingNotificationBuilder.setAutoCancel(false);
                 this.firstParkingNotificationBuilder.setOngoing(true);
@@ -667,7 +674,7 @@ public class BayUpdateService extends Service {
                 int TEN_MINUTES_LEFT = 9;
                 if (duration.equals(TEN_MINUTES_LEFT)) { // duration left == 10 mins specified by 9
 
-                    this.firstParkingNotificationBuilder.setSmallIcon(R.mipmap.exclaimination);
+                    this.firstParkingNotificationBuilder.setSmallIcon(R.drawable.ic_red_exclamation_mark);
                     this.firstParkingNotificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
 
                  }

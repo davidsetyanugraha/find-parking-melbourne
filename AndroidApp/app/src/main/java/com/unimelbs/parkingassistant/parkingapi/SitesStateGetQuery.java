@@ -3,6 +3,9 @@ package com.unimelbs.parkingassistant.parkingapi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Defines the parameters to be used when calling the SitesStateGet method from the API.
+ */
 public class SitesStateGetQuery {
     @SerializedName("latitude")
     @Expose

@@ -20,15 +20,75 @@ public class RestrictionsHelper {
         this.restrictions = restrictions;
     }
 
-    public String convertRestrictionsToString() {
+
+    public String convertRestrictionsToString(Restriction restriction) {
         String restrictionMsg = "";
-        for (int i = 0; i < this.restrictions.size(); i++) {
-            restrictionMsg = restrictionMsg +
-                    "Restriction " + (i + 1) + ": \n" +
-                    "\t" + this.restrictions.get(i).getDescription() + "\n";
+        Log.d(TAG, restriction.getDescription());
+        if (restriction.getFromday() != null) {
+            restrictionMsg = restrictionMsg + "" + convertToDay(Integer.parseInt(restriction.getFromday()));
         }
+
+        if ((restriction.getToday() != null) && (Integer.parseInt(restriction.getToday()) != 0)) {
+            Log.d(TAG, "Today "+restriction.getToday());
+            Log.d(TAG, "from "+restriction.getFromday());
+            if (Integer.parseInt(restriction.getToday()) != Integer.parseInt(restriction.getFromday())) {
+                restrictionMsg = restrictionMsg + " - " + convertToDay(Integer.parseInt(restriction.getToday()));
+            }
+        }
+
+        if (restriction.getStarttime() != null) {
+            restrictionMsg = restrictionMsg + " " + restriction.getStarttime();
+        }
+
+        if (restriction.getEndtime() != null) {
+            restrictionMsg = restrictionMsg + " - " + restriction.getEndtime();
+        }
+
         return restrictionMsg;
     }
+
+    private String convertToDay(int day) {
+        String str_day;
+        Log.d(TAG,"ConvertDay"+day);
+        switch (day) {
+            case 1:
+                str_day = "Monday";
+                break;
+            case 2:
+                str_day = "Tuesday";
+                break;
+            case 3:
+                str_day = "Wednesday";
+                break;
+            case 4:
+                str_day = "Thursday";
+                break;
+            case 5:
+                str_day = "Friday";
+                break;
+            case 6:
+                str_day = "Saturday";
+                break;
+            case 0:
+                str_day = "Sunday";
+                break;
+            default:
+                str_day = "";
+        }
+
+        return str_day;
+    }
+
+
+//    public String convertRestrictionsToString(Restriction restriction) {
+//    // @todo: add null checking
+////        String restrictionMsg = restriction.getFromday() + " - " + restriction.getToday() + " "
+////                + restriction.getStarttime() + "-" + restriction.getEndtime();
+////
+////        return restrictionMsg;
+//
+//        return restriction.getDescription();
+//    }
 
     public boolean isValid() {
         return this.isValid;
@@ -49,6 +109,22 @@ public class RestrictionsHelper {
 
     public void setRestrictions(List<Restriction> restrictions) {
         this.restrictions = restrictions;
+    }
+
+    public int getDefaultDuration(Date currentDate) {
+        int finalDurationRestriction = 0;
+        for (int i = 0; i < this.restrictions.size(); i++) {
+            int durationRestriction = Integer.parseInt(this.restrictions.get(i).getDuration());
+
+            if (i == 0) {
+                finalDurationRestriction = durationRestriction;
+            } else if (durationRestriction < finalDurationRestriction) {
+                finalDurationRestriction =  durationRestriction;
+            }
+        }
+
+        Log.d(TAG, "Default Duration: " +finalDurationRestriction);
+        return finalDurationRestriction-1;
     }
 
     public void processRestrictionChecking(Long seconds, Date currentTime, Date toDate) {
@@ -116,12 +192,11 @@ public class RestrictionsHelper {
             }
 
             if (violation) {
-                this.invalidReason = this.invalidReason + "\n" + restDesc;
+                this.invalidReason = "You are probably violating the parking restriction.";
             }
         }
 
         if (!this.invalidReason.isEmpty()) {
-            this.invalidReason = "You probably violate : " + this.invalidReason;
             this.isValid = false;
         } else {
             this.isValid = true;

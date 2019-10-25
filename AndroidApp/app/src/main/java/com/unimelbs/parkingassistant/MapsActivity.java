@@ -11,6 +11,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
@@ -49,13 +50,14 @@ import com.unimelbs.parkingassistant.model.Bay;
 import com.unimelbs.parkingassistant.model.DataFeed;
 import com.unimelbs.parkingassistant.ui.BayRenderer;
 import com.unimelbs.parkingassistant.util.Constants;
-import com.unimelbs.parkingassistant.util.PermissionManager;
 import com.unimelbs.parkingassistant.util.PreferenceManager;
 import com.unimelbs.parkingassistant.util.RestrictionsHelper;
+import com.unimelbs.parkingassistant.util.StateValues;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -77,6 +79,8 @@ public class MapsActivity extends AppCompatActivity
         ClusterManager.OnClusterItemClickListener<Bay> {
 
     private GoogleMap mMap;
+
+
     public static final String SECONDS = "com.unimelbs.parkingassistant.SECONDS";
     public static final String SELECTED_BAY = "com.unimelbs.parkingassistant.selectedBay";
     public static final String BAY_COLLECTION_ID="unimelbs";
@@ -119,6 +123,7 @@ public class MapsActivity extends AppCompatActivity
     BottomSheetBehavior sheetBehavior;
     SharedPreferences prefs;
     RestrictionsHelper restrictionsHelper;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -250,9 +255,21 @@ public class MapsActivity extends AppCompatActivity
         {
             bayUpdateService.navigateToTheSelectedBayWithSubscription(this.selectedBay, true);
 
+            MapsActivity.this.finish();
         }
         else
             {
+                String message;
+                try {
+                    message = selectedBay.getStatus().toString().toLowerCase().equals("occupied") ?
+                            "The Bay is occupied. Do you Still want to Navigate?" :
+                            "Parking sensors are not present at this bay. Do you want to Navigate?";
+                }
+                catch(Exception e)
+                {
+                    message = "Bay Status Unknown, Do you want to navigate?";
+                    e.printStackTrace();
+                }
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
 
@@ -262,6 +279,13 @@ public class MapsActivity extends AppCompatActivity
                     // occupied to present status switch over.
                     // Hence if a bay is occupied, we wont monitor it.
                     bayUpdateService.navigateToTheSelectedBayWithSubscription(selectedBay, false);
+                    try {
+                        MapsActivity.this.finish();
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
+
 
                 }
             });
@@ -270,7 +294,7 @@ public class MapsActivity extends AppCompatActivity
                     // User cancelled the dialog
                 }
             });
-            builder.setMessage("The Bay is occupied. Do you Still want to Navigate?")
+            builder.setMessage(message)
                     .setTitle("Bay Status");
 
 
@@ -301,8 +325,14 @@ public class MapsActivity extends AppCompatActivity
     protected void onPause()
     {
         Log.d(TAG, "onPause: ");
+        if (mMap!=null&&mMap.getCameraPosition()!=null)
+        {
+            StateValues.setLastPosition(mMap.getCameraPosition().target);
+            StateValues.setLastZoom(mMap.getCameraPosition().zoom);
+            data.saveBaysToFile();
+        }
         super.onPause();
-        data.saveBaysToFile();
+
     }
     @Override
     protected void onStart() {
@@ -319,9 +349,10 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onStop()
     {
-        //data.saveBaysToFile();
         super.onStop();
     }
+
+
 
     /**
      * Bottom screen Button Start Parking OnClick
@@ -334,14 +365,14 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
-    private void renderParkingDialog() {
+    private void renderParkingDialog()  {
         AlertDialog alertDialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
         final View startParkingFormView = getLayoutInflater().inflate(R.layout.dialog_parking, null);
         Button continueButton = startParkingFormView.findViewById(R.id.formSubmitButton);
 
         Date currentTime = new Date();
-        builder.setTitle("Set return time");
+        builder.setTitle("Set your return time");
         builder.setView(startParkingFormView);
         alertDialog = builder.create();
 
@@ -363,14 +394,14 @@ public class MapsActivity extends AppCompatActivity
                     cal.set(Calendar.MINUTE, minute);
 
                     Date toDate = cal.getTime();
-                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(toDate));
-                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(currentTime));
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy HH:mm:ss").format(toDate));
+                    Log.d(TAG, new SimpleDateFormat("dd-M-yyyy HH:mm:ss").format(currentTime));
 
                     long diffInMillies = toDate.getTime() - currentTime.getTime();
                     Long seconds = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
 
                     this.processValidation(currentTime, toDate, seconds);
-                    Log.d(TAG, "diff (seconds) =" +seconds);
+                    Log.d(TAG, "diff (mins) =" +(seconds/60));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -379,7 +410,7 @@ public class MapsActivity extends AppCompatActivity
             private void processValidation(Date currentTime, Date toDate, Long seconds) {
                 if (seconds <= 0) {
                     Toast.makeText(getApplicationContext(),
-                            "Invalid Date",
+                            "Invalid Date or Time",
                             Toast.LENGTH_LONG).show();
                 } else {
                     restrictionsHelper.processRestrictionChecking(seconds, currentTime, toDate);
@@ -423,8 +454,8 @@ public class MapsActivity extends AppCompatActivity
         });
 
         EditText txtDate = startParkingFormView.findViewById(R.id.in_date);
-        day = mDay; month = mMonth; year = mYear;
-        txtDate.setText(day + "-" + month + "-" + year);
+        day = mDay; month = mMonth - 1; year = mYear;
+        txtDate.setText(day + "-" + (month + 1) + "-" + year);
         txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -447,14 +478,28 @@ public class MapsActivity extends AppCompatActivity
         });
 
         EditText txtTime = startParkingFormView.findViewById(R.id.in_time);
-        int defaultDuration = 1; // 1 hour
-        hour = mHour + defaultDuration; // default hour = + 1
-        minute = mMinute;
+        int defaultDurationMins = restrictionsHelper.getDefaultDuration(currentTime);
+
+        String myTime = mHour + ":"+ mMinute ;
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+        Date d = null;
+        try {
+            d = df.parse(myTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(d);
+        cal.add(Calendar.MINUTE, defaultDurationMins);
+        String newTime = df.format(cal.getTime());
+
+        minute = cal.get(Calendar.MINUTE);
+        hour = cal.get(Calendar.HOUR_OF_DAY); // default hour = + 1
+
         txtTime.setText(convertToStrTime(hour,minute));
         txtTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG,"TIME ONCLICK!");
                 // Launch Time Picker Dialog
                 TimePickerDialog timePickerDialog = new TimePickerDialog(MapsActivity.this,
                         new TimePickerDialog.OnTimeSetListener() {
@@ -466,7 +511,7 @@ public class MapsActivity extends AppCompatActivity
                                 hour = hourOfDay;
                                 MapsActivity.this.minute = minute;
                             }
-                        }, (mHour + defaultDuration), mMinute, false);
+                        }, mHour, mMinute+ defaultDurationMins, true);
                 timePickerDialog.show();
 
             }
@@ -477,20 +522,13 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private String convertToStrTime(int hourOfDay, int minute) {
-        String am_pm = "";
-
         Calendar datetime = Calendar.getInstance();
         datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
         datetime.set(Calendar.MINUTE, minute);
 
-        if (datetime.get(Calendar.AM_PM) == Calendar.AM)
-            am_pm = "AM";
-        else if (datetime.get(Calendar.AM_PM) == Calendar.PM)
-            am_pm = "PM";
+        String strHrsToShow = datetime.get(Calendar.HOUR_OF_DAY)+"";
 
-        String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
-
-        return strHrsToShow + ":" + String.format("%02d", minute) + " " + am_pm;
+        return strHrsToShow + ":" + String.format("%02d", minute);
     }
 
 
@@ -589,6 +627,7 @@ public class MapsActivity extends AppCompatActivity
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
         // Turn on the My Location layer and the related control on the map.
+        getLocationPermission();
         updateLocationUI();
         moveToLocation();
 
@@ -596,28 +635,66 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
+    /**
+     * Go to the first position depending on if the user is starting the application or it is
+     * returning from another session
+     */
     private void moveToLocation() {
-        // Go to the first position depending on if the user is starting the application or it is
-        // returning from another session
-
-        Bay focusPoint;
-        int zoomLevel = Constants.MAP_ZOOM_DEFAULT ;
-
         // When resuming from a previously
-        // selected bay, zoom to previously
-        // selected bay.
         if(BayUpdateService.selectedBayId != null){
-            focusPoint = BayUpdateService.selectedBayId;
-            zoomLevel = Constants.MAP_ZOOM_BAY;
+            // selected bay, zoom to previously
+            Bay focusPoint = BayUpdateService.selectedBayId;
             Log.d(TAG, "onMapReady: Zoomed bay:"+
                     focusPoint.getBayId()+" "+
                     focusPoint.getPosition()+" "+
                     focusPoint.isAvailable());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), zoomLevel));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focusPoint.getPosition(), Constants.MAP_ZOOM_BAY));
         } else {
-            // Get the current location of the device and set the position of the map.
-            getDeviceLocation();
+            // If the user already navigated in the application
+            if (StateValues.isPositionChanged()) {
+                //Show the last position
+                Log.d(TAG, "Zooming to the las position:");
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(StateValues.getLastPosition(), StateValues.getLastZoom()));
+            } else {
+                /*
+                 * Get the best and most recent location of the device, which may be null in rare
+                 * cases when a location is not available.
+                 */
+                if (mLocationPermissionGranted) {
+                    try {
+                        Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
+                        locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                            @Override
+                            public void onComplete(Task<Location> task) {
+                                if (task.isSuccessful()) {
+                                    // Set the map's camera position to the current location of the device.
+                                    mLastKnownLocation = task.getResult();
+                                    Log.d(TAG, "Zooming to the current location:");
+                                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                            new LatLng(mLastKnownLocation.getLatitude(),
+                                                    mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENT_LOCATION));
+                                } else {
+                                    Log.d(TAG, "Current location is null. Using defaults.");
+                                    Log.e(TAG, "Exception: %s", task.getException());
+                                    moveToDefaultLocation();
+                                }
+                            }
+                        });
+                    } catch (SecurityException e) {
+                        Log.e("Exception: %s", e.getMessage());
+                        moveToDefaultLocation();
+                    }
+                } else {
+                    moveToDefaultLocation();
+                }
+            }
         }
+    }
+
+    private void moveToDefaultLocation() {
+        mMap.moveCamera(CameraUpdateFactory
+                .newLatLngZoom(Constants.MAP_DEFAULT_LOCATION, Constants.MAP_ZOOM_DEFAULT));
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
     }
 
     private void updateLocationUI() {
@@ -632,7 +709,7 @@ public class MapsActivity extends AppCompatActivity
                 mMap.setMyLocationEnabled(false);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 mLastKnownLocation = null;
-                getLocationPermission();
+                //getLocationPermission();
             }
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
@@ -653,45 +730,19 @@ public class MapsActivity extends AppCompatActivity
                 == PackageManager.PERMISSION_GRANTED) {
             mLocationPermissionGranted = true;
         } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        }
-    }
-
-    /**
-     * Gets the current location of the device, and positions the map's camera.
-     */
-    private void getDeviceLocation() {
-        /*
-         * Get the best and most recent location of the device, which may be null in rare
-         * cases when a location is not available.
-         */
-        try {
-            if (mLocationPermissionGranted) {
-                Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
-                    @Override
-                    public void onComplete(Task<Location> task) {
-                        if (task.isSuccessful()) {
-                            // Set the map's camera position to the current location of the device.
-                            mLastKnownLocation = task.getResult();
-                            Log.d(TAG, "Zooming to the current location:");
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                    new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), Constants.MAP_ZOOM_CURRENT_LOCATION));
-                        } else {
-                            Log.d(TAG, "Current location is null. Using defaults.");
-                            Log.e(TAG, "Exception: %s", task.getException());
-                            mMap.moveCamera(CameraUpdateFactory
-                                    .newLatLngZoom(Constants.MAP_DEFAULT_LOCATION, Constants.MAP_ZOOM_DEFAULT));
-                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                        }
-                    }
-                });
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION))
+            {
+                Toast.makeText(this,
+                        "Access to location information is needed to display your current location",
+                        Toast.LENGTH_LONG);
             }
-        } catch (SecurityException e)  {
-            Log.e("Exception: %s", e.getMessage());
+            else
+            {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            }
         }
     }
 
@@ -752,32 +803,58 @@ public class MapsActivity extends AppCompatActivity
 
     private void reRenderBottomSheet(@NotNull Bay bay) {
         //update bay
-        String bayStatusMsg = (bay.isAvailable()) ? "Available" : "Occupied";
+        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
+        String bayStatusMsg;
+        if (bay.getStatus() == Constants.Status.AVAILABLE) {
+            bayStatusMsg = "Available";
+            bayStatus.setTextColor(Color.GREEN);
+        } else if (bay.getStatus() == Constants.Status.OCCUPIED) {
+            bayStatusMsg = "Occupied";
+            bayStatus.setTextColor(Color.RED);
+        } else {
+            bayStatusMsg = "No Parking Sensor";
+            bayStatus.setTextColor(Color.YELLOW);
+        }
+
         String position = bay.getPosition().latitude + " , " + bay.getPosition().longitude;
         String title = (bay.getTitle().isEmpty()) ? position : bay.getTitle();
         bayTitle.setText(title);
         bayStatus.setText(bayStatusMsg);
-        if (bay.isAvailable()) {
-            bayStatus.setTextColor(Color.GREEN);
-        } else {
-            bayStatus.setTextColor(Color.RED);
-        }
-
-
 
         //update restriction
         layoutRestrictions.removeAllViews();
         for (int i = 0; i < bay.getRestrictions().size(); i++) {
-            Button tv = new Button(getApplicationContext());
-            tv.setText(bay.getRestrictions().get(i).getDescription());
+            View v = new View(this);
+            v.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+            ));
+            v.setBackgroundColor(Color.GRAY);
+            layoutRestrictions.addView(v);
+
+            TextView tv = new TextView(getApplicationContext());
+            tv.setText("#" + (i+1) + ": " + bay.getRestrictions().get(i).getTypedesc());
+            tv.setTypeface(null, Typeface.BOLD_ITALIC);
             layoutRestrictions.addView(tv);
+
+            tv = new TextView(getApplicationContext());
+            tv.setText(restrictionsHelper.convertRestrictionsToString(bay.getRestrictions().get(i)));
+            layoutRestrictions.addView(tv);
+
+            v = new View(this);
+            v.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
+            ));
+            v.setBackgroundColor(Color.GRAY);
+            layoutRestrictions.addView(v);
         }
 
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
 
-        restrictionsHelper = new RestrictionsHelper(bay.getRestrictions());
+
     }
 
 

@@ -3,7 +3,6 @@ package com.unimelbs.parkingassistant.model;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 import com.unimelbs.parkingassistant.parkingapi.Restriction;
-import com.unimelbs.parkingassistant.parkingapi.TheGeom;
 
 import java.io.Serializable;
 import java.util.List;

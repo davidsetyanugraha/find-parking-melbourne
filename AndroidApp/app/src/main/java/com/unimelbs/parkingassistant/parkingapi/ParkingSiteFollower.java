@@ -12,9 +12,10 @@ import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
+/**
+ * Handles the interaction to follow a parking bay an listen to the server notifications
+ */
 public class ParkingSiteFollower {
-    private static final String connectionUrl = "https://parkingappapi.azurewebsites.net/api/sites/state/connection/";
-//    private static final String connectionUrl = "http://10.8.8.8:7071/api/sites/state/connection/";
 
     private static ParkingSiteFollower instance;
     private ParkingApi api;
@@ -23,6 +24,9 @@ public class ParkingSiteFollower {
         this.api = ParkingApi.getInstance();
     }
 
+    /**
+     * Defines the connection with the SignalRHub.
+     */
     private class InnerHubConnection {
         private HubConnection hub;
         private boolean bayFollowed;
@@ -45,6 +49,9 @@ public class ParkingSiteFollower {
         }
     }
 
+    /**
+     * Returns a single instance of this class (singleton).
+     */
     public static ParkingSiteFollower getInstance() {
         //If condition to ensure we don't create multiple instances in a single application
         if (instance == null) {
@@ -53,6 +60,9 @@ public class ParkingSiteFollower {
         return instance;
     }
 
+    /**
+     * Returns an observable that when subscribed notifies when the paking bay changes it state.
+     */
     public Observable<SiteState> createParkingBayFollower(String bayId) {
         Observable<SiteState> obs = Observable.using(
                 // resource factory:
@@ -65,17 +75,23 @@ public class ParkingSiteFollower {
         return obs;
     }
 
+    /**
+     * Creates the observable making the connection with the hub.
+     */
     private Observable<SiteState> createHubObservable(String bayId, InnerHubConnection hubConnection) {
         return Observable.create(subscriber -> {
+            //Define the callback method that responds to the hub
             hubConnection.hub.on("SitesState",
                     (message) -> {
                         Log.d("PSF:SignalRConnection", message.toString());
                         if (!subscriber.isDisposed()) {
+                            // Notify the subscriber
                             subscriber.onNext(message);
                         }
                     },
                     SiteState.class);
 
+            // Handle when the connection is closed
             hubConnection.hub.onClosed((error) -> {
                 if (error != null) {
                     Log.d("PSF:SignalRConnection", error.getMessage());
@@ -87,17 +103,19 @@ public class ParkingSiteFollower {
                 }
             });
 
+            // Prepare to get the connection id
             Single<String> connectionIdObservable = Single.fromCallable(() -> hubConnection.hub.getConnectionId());
 
             CompositeDisposable disposable = new CompositeDisposable();
-            Disposable d = hubConnection.hub.start()
-                    .andThen(connectionIdObservable)
+            Disposable d = hubConnection.hub.start()// Start the hub
+                    .andThen(connectionIdObservable) //retrieve the connection id
                     .flatMap(connectionId -> {
                         FollowCommand command = new FollowCommand(connectionId, bayId);
+                        // register the bay on the API using the follow method
                         return api.follow(command);
                     })
                     //Different ways to subscribe (lambda) https://guides.codepath.com/android/Lambda-Expressions
-                    .subscribe(
+                    .subscribe( //Executes the connection
                             bay -> {
                                 Log.d("PSF:Api", "Following " + bay.getId());
                                 hubConnection.setBayFollowed(true);
@@ -114,6 +132,9 @@ public class ParkingSiteFollower {
 
     }
 
+    /**
+     * Creates the hub object.
+     */
     private InnerHubConnection createHub() {
         HubConnection hubConnection = HubConnectionBuilder.create(Constants.HUB_CONNECTION_URL)
                 .build();
@@ -121,8 +142,12 @@ public class ParkingSiteFollower {
         return new InnerHubConnection(hubConnection);
     }
 
+    /**
+     * Closes all the conections.
+     */
     private void closeConnection(String bayId, InnerHubConnection hubConnection) {
         if (hubConnection.isBayFollowed()) {
+            // If it is following a bay, the unfollow method should be executed
             String connectionId = hubConnection.hub.getConnectionId();
             UnfollowCommand command = new UnfollowCommand(connectionId, bayId);
             ParkingApi api = ParkingApi.getInstance();
@@ -140,6 +165,7 @@ public class ParkingSiteFollower {
                     );
             disposable.add(d);
         }
+        // If the hub have not been disposed, close the hub connection
         if (hubConnection.hub.getConnectionState() == HubConnectionState.CONNECTED) {
             CompositeDisposable disposable = new CompositeDisposable();
             Disposable d = hubConnection.hub.stop().subscribe(() -> {
