@@ -253,6 +253,17 @@ public class MapsActivity extends AppCompatActivity
         }
         else
             {
+                String message;
+                try {
+                    message = selectedBay.getStatus().toString().toLowerCase().equals("occupied") ?
+                            "The Bay is occupied. Do you Still want to Navigate?" :
+                            "Parking sensors are not present at this bay. Do you want to Navigate?";
+                }
+                catch(Exception e)
+                {
+                    message = "Bay Status Unknown, Do you want to navigate?";
+                    e.printStackTrace();
+                }
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
 
@@ -270,7 +281,7 @@ public class MapsActivity extends AppCompatActivity
                     // User cancelled the dialog
                 }
             });
-            builder.setMessage("The Bay is occupied. Do you Still want to Navigate?")
+            builder.setMessage(message)
                     .setTitle("Bay Status");
 
 
@@ -776,7 +787,7 @@ public class MapsActivity extends AppCompatActivity
             bayStatusMsg = "Occupied";
             bayStatus.setTextColor(Color.RED);
         } else {
-            bayStatusMsg = "Unknown";
+            bayStatusMsg = "No Parking Sensor";
             bayStatus.setTextColor(Color.YELLOW);
         }
 
