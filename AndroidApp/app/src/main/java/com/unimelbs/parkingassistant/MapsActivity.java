@@ -335,7 +335,7 @@ public class MapsActivity extends AppCompatActivity
     }
 
     /**
-     * Bottom screen Button Start Parking OnClick
+     * btn_direction screen Button Start Parking OnClick
      */
     @OnClick(R.id.btn_parking)
     public void startParking() {
