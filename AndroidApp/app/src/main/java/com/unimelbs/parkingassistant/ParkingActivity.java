@@ -34,6 +34,7 @@ import butterknife.OnClick;
 import static com.unimelbs.parkingassistant.util.PreferenceManager.PREFERENCE_NAME;
 import static com.unimelbs.parkingassistant.util.PreferenceManager.clearPreference;
 
+// This activity has been deprecated and moved into bayUpdateService.java
 public class ParkingActivity extends AppCompatActivity {
 
     //alarm stuff (deprecated)

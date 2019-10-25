@@ -1,7 +1,5 @@
 package com.unimelbs.parkingassistant.util;
 
-import android.util.Log;
-
 import com.unimelbs.parkingassistant.parkingapi.Restriction;
 
 import java.util.Calendar;
@@ -20,14 +18,65 @@ public class RestrictionsHelper {
         this.restrictions = restrictions;
     }
 
-    public String convertRestrictionsToString(Restriction restriction) {
-    // @todo: add null checking
-//        String restrictionMsg = restriction.getFromday() + " - " + restriction.getToday() + " "
-//                + restriction.getStarttime() + "-" + restriction.getEndtime();
-//
-//        return restrictionMsg;
 
-        return restriction.getDescription();
+    public String convertRestrictionsToString(Restriction restriction) {
+        String restrictionMsg = "";
+
+        if (restriction.getFromday() != null) {
+            restrictionMsg = restrictionMsg + "" + convertToDay(Integer.parseInt(restriction.getFromday()));
+        }
+
+        if ((restriction.getToday() != null) && (Integer.parseInt(restriction.getToday()) != 0)) {
+            if (Integer.parseInt(restriction.getToday()) != Integer.parseInt(restriction.getFromday())) {
+                restrictionMsg = restrictionMsg + " - " + convertToDay(Integer.parseInt(restriction.getToday()));
+            }
+        }
+
+        if (restriction.getStarttime() != null) {
+            String time = restriction.getStarttime();
+            String timeWithoutSeconds = time.substring(0, time.length() - 3);
+            restrictionMsg = restrictionMsg + " " + timeWithoutSeconds;
+        }
+
+        if (restriction.getEndtime() != null) {
+            String time = restriction.getEndtime();
+            String timeWithoutSeconds = time.substring(0, time.length() - 3);
+            restrictionMsg = restrictionMsg + " - " + timeWithoutSeconds;
+        }
+
+        return restrictionMsg;
+    }
+
+    private String convertToDay(int day) {
+        String str_day;
+
+        switch (day) {
+            case 1:
+                str_day = "Monday";
+                break;
+            case 2:
+                str_day = "Tuesday";
+                break;
+            case 3:
+                str_day = "Wednesday";
+                break;
+            case 4:
+                str_day = "Thursday";
+                break;
+            case 5:
+                str_day = "Friday";
+                break;
+            case 6:
+                str_day = "Saturday";
+                break;
+            case 0:
+                str_day = "Sunday";
+                break;
+            default:
+                str_day = "";
+        }
+
+        return str_day;
     }
 
     public boolean isValid() {
@@ -63,7 +112,6 @@ public class RestrictionsHelper {
             }
         }
 
-        Log.d(TAG, "Default Duration: " +finalDurationRestriction);
         return finalDurationRestriction-1;
     }
 
@@ -95,26 +143,7 @@ public class RestrictionsHelper {
             final String[] restrictionEndTime = this.restrictions.get(i).getEndtime().split(Pattern.quote(":"));
             Integer restEndHour = Integer.parseInt(restrictionEndTime[0]);
             Integer restEndMins = Integer.parseInt(restrictionEndTime[1]);
-
-            final String restTypeDesc = this.restrictions.get(i).getTypedesc();
-            final String restDisExt = this.restrictions.get(i).getDisabilityext();
-            final String restEffOnPh = this.restrictions.get(i).getEffectiveonph();
-            final String restDesc = this.restrictions.get(i).getDescription();
             Boolean violation = false;
-
-            Log.d(TAG, "=========== "+restDesc +"=============");
-            Log.d(TAG, "minutes: " + durationMinutes);
-            Log.d(TAG, "restrictionDuration: " + durationRestriction);
-            Log.d(TAG, "from: " + restFrDay);
-            Log.d(TAG, "today: " + restToDay);
-            Log.d(TAG, "restrictionStartTimeHour: " + restStHour);
-            Log.d(TAG, "restrictionStartTimeMins: " + restStMins);
-            Log.d(TAG, "restrictionEndTimeHour: " + restEndHour);
-            Log.d(TAG, "restrictionEndTimeMins: " + restEndMins);
-            Log.d(TAG, "restrictionTypeDesc: " + restTypeDesc);
-            Log.d(TAG, "restrictionDisExt: " + restDisExt);
-            Log.d(TAG, "restEffOnPh: " + restEffOnPh);
-            Log.d(TAG, "=======================================");
 
             if ((durationRestriction != null)) {
                 violation = (durationMinutes > durationRestriction) ? true : false;
@@ -126,18 +155,14 @@ public class RestrictionsHelper {
                         violation = false;
                     }
                 }
-                Log.d(TAG, "----------");
-                Log.d(TAG, "Violation? = " + violation);
-                Log.d(TAG, "----------");
             }
 
             if (violation) {
-                this.invalidReason = this.invalidReason + "\n" + restDesc;
+                this.invalidReason = "You are probably violating the parking restriction.";
             }
         }
 
         if (!this.invalidReason.isEmpty()) {
-            this.invalidReason = "You are probably violating the parking restriction " + this.invalidReason;
             this.isValid = false;
         } else {
             this.isValid = true;
